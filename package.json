@@ -24,7 +24,8 @@
   "engines": {
     "node": ">=18"
   },
-  "name": "with-prisma",
+  "name": "hospital-appointment-system",
+  "version": "1.0.0",
   "dependencies": {
     "@prisma/client": "latest"
   },
