@@ -1,9 +1,8 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
-import { auth } from "./lib/auth";
 import { headers } from "next/headers";
 import { RoleHomePages } from "./lib/redirect-config";
-import { Role } from "../generated/prisma/enums";
+import { Role } from "@repo/database";
 
 const PUBLIC_PATHS = [
   "/auth/login",
@@ -46,20 +45,32 @@ export async function proxy(req: NextRequest) {
   if (pathname === "/auth/login") return NextResponse.next();
 
   // Forward the request headers so better-auth can resolve the session
-  const sessionRes = await auth.api.getSession({
-    headers: await headers(),
+  const requestHeaders = new Headers(req.headers);
+  const cookies = requestHeaders.get("cookie");
+
+  const sessionRes = await fetch(`${req.nextUrl.origin}/api/auth/session`, {
+    headers: {
+      cookie: cookies || "",
+    },
   });
-  if (!sessionRes?.session) {
+
+  let session = null;
+  let user = null;
+  if (sessionRes.ok) {
+    const data = await sessionRes.json();
+    session = data.session;
+    user = data.user;
+  }
+
+  if (!session) {
     // If session resolution fails, treat as unauthenticated
     const loginUrl = new URL("/auth/login", req.nextUrl.origin);
     return NextResponse.redirect(loginUrl);
   }
 
-  const session = sessionRes.session;
-  const user = sessionRes.user;
-
   // No session -> redirect to login
   if (!session && !user) {
+    // This check is redundant with the one above, but kept for clarity based on original logic structure
     const loginUrl = new URL("/auth/login", req.nextUrl.origin);
     return NextResponse.redirect(loginUrl);
   }

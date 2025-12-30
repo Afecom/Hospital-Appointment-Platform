@@ -1,6 +1,5 @@
 import AppShell from "@/components/shared/layout/AppShell";
-import { auth } from "@/lib/auth";
-import { headers } from "next/headers";
+import { authClient } from "@/lib/auth-client";
 import { redirect, RedirectType } from "next/navigation";
 import { ReactNode } from "react";
 
@@ -9,9 +8,7 @@ export default async function ProtectedLayout({
 }: {
   children: ReactNode;
 }) {
-  const session = await auth.api.getSession({
-    headers: await headers(),
-  });
+  const session = await authClient.getSession();
   if (!session) redirect("/auth/login", RedirectType.replace);
-  return <AppShell user={session.user}>{children}</AppShell>;
+  return <AppShell user={session.data?.user}>{children}</AppShell>;
 }
