@@ -42,6 +42,9 @@ importers:
       '@fortawesome/react-fontawesome':
         specifier: ^3.1.1
         version: 3.1.1(@fortawesome/fontawesome-svg-core@7.1.0)(react@19.2.1)
+      '@prisma/adapter-pg':
+        specifier: ^7.2.0
+        version: 7.2.0
       '@repo/database':
         specifier: workspace:*
         version: link:../../packages/database

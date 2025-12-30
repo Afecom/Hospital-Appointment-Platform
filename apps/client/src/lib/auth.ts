@@ -1,10 +1,12 @@
 import { betterAuth } from "better-auth";
-import { prisma } from "@/lib/prisma";
+import { PrismaClient } from "@repo/database";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { phoneNumber } from "better-auth/plugins";
 import { bearer } from "better-auth/plugins";
 import { admin } from "better-auth/plugins";
 import axios from "axios";
+
+const prisma = new PrismaClient();
 
 const baseAdapter = prismaAdapter(prisma, {
   provider: "postgresql",
@@ -18,10 +20,6 @@ const safeAdapter = new Proxy(baseAdapter, {
       try {
         return await orig.apply(target, args);
       } catch (err) {
-        // log and return safe default values for common adapter methods
-        // to avoid crashing the dev server when DB schema mismatches exist
-        // (we'll surface the error but keep the app running)
-        // eslint-disable-next-line no-console
         console.error("[Auth adapter] Caught error in", String(prop), err);
         if (String(prop) === "findSession") return null;
         if (String(prop) === "findSessions") return [];
@@ -87,18 +85,18 @@ export const auth = betterAuth({
     phoneNumber({
       sendOTP: async ({ phoneNumber, code }, ctx) => {
         // Prevent sending OTP for phone numbers that already exist
-        // try {
-        //   const existing = await prisma.user.findFirst({
-        //     where: { phoneNumber },
-        //   });
-        //   if (existing) {
-        //     // Stop the flow: throw an error so the caller knows the number is taken
-        //     throw new Error("Phone number already registered");
-        //   }
-        // } catch (err) {
-        //   // If prisma lookup throws, rethrow to stop OTP sending
-        //   throw err;
-        // }
+        try {
+          const existing = await prisma.user.findFirst({
+            where: { phoneNumber },
+          });
+          if (existing) {
+            // Stop the flow: throw an error so the caller knows the number is taken
+            throw new Error("Phone number already registered");
+          }
+        } catch (err) {
+          // If prisma lookup throws, rethrow to stop OTP sending
+          throw err;
+        }
 
         const token = process.env.SMS_TOKEN;
         try {
@@ -111,11 +109,13 @@ export const auth = betterAuth({
             {
               headers: {
                 Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
               },
             }
           );
         } catch (error) {
-          console.error(error);
+          console.log(error);
+          throw new Error("Failed to send OTP");
         }
       },
       signUpOnVerification: {

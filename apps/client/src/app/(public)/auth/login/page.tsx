@@ -6,8 +6,11 @@ import React, { useState } from "react";
 import { redirect, RedirectType } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { RoleHomePages, DefaultRedirect } from "@/lib/redirect-config";
-import { Role } from "../../../../../generated/prisma/enums";
+import {
+  RoleHomePages,
+  DefaultRedirect,
+} from "../../../../lib/redirect-config";
+import { Role } from "@repo/database";
 
 export default function loginPage() {
   const router = useRouter();

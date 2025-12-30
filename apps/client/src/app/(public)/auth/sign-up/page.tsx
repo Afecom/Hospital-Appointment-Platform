@@ -17,7 +17,7 @@ export default function signupPage() {
       const res = await authClient.phoneNumber.sendOtp({
         phoneNumber,
       });
-      if (res.error) setAuthError(res.error.message!);
+      if (res.error) return setAuthError(res.error.message!);
       else if (res.data) {
         router.push(`/auth/verify?phone=${encodeURIComponent(phoneNumber)}`);
       }

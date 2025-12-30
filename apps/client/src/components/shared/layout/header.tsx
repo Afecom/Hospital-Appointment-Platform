@@ -1,5 +1,5 @@
 import { Headset, BellDot, Search } from "lucide-react";
-import { Role } from "../../../../generated/prisma/enums";
+import { Role } from "@repo/database";
 import ButtonComponent from "../ui/button";
 export default function HeaderSection({ role }: { role: Role }) {
   return (
