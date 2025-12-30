@@ -19,12 +19,12 @@ export async function generateInitialSlots(scheduleId: string) {
         hospitalId: schedule.hospitalId,
       },
     },
-    include: { hospital: true, doctor: true },
+    include: { Hospital: true, Doctor: true },
   });
   if (!doctorHospitalProfile)
     throw new Error('doctor to hospital mapping not found in DB');
 
-  if (doctorHospitalProfile.doctor?.isDeactivated) {
+  if (doctorHospitalProfile.Doctor?.isDeactivated) {
     return { message: 'Doctor deactivated, skipping slot generation' };
   }
 
@@ -34,7 +34,7 @@ export async function generateInitialSlots(scheduleId: string) {
   }
 
   const timezone =
-    doctorHospitalProfile.hospital.timezone || 'Africa/Addis_Ababa';
+    doctorHospitalProfile.Hospital.timezone || 'Africa/Addis_Ababa';
 
   //
   // 1. Establish the generation window

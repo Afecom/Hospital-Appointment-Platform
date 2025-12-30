@@ -55,9 +55,9 @@ export class HospitalService {
         logoUrl,
         logoId,
         subAccountId: subAccountId,
-        specializations: {
+        HospitalSpecialization: {
           create: specializationIds.map((id) => ({
-            specialization: { connect: { id } },
+            Specialization: { connect: { id } },
           })),
         },
       },
@@ -79,7 +79,7 @@ export class HospitalService {
   async findOne(id: string) {
     const hospital = await this.databaseService.hospital.findUniqueOrThrow({
       where: { id },
-      include: { specializations: true },
+      include: { HospitalSpecialization: true },
     });
     return hospital;
   }
@@ -96,7 +96,7 @@ export class HospitalService {
           },
         }),
       },
-      include: { specializations: true },
+      include: { HospitalSpecialization: true },
     });
     return updated_hospital;
   }
@@ -108,11 +108,11 @@ export class HospitalService {
   async findAllBySpecialization(id: string) {
     const hospitals = await this.databaseService.hospital.findMany({
       where: {
-        specializations: {
+        HospitalSpecialization: {
           some: { specializationId: id },
         },
       },
-      include: { specializations: true },
+      include: { HospitalSpecialization: true },
     });
     if (hospitals.length === 0)
       throw new NotFoundException(

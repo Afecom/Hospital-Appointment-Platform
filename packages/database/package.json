@@ -1,20 +1,28 @@
 {
   "name": "@repo/database",
   "version": "1.0.0",
+  "main": "dist/src/client.js",
+  "module": "dist/src/client.js",
+  "types": "dist/src/client.d.ts",
   "exports": {
-    ".": "./src/client.ts"
+    ".": {
+      "import": "./dist/src/client.js",
+      "require": "./dist/src/client.js",
+      "types": "./dist/src/client.d.ts"
+    }
   },
   "scripts": {
+    "build": "tsup src/**/*.ts generated/**/*.ts --dts",
     "db:migrate:deploy": "prisma migrate deploy",
     "db:migrate:dev": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx src/seed.ts",
-    "dev": "tsup src/* --watch",
+    "dev": "tsup src/**/*.ts generated/**/*.ts --watch",
     "format": "prisma format",
     "generate": "prisma generate",
     "lint": "eslint . --max-warnings 0",
-    "prebuild": "npm run generate",
-    "predev": "npm run generate",
+    "prebuild": "npm run generate && node scripts/patch-generated-prisma.js",
+    "predev": "npm run generate && node scripts/patch-generated-prisma.js",
     "studio": "prisma studio"
   },
   "dependencies": {

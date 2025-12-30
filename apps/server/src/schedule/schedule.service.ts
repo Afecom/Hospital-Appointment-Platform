@@ -7,7 +7,7 @@ import {
 import { DateTime } from 'luxon';
 import { CreateScheduleDto } from './dto/create-schedule.dto.js';
 import { UserSession } from '@thallesp/nestjs-better-auth';
-import { ScheduleStatus, ScheduleType } from '../../generated/prisma/enums.js';
+import { ScheduleStatus, ScheduleType } from '@repo/database';
 import { DatabaseService } from '../database/database.service.js';
 import { ScheduleFilterService } from './schedule-filter.service.js';
 import { UpdateScheduleDto } from './dto/update-schedule.dto.js';
@@ -59,10 +59,10 @@ export class ScheduleService {
         createdBy: session.user.id,
         ...(data as any),
       },
-      include: { hospital: { select: { timezone: true } } },
+      include: { Hospital: { select: { timezone: true } } },
     });
     if (schedule.endDate) {
-      const tz = schedule.hospital.timezone;
+      const tz = schedule.Hospital?.timezone;
       const expirationLocal = DateTime.fromISO(
         `${schedule.endDate}T${schedule.endTime}`,
         { zone: tz },
@@ -134,9 +134,9 @@ export class ScheduleService {
         take,
         skip,
         include: {
-          doctor: {
+          Doctor: {
             include: {
-              user: {
+              User: {
                 select: {
                   fullName: true,
                   phoneNumber: true,
@@ -144,8 +144,8 @@ export class ScheduleService {
                   imageUrl: true,
                 },
               },
-              specializations: {
-                include: { specialization: true },
+              DoctorSpecialization: {
+                include: { Specialization: true },
               },
             },
           },

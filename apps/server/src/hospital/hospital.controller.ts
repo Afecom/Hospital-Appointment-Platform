@@ -14,7 +14,7 @@ import { HospitalService } from './hospital.service.js';
 import { CreateHospitalDto } from './dto/create-hospital.dto.js';
 import { UpdateHospitalDto } from './dto/update-hospital.dto.js';
 import { Roles } from '@thallesp/nestjs-better-auth';
-import { Role } from '../../generated/prisma/enums.js';
+import { Role } from '@repo/database';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
 

@@ -12,7 +12,7 @@ import { SpecializationService } from './specialization.service.js';
 import { CreateSpecializationDto } from './dto/create-specialization.dto.js';
 import { UpdateSpecializationDto } from './dto/update-specialization.dto.js';
 import { Roles } from '@thallesp/nestjs-better-auth';
-import { Role } from '../../generated/prisma/enums.js';
+import { Role } from '@repo/database';
 
 @Controller('specialization')
 export class SpecializationController {

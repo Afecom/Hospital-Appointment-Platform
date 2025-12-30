@@ -13,7 +13,7 @@ import {
 import { Session, type UserSession, Roles } from '@thallesp/nestjs-better-auth';
 import { createAppointmentDto } from './dto/create-appointment.dto.js';
 import { appointmentService } from './appointment.service.js';
-import { Role } from '../../generated/prisma/enums.js';
+import { Role } from '@repo/database';
 import { updateAppointment } from './dto/update-appointment.dto.js';
 import { chapaWebhookPayload } from './dto/chapa-webhook-payload.dto.js';
 

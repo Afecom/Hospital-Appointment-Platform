@@ -7,7 +7,7 @@ import { DatabaseService } from '../database/database.service.js';
 import { createAppointmentDto } from './dto/create-appointment.dto.js';
 import { updateAppointment } from './dto/update-appointment.dto.js';
 import { UserSession } from '@thallesp/nestjs-better-auth';
-import { Role } from '../../generated/prisma/enums.js';
+import { Role } from '@repo/database';
 import {
   normalizePagination,
   buildPaginationMeta,
@@ -25,9 +25,9 @@ export class appointmentService {
     const slot = await this.prisma.slot.findUnique({
       where: { id: slotId, status: 'available' },
       include: {
-        schedule: {
+        Schedule: {
           include: {
-            hospital: { select: { id: true, fee: true, subAccountId: true } },
+            Hospital: { select: { id: true, fee: true, subAccountId: true } },
           },
         },
       },

@@ -2,7 +2,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service.js';
 import { DateTime } from 'luxon';
-import { ScheduleStatus, ScheduleType } from '../../generated/prisma/enums.js';
+import { ScheduleStatus, ScheduleType } from '@repo/database';
 
 type StatusType = ScheduleStatus;
 
@@ -242,7 +242,7 @@ export class ScheduleOverlapService {
         endDate: true,
         dayOfWeek: true,
         status: true,
-        hospital: { select: { timezone: true } },
+        Hospital: { select: { timezone: true } },
       },
     });
 

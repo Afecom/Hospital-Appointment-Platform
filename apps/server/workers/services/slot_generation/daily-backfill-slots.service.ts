@@ -5,7 +5,7 @@ export async function fillMissingSlotsWorker(scheduleId: string) {
   // Fetch schedule + hospital (timezone)
   const schedule = await prisma.schedule.findUnique({
     where: { id: scheduleId },
-    include: { hospital: true },
+    include: { Hospital: true },
   });
 
   if (!schedule) {
@@ -23,12 +23,12 @@ export async function fillMissingSlotsWorker(scheduleId: string) {
     return;
   }
 
-  if (!schedule.hospital?.timezone) {
+  if (!schedule.Hospital?.timezone) {
     console.error(`Missing timezone for hospital: ${schedule.hospitalId}`);
     return;
   }
 
-  const tz = schedule.hospital.timezone;
+  const tz = schedule.Hospital.timezone;
 
   // Build "today" in hospital timezone
   const now = DateTime.now().setZone(tz).startOf('day');

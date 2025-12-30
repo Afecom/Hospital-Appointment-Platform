@@ -1,5 +1,5 @@
 import { IsString } from 'class-validator';
-import { Role } from '../../../generated/prisma/enums.js';
+import { Role } from '@repo/database';
 
 export class updateRoleDto {
   @IsString()

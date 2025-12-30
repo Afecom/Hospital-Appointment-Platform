@@ -11,11 +11,7 @@ import {
 import { ScheduleService } from './schedule.service.js';
 import { CreateScheduleDto } from './dto/create-schedule.dto.js';
 import { Session, Roles, type UserSession } from '@thallesp/nestjs-better-auth';
-import {
-  Role,
-  ScheduleStatus,
-  ScheduleType,
-} from '../../generated/prisma/enums.js';
+import { Role, ScheduleStatus, ScheduleType } from '@repo/database';
 import { UpdateScheduleDto } from './dto/update-schedule.dto.js';
 
 @Controller('schedule')
