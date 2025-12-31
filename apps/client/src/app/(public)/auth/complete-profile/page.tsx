@@ -55,8 +55,8 @@ export default function completeProfile() {
       if (res?.data) {
         try {
           const sessionRes = await authClient.getSession({
-            query: {
-              disableCookieCache: true,
+            fetchOptions: {
+              credentials: "include",
             },
           });
           if (sessionRes.error) {
@@ -64,8 +64,8 @@ export default function completeProfile() {
             router.replace(DefaultRedirect);
           }
           if (sessionRes.data) {
-            const role = sessionRes.data.user.role;
-            const homePath = RoleHomePages[role as Role];
+            const role = sessionRes.data.user.role as Role;
+            const homePath = RoleHomePages[role];
             console.log("Home path:", homePath);
             return router.replace(homePath);
           }
