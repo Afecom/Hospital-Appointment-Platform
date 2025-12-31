@@ -8,6 +8,7 @@ import {
   Star,
   History,
   HandCoins,
+  Home,
 } from "lucide-react";
 
 export const NavSchema = {
@@ -46,12 +47,18 @@ export const NavSchema = {
   user: [
     {
       id: 1,
+      text: "Home",
+      path: "/user/home",
+      icon: <Home />,
+    },
+    {
+      id: 2,
       text: "Appointments",
       path: "/user/appointment",
       icon: <ClipboardClock />,
     },
     {
-      id: 2,
+      id: 3,
       text: "Favorites",
       path: "/user/favorite",
       icon: <Star />,

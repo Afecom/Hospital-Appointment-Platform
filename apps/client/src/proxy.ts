@@ -44,12 +44,6 @@ export async function proxy(req: NextRequest) {
     return NextResponse.next();
   }
 
-  // Allow the login page to be accessed by unauthenticated users
-  if (pathname === "/auth/login") {
-    console.log("[PROXY] Allowing login page");
-    return NextResponse.next();
-  }
-
   const sessionRes = await authClient.getSession({
     fetchOptions: {
       headers: {

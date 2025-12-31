@@ -5,7 +5,7 @@ import { MoreVertical, ChevronLast, ChevronFirst } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLayout } from "@/context/LayoutContext";
 import { authClient } from "@/lib/auth-client";
-import { Role } from "@repo/database";
+import { Role } from "../../../../generated/prisma/enums";
 import { NavSchema } from "@/lib/navSchema";
 import { usePathname } from "next/navigation";
 

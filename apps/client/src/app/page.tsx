@@ -1,12 +1,15 @@
 import { redirect, RedirectType } from "next/navigation";
-import { authClient } from "@/lib/auth-client";
+import { auth } from "@/lib/auth";
+import { headers } from "next/headers";
 import { RoleHomePages, DefaultRedirect } from "@/lib/redirect-config";
 import { Role } from "../../generated/prisma/enums";
 
 export default async function Home() {
-  const sessionRes = await authClient.getSession();
-  const session = sessionRes.data?.session;
-  const user = sessionRes.data?.user;
+  const sessionRes = await auth.api.getSession({
+    headers: await headers(),
+  });
+  const session = sessionRes?.session;
+  const user = sessionRes?.user;
 
   if (!session) {
     return redirect(DefaultRedirect, RedirectType.replace);
