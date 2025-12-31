@@ -6,4 +6,4 @@ export const RoleHomePages = {
   hospital_user: "/hospital-user/dashboard",
   doctor: "/doctor/dashboard",
 };
-export const DefaultRedirect = "/login";
+export const DefaultRedirect = "/auth/login";

@@ -1,0 +1,413 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Appointment {
+  id                                String            @id @default(uuid())
+  customerId                        String
+  doctorId                          String
+  scheduleId                        String
+  slotId                            String            @unique
+  status                            AppointmentStatus @default(pending)
+  approvedSlotStart                 DateTime
+  approvedSlotEnd                   DateTime
+  notes                             String?
+  approvedBy                        String?
+  createdAt                         DateTime          @default(now())
+  updatedAt                         DateTime          @updatedAt
+  tx_ref                            String            @unique
+  hospitalId                        String
+  isPaid                            Boolean           @default(false)
+  User_Appointment_approvedByToUser User?             @relation("Appointment_approvedByToUser", fields: [approvedBy], references: [id])
+  User_Appointment_customerIdToUser User              @relation("Appointment_customerIdToUser", fields: [customerId], references: [id])
+  Doctor                            Doctor            @relation(fields: [doctorId], references: [id])
+  Hospital                          Hospital          @relation(fields: [hospitalId], references: [id])
+  Schedule                          Schedule          @relation(fields: [scheduleId], references: [id])
+  Payment                           Payment?
+  Slot                              Slot?
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  userId    String
+  action    String
+  metadata  Json?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Doctor {
+  id                    String                  @id @default(uuid())
+  userId                String                  @unique
+  yearsOfExperience     Int?
+  bio                   String?
+  createdAt             DateTime                @default(now())
+  updatedAt             DateTime                @updatedAt
+  isDeactivated         Boolean                 @default(false)
+  Appointment           Appointment[]
+  User                  User                    @relation(fields: [userId], references: [id])
+  DoctorHospitalProfile DoctorHospitalProfile[]
+  DoctorSpecialization  DoctorSpecialization[]
+  Review                Review[]
+  SavedDoctorHospital   SavedDoctorHospital[]
+  Schedule              Schedule[]
+}
+
+model DoctorApplication {
+  id                String                  @id @default(uuid())
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  userId            String
+  hospitalId        String
+  yearsOfExperience Int?
+  bio               String?
+  status            DoctorApplicationStatus @default(pending)
+  specializationIds String[]
+  Hospital          Hospital                @relation(fields: [hospitalId], references: [id])
+  User              User                    @relation(fields: [userId], references: [id])
+
+  @@unique([userId, hospitalId])
+}
+
+model DoctorHospitalProfile {
+  id           String     @id @default(uuid())
+  doctorId     String
+  hospitalId   String
+  doctorType   DoctorType
+  slotDuration Int
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+  Doctor       Doctor     @relation(fields: [doctorId], references: [id])
+  Hospital     Hospital   @relation(fields: [hospitalId], references: [id])
+
+  @@unique([doctorId, hospitalId])
+}
+
+model DoctorSpecialization {
+  id               String         @id @default(uuid())
+  doctorId         String
+  specializationId String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  Doctor           Doctor         @relation(fields: [doctorId], references: [id])
+  Specialization   Specialization @relation(fields: [specializationId], references: [id])
+
+  @@unique([doctorId, specializationId])
+}
+
+model Hospital {
+  id                     String                   @id @default(uuid())
+  adminId                String                   @unique
+  name                   String                   @unique
+  description            String
+  address                String
+  city                   String
+  latitude               Decimal
+  longitude              Decimal
+  phone                  String
+  email                  String
+  website                String?
+  openTime               DateTime?
+  closeTime              DateTime?
+  is24Hours              Boolean                  @default(false)
+  emergencySupport       Boolean                  @default(true)
+  rating                 Decimal?                 @db.Decimal(3, 2)
+  reviewCount            Int                      @default(0)
+  logoUrl                String
+  createdAt              DateTime                 @default(now())
+  updatedAt              DateTime                 @updatedAt
+  isDeactivated          Boolean                  @default(false)
+  fee                    Decimal
+  type                   HospitalType
+  timezone               String                   @default("Africa/Addis_Ababa")
+  subAccountId           String
+  logoId                 String
+  Appointment            Appointment[]
+  DoctorApplication      DoctorApplication[]
+  DoctorHospitalProfile  DoctorHospitalProfile[]
+  User                   User                     @relation(fields: [adminId], references: [id])
+  HospitalSpecialization HospitalSpecialization[]
+  Review                 Review[]
+  SavedDoctorHospital    SavedDoctorHospital[]
+  Schedule               Schedule[]
+
+  @@index([name, id])
+}
+
+model HospitalSpecialization {
+  id               String         @id @default(uuid())
+  hospitalId       String
+  specializationId String
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+  Hospital         Hospital       @relation(fields: [hospitalId], references: [id])
+  Specialization   Specialization @relation(fields: [specializationId], references: [id])
+
+  @@unique([hospitalId, specializationId])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Payment {
+  id            String      @id @default(uuid())
+  appointmentId String      @unique
+  customerId    String
+  amount        Decimal     @db.Decimal(10, 2)
+  status        String
+  method        String
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  Appointment   Appointment @relation(fields: [appointmentId], references: [id])
+  User          User        @relation(fields: [customerId], references: [id])
+}
+
+model Review {
+  id         String    @id @default(uuid())
+  customerId String
+  doctorId   String?
+  hospitalId String?
+  rating     Int
+  comment    String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  User       User      @relation(fields: [customerId], references: [id])
+  Doctor     Doctor?   @relation(fields: [doctorId], references: [id])
+  Hospital   Hospital? @relation(fields: [hospitalId], references: [id])
+}
+
+model SavedDoctorHospital {
+  id         String    @id @default(uuid())
+  userId     String
+  doctorId   String?
+  hospitalId String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  Doctor     Doctor?   @relation(fields: [doctorId], references: [id])
+  Hospital   Hospital? @relation(fields: [hospitalId], references: [id])
+  User       User      @relation(fields: [userId], references: [id])
+}
+
+model Schedule {
+  id                    String         @id @default(uuid())
+  type                  ScheduleType
+  startTime             String
+  endTime               String
+  status                ScheduleStatus @default(pending)
+  createdBy             String
+  createdAt             DateTime       @default(now())
+  updatedAt             DateTime       @updatedAt
+  doctorId              String
+  endDate               String?
+  hospitalId            String
+  startDate             String
+  dayOfWeek             Int[]
+  name                  String
+  period                SchedulePeriod
+  isDeactivated         Boolean        @default(false)
+  isExpired             Boolean        @default(false)
+  slotLastGeneratedDate String?
+  Appointment           Appointment[]
+  User                  User           @relation(fields: [createdBy], references: [id])
+  Doctor                Doctor         @relation(fields: [doctorId], references: [id])
+  Hospital              Hospital       @relation(fields: [hospitalId], references: [id])
+  Slot                  Slot[]
+
+  @@index([type, status, startDate])
+}
+
+model SearchLog {
+  id        String   @id @default(uuid())
+  userId    String
+  query     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Slot {
+  id            String       @id @default(uuid())
+  scheduleId    String
+  slotStart     DateTime
+  slotEnd       DateTime
+  status        SlotStatus
+  appointmentId String?      @unique
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  date          DateTime
+  Appointment   Appointment? @relation(fields: [appointmentId], references: [id])
+  Schedule      Schedule     @relation(fields: [scheduleId], references: [id])
+
+  @@unique([slotStart, scheduleId, date])
+  @@index([scheduleId, slotStart, status])
+}
+
+model Specialization {
+  id                     String                   @id @default(uuid())
+  name                   String                   @unique
+  createdAt              DateTime                 @default(now())
+  description            String
+  imageURL               String?
+  slug                   String?
+  updatedAt              DateTime                 @updatedAt
+  DoctorSpecialization   DoctorSpecialization[]
+  HospitalSpecialization HospitalSpecialization[]
+
+  @@index([name])
+}
+
+model User {
+  id                                       String                @id @default(uuid())
+  fullName                                 String
+  email                                    String?
+  emailVerified                            Boolean               @default(false)
+  createdAt                                DateTime              @default(now())
+  updatedAt                                DateTime              @updatedAt
+  phoneNumber                              String?               @unique
+  phoneNumberVerified                      Boolean?              @default(false)
+  gender                                   String?
+  role                                     Role?                 @default(user)
+  dateOfBirth                              String?
+  imageUrl                                 String?
+  imageId                                  String?
+  banned                                   Boolean               @default(false)
+  isOnboardingComplete                     Boolean               @default(false)
+  Appointment_Appointment_approvedByToUser Appointment[]         @relation("Appointment_approvedByToUser")
+  Appointment_Appointment_customerIdToUser Appointment[]         @relation("Appointment_customerIdToUser")
+  AuditLog                                 AuditLog[]
+  Doctor                                   Doctor?
+  DoctorApplication                        DoctorApplication[]
+  Hospital                                 Hospital?
+  Notification                             Notification[]
+  Payment                                  Payment[]
+  Review                                   Review[]
+  SavedDoctorHospital                      SavedDoctorHospital[]
+  Schedule                                 Schedule[]
+  SearchLog                                SearchLog[]
+  account                                  account[]
+  session                                  session[]
+
+  @@index([phoneNumber, fullName])
+}
+
+model account {
+  id                    String    @id @default(uuid())
+  accountId             String
+  providerId            String
+  userId                String
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  User                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model session {
+  id        String   @id @default(uuid())
+  expiresAt DateTime
+  token     String   @unique
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ipAddress String?
+  userAgent String?
+  userId    String
+  User      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+}
+
+model verification {
+  id         String   @id @default(uuid())
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@index([identifier])
+}
+
+enum AppointmentStatus {
+  pending
+  approved
+  rejected
+}
+
+enum DoctorApplicationStatus {
+  pending
+  approved
+  rejected
+}
+
+enum DoctorType {
+  permanent
+  rotating
+}
+
+enum HospitalType {
+  hospital
+  dentalClinic
+  dermatologyClinic
+  diagnosticCenter
+  clinic
+}
+
+enum Role {
+  admin
+  user
+  hospital_admin
+  hospital_operator
+  hospital_user
+  doctor
+}
+
+enum SchedulePeriod {
+  morning
+  afternoon
+  evening
+}
+
+enum ScheduleStatus {
+  pending
+  approved
+  rejected
+}
+
+enum ScheduleType {
+  recurring
+  temporary
+  one_time
+}
+
+enum SlotStatus {
+  available
+  booked
+  cancelled
+  expired
+}
+
+enum gender {
+  male
+  female
+}

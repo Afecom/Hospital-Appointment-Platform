@@ -54,14 +54,23 @@ export default function completeProfile() {
       }
       if (res?.data) {
         try {
-          const sessionRes = await authClient.getSession();
-          if (sessionRes.error) return router.replace(DefaultRedirect);
+          const sessionRes = await authClient.getSession({
+            query: {
+              disableCookieCache: true,
+            },
+          });
+          if (sessionRes.error) {
+            console.log("session error");
+            router.replace(DefaultRedirect);
+          }
           if (sessionRes.data) {
             const role = sessionRes.data.user.role;
             const homePath = RoleHomePages[role as Role];
+            console.log("Home path:", homePath);
             return router.replace(homePath);
           }
         } catch (error) {
+          console.log("error", error);
           return router.replace(DefaultRedirect);
         }
       }

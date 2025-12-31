@@ -1,12 +1,10 @@
 import { betterAuth } from "better-auth";
-import { PrismaClient } from "@repo/database";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { phoneNumber } from "better-auth/plugins";
 import { bearer } from "better-auth/plugins";
 import { admin } from "better-auth/plugins";
 import axios from "axios";
-
-const prisma = new PrismaClient();
+import { prisma } from "./prisma";
 
 const baseAdapter = prismaAdapter(prisma, {
   provider: "postgresql",
@@ -85,18 +83,18 @@ export const auth = betterAuth({
     phoneNumber({
       sendOTP: async ({ phoneNumber, code }, ctx) => {
         // Prevent sending OTP for phone numbers that already exist
-        try {
-          const existing = await prisma.user.findFirst({
-            where: { phoneNumber },
-          });
-          if (existing) {
-            // Stop the flow: throw an error so the caller knows the number is taken
-            throw new Error("Phone number already registered");
-          }
-        } catch (err) {
-          // If prisma lookup throws, rethrow to stop OTP sending
-          throw err;
-        }
+        // try {
+        //   const existing = await prisma.user.findFirst({
+        //     where: { phoneNumber },
+        //   });
+        //   if (existing) {
+        //     // Stop the flow: throw an error so the caller knows the number is taken
+        //     throw new Error("Phone number already registered");
+        //   }
+        // } catch (err) {
+        //   // If prisma lookup throws, rethrow to stop OTP sending
+        //   throw err;
+        // }
 
         const token = process.env.SMS_TOKEN;
         try {

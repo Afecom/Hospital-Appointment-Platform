@@ -26,11 +26,10 @@ export class UserService {
         headers: { Authorization: `Bearer ${sessionToken}` },
       });
       console.log(authResponse);
-      delete data.password;
     } catch (error) {
       console.log(error);
     }
-
+    delete data.password;
     const updatedProfile = await this.prisma.user.update({
       where: { id: userId },
       data: {

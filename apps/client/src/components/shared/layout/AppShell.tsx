@@ -2,7 +2,7 @@
 import { LayoutProvider } from "@/context/LayoutContext";
 import HeaderSection from "./header";
 import { ReactNode } from "react";
-import { Role } from "@repo/database";
+import { Role } from "../../../../generated/prisma/enums";
 import Sidebar, { SidebarItem } from "./sidebar";
 import { useRouter } from "next/navigation";
 
