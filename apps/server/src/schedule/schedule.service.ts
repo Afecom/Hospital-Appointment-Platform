@@ -7,7 +7,7 @@ import {
 import { DateTime } from 'luxon';
 import { CreateScheduleDto } from './dto/create-schedule.dto.js';
 import { UserSession } from '@thallesp/nestjs-better-auth';
-import { ScheduleStatus, ScheduleType } from '@repo/database';
+import { ScheduleStatus, ScheduleType } from '../../generated/prisma/enums.js';
 import { DatabaseService } from '../database/database.service.js';
 import { ScheduleFilterService } from './schedule-filter.service.js';
 import { UpdateScheduleDto } from './dto/update-schedule.dto.js';

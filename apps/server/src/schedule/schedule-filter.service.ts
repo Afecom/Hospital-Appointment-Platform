@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { ScheduleStatus, ScheduleType } from '@repo/database';
+import { ScheduleStatus, ScheduleType } from '../../generated/prisma/enums.js';
 import { DatabaseService } from '../database/database.service.js';
 import {
   normalizePagination,

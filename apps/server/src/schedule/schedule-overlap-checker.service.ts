@@ -2,7 +2,7 @@
 import { Injectable, BadRequestException } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service.js';
 import { DateTime } from 'luxon';
-import { ScheduleStatus, ScheduleType } from '@repo/database';
+import { ScheduleStatus, ScheduleType } from '../../generated/prisma/enums.js';
 
 type StatusType = ScheduleStatus;
 

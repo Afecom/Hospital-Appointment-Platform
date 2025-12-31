@@ -20,7 +20,7 @@ import { UpdateDoctorDto } from './dto/update-doctor.dto.js';
 import { applyDoctorDto } from './dto/apply-doctor.dto.js';
 import { approveDoctor } from './dto/approve-doctor.dto.js';
 import { rejectDoctor } from './dto/reject-doctor.dto.js';
-import { Role } from '@repo/database';
+import { Role } from '../../generated/prisma/enums.js';
 
 @Controller('doctor')
 export class DoctorController {

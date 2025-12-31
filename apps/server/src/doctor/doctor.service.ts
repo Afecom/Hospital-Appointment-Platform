@@ -5,7 +5,7 @@ import { DatabaseService } from '../database/database.service.js';
 import { type UserSession } from '@thallesp/nestjs-better-auth';
 import { applyDoctorDto } from './dto/apply-doctor.dto.js';
 import { rejectDoctor } from './dto/reject-doctor.dto.js';
-import { DoctorApplicationStatus } from '@repo/database';
+import { DoctorApplicationStatus } from '../../generated/prisma/enums.js';
 import {
   buildPaginationMeta,
   normalizePagination,
