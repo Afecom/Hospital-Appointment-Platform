@@ -10,7 +10,7 @@ import {
   RoleHomePages,
   DefaultRedirect,
 } from "../../../../lib/redirect-config";
-import { Role } from "@repo/database";
+import { Role } from "../../../../../generated/prisma/enums";
 
 export default function loginPage() {
   const router = useRouter();

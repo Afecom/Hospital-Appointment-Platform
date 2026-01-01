@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import { Users, UserPlus, AlertTriangle } from "lucide-react";
+import { useQueries } from "@tanstack/react-query";
 import DoctorDashboardCard from "@/components/shared/ui/DoctorDashboardCard";
 import DoctorActivityLog from "@/components/shared/ui/DoctorActivityLog";
 import api from "@/lib/axios";
@@ -23,14 +24,56 @@ const recentActivities = [
   },
 ];
 
-let totalDoctors = 0;
-let doctorApplications = 0;
-let totalInactiveDoctors = 0;
-let inactiveDoctors: any[] = [];
+const fetchTotalDoctors = () =>
+  api
+    .get("/doctor/hospital")
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error("Failed to fetch total doctors");
+    });
+
+const fetchDoctorApplication = async () =>
+  api
+    .get("/doctor/pending")
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error("Failed to fetch doctor applications");
+    });
+
+const fetchInactiveDoctors = () =>
+  api
+    .get("/doctor/hospital/inactive")
+    .then((res) => res.data)
+    .catch((err) => {
+      throw new Error("Failed to fetch inactive doctors");
+    });
 
 export default function DoctorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const result = useQueries({
+    queries: [
+      {
+        queryKey: ["totalDoctors"],
+        queryFn: fetchTotalDoctors,
+      },
+      {
+        queryKey: ["doctorApplications"],
+        queryFn: fetchDoctorApplication,
+      },
+      {
+        queryKey: ["inactiveDoctors"],
+        queryFn: fetchInactiveDoctors,
+      },
+    ],
+  });
+  const [totalDoctorsData, doctorApplicationsData, inactiveDoctorsData] =
+    result;
 
+  const totalDoctors = totalDoctorsData.data?.meta?.total ?? 2;
+  const doctorApplications = doctorApplicationsData.data?.meta?.total ?? 5;
+  const inactiveDoctors: any[] =
+    inactiveDoctorsData.data?.inactiveDoctors ?? [];
+  const totalInactiveDoctors = inactiveDoctors.length ?? 8;
   // TODO: Fetch recent doctor activities from /api/doctors/activities
 
   return (
@@ -43,12 +86,14 @@ export default function DoctorsPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <DoctorDashboardCard
           text="Total Doctors"
+          isLoading={totalDoctorsData.isFetching}
           path="/hospital-admin/doctor/list"
           data={totalDoctors}
           icon={<Users className="w-8 h-8 text-secondary" />}
         />
         <DoctorDashboardCard
           text="Doctor Applications"
+          isLoading={doctorApplicationsData.isFetching}
           path="/hospital-admin/doctor/applications"
           data={doctorApplications}
           icon={<UserPlus className="w-8 h-8 text-secondary" />}
@@ -62,6 +107,7 @@ export default function DoctorsPage() {
         </h2>
         <DoctorDashboardCard
           text="Doctors with No Schedules"
+          isLoading={inactiveDoctorsData.isFetching}
           data={totalInactiveDoctors}
           icon={<AlertTriangle className="w-8 h-8 text-yellow-500" />}
           onClick={() => setIsModalOpen(true)}
