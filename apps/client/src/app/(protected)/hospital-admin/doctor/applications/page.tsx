@@ -1,5 +1,5 @@
-"use client";
 import React from "react";
+import api from "@/lib/axios";
 
 // Mock data for doctor applications
 const doctorApplications = [
@@ -37,7 +37,12 @@ const doctorApplications = [
   },
 ];
 
-const DoctorApplicationsPage = () => {
+const DoctorApplicationsPage = async () => {
+  let pendingDoctors: any[] = [];
+  try {
+    const fetchPendingDoctors = await api.get("/doctor/pending");
+    pendingDoctors = fetchPendingDoctors.data.pendingDoctors;
+  } catch (error) {}
   const handleApprove = (id: string) => {
     console.log(`Approved doctor with id: ${id}`);
   };
@@ -94,16 +99,10 @@ const DoctorApplicationsPage = () => {
                   </div>
                 </div>
                 <div className="flex justify-end gap-3 mt-4">
-                  <button
-                    onClick={() => handleReject(app.id)}
-                    className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-800 hover:cursor-pointer transition-colors"
-                  >
+                  <button className="px-4 py-2 rounded-md bg-red-600 text-white font-semibold hover:bg-red-800 hover:cursor-pointer transition-colors">
                     Reject
                   </button>
-                  <button
-                    onClick={() => handleApprove(app.id)}
-                    className="px-4 py-2 rounded-md bg-secondary text-white font-semibold hover:bg-blue-950 hover:cursor-pointer transition-colors"
-                  >
+                  <button className="px-4 py-2 rounded-md bg-secondary text-white font-semibold hover:bg-blue-950 hover:cursor-pointer transition-colors">
                     Approve
                   </button>
                 </div>

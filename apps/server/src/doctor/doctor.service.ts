@@ -77,18 +77,30 @@ export class DoctorService {
     return await this.databaseService.doctor.delete({ where: { id } });
   }
 
-  async applyDoctor(data: applyDoctorDto, session: UserSession) {
+  async applyDoctor(dto: applyDoctorDto, session: UserSession) {
+    const { specializationIds, ...rest } = dto;
     return await this.databaseService.doctorApplication.create({
       data: {
         userId: session.user.id,
-        ...data,
+        ...rest,
+        DoctorApplicationSpecialization: {
+          create: specializationIds.map((spec) => ({
+            Specialization: { connect: { id: spec } },
+          })),
+        },
       },
     });
   }
 
   async approveDoctor(data: approveDoctor) {
     const application = await this.databaseService.doctorApplication.findUnique(
-      { where: { id: data.applicationId } },
+      {
+        where: { id: data.applicationId },
+        include: {
+          DoctorApplicationSpecialization: true,
+          Hospital: true,
+        },
+      },
     );
     if (!application)
       throw new NotFoundException(
@@ -104,38 +116,25 @@ export class DoctorService {
             userId: application.userId,
             bio: application.bio,
             yearsOfExperience: application.yearsOfExperience,
-          },
-        });
-      }
-      await tx.user.update({
-        where: { id: doctorProfile.userId },
-        data: { role: 'doctor' },
-      });
-      for (const spec of application.specializationIds) {
-        await tx.doctorSpecialization.upsert({
-          where: {
-            doctorId_specializationId: {
-              doctorId: doctorProfile.id,
-              specializationId: spec,
+            DoctorSpecialization: {
+              create: application.DoctorApplicationSpecialization.map(
+                (spec) => ({
+                  Specialization: { connect: { id: spec.specializationId } },
+                }),
+              ),
+            },
+            DoctorHospitalProfile: {
+              create: {
+                doctorType: data.doctorType,
+                slotDuration: data.slotDuration,
+                hospitalId: application.hospitalId,
+              },
             },
           },
-          update: {},
-          create: {
-            doctorId: doctorProfile.id,
-            specializationId: spec,
-          },
         });
       }
-      await tx.doctorHospitalProfile.create({
-        data: {
-          doctorId: doctorProfile.id,
-          hospitalId: application.hospitalId,
-          doctorType: data.doctorType,
-          slotDuration: data.slotDuration,
-        },
-      });
       await tx.doctorApplication.update({
-        where: { id: data.applicationId },
+        where: { id: application.id },
         data: { status: 'approved' },
       });
     });
@@ -164,7 +163,27 @@ export class DoctorService {
       };
       let pendingDoctors: any = await tx.doctorApplication.findMany({
         where: whereClause,
-        include: { User: true },
+        select: {
+          id: true,
+          yearsOfExperience: true,
+          specializationIds: true,
+          User: {
+            select: {
+              fullName: true,
+              gender: true,
+              phoneNumber: true,
+            },
+          },
+          DoctorApplicationSpecialization: {
+            select: {
+              Specialization: {
+                select: {
+                  name: true,
+                },
+              },
+            },
+          },
+        },
         skip,
         take,
       });

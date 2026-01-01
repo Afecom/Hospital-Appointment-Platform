@@ -60,19 +60,25 @@ model Doctor {
 }
 
 model DoctorApplication {
-  id                String                  @id @default(uuid())
-  createdAt         DateTime                @default(now())
-  updatedAt         DateTime                @updatedAt
-  userId            String
-  hospitalId        String
-  yearsOfExperience Int?
-  bio               String?
-  status            DoctorApplicationStatus @default(pending)
-  specializationIds String[]
-  Hospital          Hospital                @relation(fields: [hospitalId], references: [id])
-  User              User                    @relation(fields: [userId], references: [id])
+  id                              String                            @id @default(uuid())
+  createdAt                       DateTime                          @default(now())
+  updatedAt                       DateTime                          @updatedAt
+  userId                          String
+  yearsOfExperience               Int?
+  bio                             String?
+  status                          DoctorApplicationStatus           @default(pending)
+  User                            User                              @relation(fields: [userId], references: [id])
+  DoctorApplicationSpecialization DoctorApplicationSpecialization[]
+}
 
-  @@unique([userId, hospitalId])
+model DoctorApplicationSpecialization {
+  id                  String            @id @default(uuid())
+  doctorApplicationId String
+  specializationId    String
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+  DoctorApplication   DoctorApplication @relation(fields: [doctorApplicationId], references: [id])
+  Specialization      Specialization    @relation(fields: [specializationId], references: [id])
 }
 
 model DoctorHospitalProfile {
@@ -129,7 +135,6 @@ model Hospital {
   subAccountId           String
   logoId                 String
   Appointment            Appointment[]
-  DoctorApplication      DoctorApplication[]
   DoctorHospitalProfile  DoctorHospitalProfile[]
   User                   User                     @relation(fields: [adminId], references: [id])
   HospitalSpecialization HospitalSpecialization[]
@@ -257,15 +262,16 @@ model Slot {
 }
 
 model Specialization {
-  id                     String                   @id @default(uuid())
-  name                   String                   @unique
-  createdAt              DateTime                 @default(now())
-  description            String
-  imageURL               String?
-  slug                   String?
-  updatedAt              DateTime                 @updatedAt
-  DoctorSpecialization   DoctorSpecialization[]
-  HospitalSpecialization HospitalSpecialization[]
+  id                              String                            @id @default(uuid())
+  name                            String                            @unique
+  createdAt                       DateTime                          @default(now())
+  description                     String
+  imageURL                        String?
+  slug                            String?
+  updatedAt                       DateTime                          @updatedAt
+  DoctorSpecialization            DoctorSpecialization[]
+  HospitalSpecialization          HospitalSpecialization[]
+  DoctorApplicationSpecialization DoctorApplicationSpecialization[]
 
   @@index([name])
 }

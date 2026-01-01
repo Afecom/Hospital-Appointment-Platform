@@ -60,7 +60,7 @@ export default async function adminDashboardFunction() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <DashboardCard
             text="Doctor Approvals"
-            path="/hospital-admin/doctor/review"
+            path="/hospital-admin/doctor/applications"
             data={totalPendingDoctors}
             icon={<BriefcaseMedical className="w-8 h-8 text-secondary" />}
           />
