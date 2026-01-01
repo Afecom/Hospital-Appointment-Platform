@@ -43,17 +43,18 @@ model AuditLog {
 }
 
 model Doctor {
-  id                    String                  @id @default(uuid())
-  userId                String                  @unique
+  id                    String                      @id @default(uuid())
+  userId                String                      @unique
   yearsOfExperience     Int?
   bio                   String?
-  createdAt             DateTime                @default(now())
-  updatedAt             DateTime                @updatedAt
-  isDeactivated         Boolean                 @default(false)
+  createdAt             DateTime                    @default(now())
+  updatedAt             DateTime                    @updatedAt
+  isDeactivated         Boolean                     @default(false)
   Appointment           Appointment[]
-  User                  User                    @relation(fields: [userId], references: [id])
+  User                  User                        @relation(fields: [userId], references: [id])
   DoctorHospitalProfile DoctorHospitalProfile[]
   DoctorSpecialization  DoctorSpecialization[]
+  HospitalApplications  DoctorHospitalApplication[]
   Review                Review[]
   SavedDoctorHospital   SavedDoctorHospital[]
   Schedule              Schedule[]
@@ -64,15 +65,21 @@ model DoctorApplication {
   createdAt                       DateTime                          @default(now())
   updatedAt                       DateTime                          @updatedAt
   userId                          String
-  hospitalId                      String
   yearsOfExperience               Int?
   bio                             String?
   status                          DoctorApplicationStatus           @default(pending)
-  Hospital                        Hospital                          @relation(fields: [hospitalId], references: [id])
   User                            User                              @relation(fields: [userId], references: [id])
   DoctorApplicationSpecialization DoctorApplicationSpecialization[]
+}
 
-  @@unique([userId, hospitalId])
+model DoctorHospitalApplication {
+  id         String   @id @default(uuid())
+  doctorId   String
+  hospitalId String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  Doctor     Doctor   @relation(fields: [doctorId], references: [id])
+  Hospital   Hospital @relation(fields: [hospitalId], references: [id])
 }
 
 model DoctorApplicationSpecialization {
@@ -112,9 +119,9 @@ model DoctorSpecialization {
 }
 
 model Hospital {
-  id                     String                   @id @default(uuid())
-  adminId                String                   @unique
-  name                   String                   @unique
+  id                     String                      @id @default(uuid())
+  adminId                String                      @unique
+  name                   String                      @unique
   description            String
   address                String
   city                   String
@@ -125,24 +132,26 @@ model Hospital {
   website                String?
   openTime               DateTime?
   closeTime              DateTime?
-  is24Hours              Boolean                  @default(false)
-  emergencySupport       Boolean                  @default(true)
-  rating                 Decimal?                 @db.Decimal(3, 2)
-  reviewCount            Int                      @default(0)
+  is24Hours              Boolean                     @default(false)
+  emergencySupport       Boolean                     @default(true)
+  rating                 Decimal?                    @db.Decimal(3, 2)
+  reviewCount            Int                         @default(0)
   logoUrl                String
-  createdAt              DateTime                 @default(now())
-  updatedAt              DateTime                 @updatedAt
-  isDeactivated          Boolean                  @default(false)
+  createdAt              DateTime                    @default(now())
+  updatedAt              DateTime                    @updatedAt
+  isDeactivated          Boolean                     @default(false)
   fee                    Decimal
   type                   HospitalType
-  timezone               String                   @default("Africa/Addis_Ababa")
+  timezone               String                      @default("Africa/Addis_Ababa")
   subAccountId           String
   logoId                 String
   Appointment            Appointment[]
-  DoctorApplication      DoctorApplication[]
   DoctorHospitalProfile  DoctorHospitalProfile[]
-  User                   User                     @relation(fields: [adminId], references: [id])
+  Admin                  User                        @relation(name: "Hospitaladmin", fields: [adminId], references: [id])
+  Operator               User[]                      @relation(name: "HospitalOperator")
+  User                   User[]                      @relation(name: "HospitalUser")
   HospitalSpecialization HospitalSpecialization[]
+  DoctorApplications     DoctorHospitalApplication[]
   Review                 Review[]
   SavedDoctorHospital    SavedDoctorHospital[]
   Schedule               Schedule[]
@@ -302,7 +311,9 @@ model User {
   AuditLog                                 AuditLog[]
   Doctor                                   Doctor?
   DoctorApplication                        DoctorApplication[]
-  Hospital                                 Hospital?
+  Hospitaladmin                            Hospital?             @relation(name: "Hospitaladmin")
+  HospitalOperator                         Hospital?             @relation(name: "HospitalOperator", fields: [OperatorHospitalId], references: [id])
+  HospitalUser                             Hospital?             @relation(name: "HospitalUser", fields: [UserHospitalId], references: [id])
   Notification                             Notification[]
   Payment                                  Payment[]
   Review                                   Review[]
@@ -311,6 +322,8 @@ model User {
   SearchLog                                SearchLog[]
   account                                  account[]
   session                                  session[]
+  OperatorHospitalId                       String?
+  UserHospitalId                           String?
 
   @@index([phoneNumber, fullName])
 }

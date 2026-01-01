@@ -121,7 +121,6 @@ model DoctorSpecialization {
 model Hospital {
   id                     String                      @id @default(uuid())
   adminId                String                      @unique
-  operatorId             String                      @unique
   name                   String                      @unique
   description            String
   address                String
