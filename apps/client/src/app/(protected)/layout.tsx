@@ -12,7 +12,6 @@ export default async function ProtectedLayout({
   const session = await auth.api.getSession({
     headers: await headers(),
   });
-  console.log(session);
   if (!session) redirect("/auth/login", RedirectType.replace);
   return <AppShell user={session.user}>{children}</AppShell>;
 }

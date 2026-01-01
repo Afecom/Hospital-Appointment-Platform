@@ -63,34 +63,37 @@ export class DoctorController {
   }
 
   @Get(':id')
-  @Roles([Role.admin])
+  @Roles([Role.admin, Role.hospital_admin])
   findOne(@Param('id') id: string) {
     return this.doctorService.findOne(id);
   }
 
   @Patch(':id')
+  @Roles([Role.doctor, Role.admin])
   update(@Param('id') id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
     return this.doctorService.update(id, updateDoctorDto);
   }
 
   @Delete(':id')
+  @Roles([Role.doctor, Role.admin])
   remove(@Param('id') id: string) {
     return this.doctorService.remove(id);
   }
 
   @Post('apply')
+  @Roles([Role.user])
   apply(@Body() body: applyDoctorDto, @Session() session: UserSession) {
     return this.doctorService.applyDoctor(body, session);
   }
 
   @Post('approve-request')
-  @Roles([Role.admin])
+  @Roles([Role.admin, Role.hospital_admin])
   approve(@Body() body: approveDoctor) {
     return this.doctorService.approveDoctor(body);
   }
 
   @Post('reject-request')
-  @Roles([Role.hospital_admin])
+  @Roles([Role.hospital_admin, Role.admin])
   reject(@Body() body: rejectDoctor) {
     return this.doctorService.rejectDoctor(body);
   }
