@@ -15,6 +15,7 @@ export class HospitalService {
   async create(DTO: CreateHospitalDto, logoUrl: string, logoId: string) {
     const { specializationIds, accountName, accountNumber, bankName, ...rest } =
       DTO;
+    console.log(specializationIds);
     const chapaBanks = (await chapaAxios.get('/banks')).data;
     const bankCode = chapaBanks.data.find(
       (bank: any) => bank.name === bankName,

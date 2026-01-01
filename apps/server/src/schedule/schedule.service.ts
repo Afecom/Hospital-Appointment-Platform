@@ -122,8 +122,8 @@ export class ScheduleService {
       status,
       ...(type && { type }),
       ...(doctorId && { doctorId }),
-      doctor: {
-        hospitals: {
+      Doctor: {
+        DoctorHospitalProfile: {
           some: { hospitalId },
         },
       },

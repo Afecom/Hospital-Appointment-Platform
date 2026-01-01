@@ -85,7 +85,9 @@ export class ScheduleController {
     @Param('id') scheduleId: string,
     @Body() data: UpdateScheduleDto,
     @Session() session: UserSession,
-  ) {}
+  ) {
+    return this.scheduleService.updateSchedule(data, session, scheduleId);
+  }
 
   @Delete(':id')
   @Roles([Role.doctor])
