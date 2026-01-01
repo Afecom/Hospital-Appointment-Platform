@@ -182,6 +182,22 @@ export class DoctorService {
     });
   }
 
+  async countPendingDoctors(session: UserSession) {
+    return await this.databaseService.$transaction(async (tx) => {
+      const adminId = session.user.id;
+      const hospital = await tx.hospital.findUniqueOrThrow({
+        where: { adminId },
+      });
+      const hospitalId = hospital.id;
+      const pendingDoctors = await tx.doctorApplication.count({
+        where: {
+          hospitalId,
+          status: 'pending',
+        },
+      });
+      return pendingDoctors;
+    });
+  }
   async getHospitalDoctors(session: UserSession, page: number, limit: number) {
     const adminId = session.user.id;
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
@@ -254,6 +270,20 @@ export class DoctorService {
         inactiveDoctors,
         meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
       };
+    });
+  }
+
+  async countHospitalDoctors(session: UserSession) {
+    return await this.databaseService.$transaction(async (tx) => {
+      const adminId = session.user.id;
+      const hospital = await tx.hospital.findUniqueOrThrow({
+        where: { adminId },
+      });
+      const hospitalId = hospital.id;
+      const total = await tx.doctorHospitalProfile.count({
+        where: { hospitalId },
+      });
+      return total;
     });
   }
 }

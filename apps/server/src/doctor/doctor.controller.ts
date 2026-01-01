@@ -42,6 +42,12 @@ export class DoctorController {
     return this.doctorService.getPendingDoctors(session, page, limit);
   }
 
+  @Get('pending/count')
+  @Roles([Role.hospital_admin])
+  countPendingDoctors(@Session() session: UserSession) {
+    return this.doctorService.countPendingDoctors(session);
+  }
+
   @Get('hospital')
   @Roles([Role.hospital_admin])
   hospitalDoctors(
@@ -50,6 +56,12 @@ export class DoctorController {
     @Query('limit') limit: number,
   ) {
     return this.doctorService.getHospitalDoctors(session, page, limit);
+  }
+
+  @Get('hospital/count')
+  @Roles([Role.hospital_admin])
+  CountHospitalDoctors(@Session() session: UserSession) {
+    return this.doctorService.countHospitalDoctors(session);
   }
 
   @Get('hospital/inactive')
