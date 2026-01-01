@@ -133,6 +133,12 @@ export class DoctorService {
           },
         });
       }
+      await tx.doctor.update({
+        where: { id: doctorProfile.id },
+        data: {
+          bio: application.bio,
+        },
+      });
       await tx.doctorApplication.update({
         where: { id: application.id },
         data: { status: 'approved' },
