@@ -9,22 +9,22 @@ let totalDoctors = 0;
 let totalAppointments = 0;
 let hospitalName = "";
 let hospitalSlogan = "";
-try {
-  const PendingDoctors = await api.get("/doctor/pending");
-  totalPendingDoctors = PendingDoctors.data.meta.total;
-  const PendingSchedules = await api.get("/schedule");
-  totalPendingSchedules = PendingSchedules.data.meta.total;
-  const totalDoctorsReq = await api.get("/doctor/hospital");
-  totalDoctors = totalDoctorsReq.data.meta.total;
-  hospitalName = totalDoctorsReq.data.hospital.name;
-  hospitalSlogan = totalDoctorsReq.data.hospital.description;
-  const appointments = await api.get("/appointment");
-  totalAppointments = appointments.data.meta.total;
-} catch (error) {
-  console.warn(error);
-}
 
 export default async function adminDashboardFunction() {
+  try {
+    const PendingDoctors = await api.get("/doctor/pending");
+    totalPendingDoctors = PendingDoctors.data.meta.total;
+    const PendingSchedules = await api.get("/schedule");
+    totalPendingSchedules = PendingSchedules.data.meta.total;
+    const totalDoctorsReq = await api.get("/doctor/hospital");
+    totalDoctors = totalDoctorsReq.data.meta.total;
+    hospitalName = totalDoctorsReq.data.hospital.name;
+    hospitalSlogan = totalDoctorsReq.data.hospital.description;
+    const appointments = await api.get("/appointment");
+    totalAppointments = appointments.data.meta.total;
+  } catch (error) {
+    console.warn(error);
+  }
   // Mock data for recent activities
   const recentActivities = [
     {

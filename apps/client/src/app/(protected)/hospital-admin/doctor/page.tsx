@@ -27,17 +27,6 @@ let totalDoctors = 0;
 let doctorApplications = 0;
 let totalInactiveDoctors = 0;
 let inactiveDoctors: any[] = [];
-try {
-  const totalDoctorsReq = await api.get("/doctor/hospital");
-  totalDoctors = totalDoctorsReq.data.meta.total;
-  const doctorApplicationsReq = await api.get("/doctor/pending");
-  doctorApplications = doctorApplicationsReq.data.meta.total;
-  const inactiveDoctorsReq = await api.get("/doctor/hospital/inactive");
-  inactiveDoctors = inactiveDoctorsReq.data.inactiveDoctors;
-  totalInactiveDoctors = inactiveDoctorsReq.data.meta.total;
-} catch (error) {
-  console.warn(error);
-}
 
 export default function DoctorsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
