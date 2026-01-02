@@ -1,15 +1,22 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateDoctorDto } from './dto/update-doctor.dto.js';
-import { approveDoctor } from './dto/approve-doctor.dto.js';
+import {
+  approveDoctor,
+  rejectDoctor,
+} from './dto/approve-reject-doctor.dto.js';
 import { DatabaseService } from '../database/database.service.js';
 import { type UserSession } from '@thallesp/nestjs-better-auth';
-import { applyDoctorDto } from './dto/apply-doctor.dto.js';
-import { rejectDoctor } from './dto/reject-doctor.dto.js';
+import { applyHospitalDoctorDto } from './dto/apply-hospital-doctor.dto.js';
 import { DoctorApplicationStatus } from '../../generated/prisma/enums.js';
 import {
   buildPaginationMeta,
   normalizePagination,
 } from '../common/pagination/pagination.js';
+import { applyDoctor } from './dto/apply-doctor.dto.js';
+import {
+  approveHospitalDoctor,
+  rejectHospitalDoctor,
+} from './dto/approve-reject-hospital-doctor.dto.js';
 
 @Injectable()
 export class DoctorService {
@@ -77,78 +84,82 @@ export class DoctorService {
     return await this.databaseService.doctor.delete({ where: { id } });
   }
 
-  async applyDoctor(dto: applyDoctorDto, session: UserSession) {
-    const { specializationIds, ...rest } = dto;
+  async applyHospitalDoctor(dto: applyHospitalDoctorDto, session: UserSession) {
+    const userId = session.user.id;
+    const { hospitalIds } = dto;
+    const doctorProfile = await this.databaseService.doctor.findUniqueOrThrow({
+      where: { userId },
+    });
+    const hospitals = await this.databaseService.hospital.findMany({
+      where: { id: { in: hospitalIds } },
+    });
+    if (hospitals.length !== hospitalIds.length)
+      throw new Error('Invalid hospital ids');
+    return await this.databaseService.$transaction(async (tx) => {
+      hospitalIds.map(async (hospitalId) => {
+        return await tx.doctorHospitalApplication.create({
+          data: {
+            doctorId: doctorProfile.id,
+            hospitalId,
+          },
+        });
+      });
+    });
+  }
+
+  async approveHospitalDoctor(dto: approveHospitalDoctor) {
+    const { applicationId, ...rest } = dto;
+    const application =
+      await this.databaseService.doctorHospitalApplication.findUniqueOrThrow({
+        where: { id: applicationId },
+      });
+    return await this.databaseService.doctorHospitalApplication.update({
+      where: { id: application.id },
+      data: {
+        ...rest,
+        status: 'approved',
+      },
+    });
+  }
+  async rejectHospitalDoctor(dto: rejectHospitalDoctor) {
+    const application =
+      await this.databaseService.doctorHospitalApplication.findUniqueOrThrow({
+        where: { id: dto.applicationId },
+      });
+    return await this.databaseService.doctorHospitalApplication.update({
+      where: { id: application.id },
+      data: { status: 'rejected' },
+    });
+  }
+
+  async applyDoctor(dto: applyDoctor, session: UserSession) {
     return await this.databaseService.doctorApplication.create({
       data: {
         userId: session.user.id,
-        ...rest,
-        DoctorApplicationSpecialization: {
-          create: specializationIds.map((spec) => ({
-            Specialization: { connect: { id: spec } },
-          })),
-        },
+        ...dto,
       },
     });
   }
 
   async approveDoctor(data: approveDoctor) {
-    const application = await this.databaseService.doctorApplication.findUnique(
-      {
+    const doctorApplication =
+      await this.databaseService.doctorApplication.findUniqueOrThrow({
         where: { id: data.applicationId },
-        include: {
-          DoctorApplicationSpecialization: true,
-          Hospital: true,
-        },
-      },
-    );
-    if (!application)
-      throw new NotFoundException(
-        'A doctor application was not found with the provided ID',
-      );
-    return await this.databaseService.$transaction(async (tx) => {
-      let doctorProfile = await tx.doctor.findUnique({
-        where: { userId: application.userId },
       });
-      if (!doctorProfile) {
-        doctorProfile = await tx.doctor.create({
-          data: {
-            userId: application.userId,
-            bio: application.bio,
-            yearsOfExperience: application.yearsOfExperience,
-            DoctorSpecialization: {
-              create: application.DoctorApplicationSpecialization.map(
-                (spec) => ({
-                  Specialization: { connect: { id: spec.specializationId } },
-                }),
-              ),
-            },
-            DoctorHospitalProfile: {
-              create: {
-                doctorType: data.doctorType,
-                slotDuration: data.slotDuration,
-                hospitalId: application.hospitalId,
-              },
-            },
-          },
-        });
-      }
-      await tx.doctor.update({
-        where: { id: doctorProfile.id },
-        data: {
-          bio: application.bio,
-        },
-      });
-      await tx.doctorApplication.update({
-        where: { id: application.id },
-        data: { status: 'approved' },
-      });
+    return await this.databaseService.doctorApplication.update({
+      where: { id: doctorApplication.id },
+      data: { status: 'approved' },
     });
   }
 
   async rejectDoctor(data: rejectDoctor) {
+    const doctorApplication =
+      await this.databaseService.doctorApplication.findUniqueOrThrow({
+        where: { id: data.applicationId },
+      });
+
     return await this.databaseService.doctorApplication.update({
-      where: { id: data.applicationId },
+      where: { id: doctorApplication.id },
       data: { status: 'rejected' },
     });
   }

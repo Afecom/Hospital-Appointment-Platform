@@ -8,19 +8,20 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import {
-  Session,
-  type UserSession,
-  Roles,
-  AllowAnonymous,
-  OptionalAuth,
-} from '@thallesp/nestjs-better-auth';
+import { Session, type UserSession, Roles } from '@thallesp/nestjs-better-auth';
 import { DoctorService } from './doctor.service.js';
 import { UpdateDoctorDto } from './dto/update-doctor.dto.js';
-import { applyDoctorDto } from './dto/apply-doctor.dto.js';
-import { approveDoctor } from './dto/approve-doctor.dto.js';
-import { rejectDoctor } from './dto/reject-doctor.dto.js';
+import { applyHospitalDoctorDto } from './dto/apply-hospital-doctor.dto.js';
+import {
+  approveDoctor,
+  rejectDoctor,
+} from './dto/approve-reject-doctor.dto.js';
 import { Role } from '../../generated/prisma/enums.js';
+import { applyDoctor } from './dto/apply-doctor.dto.js';
+import {
+  approveHospitalDoctor,
+  rejectHospitalDoctor,
+} from './dto/approve-reject-hospital-doctor.dto.js';
 
 @Controller('doctor')
 export class DoctorController {
@@ -92,20 +93,38 @@ export class DoctorController {
     return this.doctorService.remove(id);
   }
 
+  @Post('apply/hospital')
+  @Roles([Role.doctor])
+  apply(@Body() body: applyHospitalDoctorDto, @Session() session: UserSession) {
+    return this.doctorService.applyHospitalDoctor(body, session);
+  }
+
+  @Patch('hospital/approve')
+  @Roles([Role.hospital_admin])
+  approveHospitalDoctor(@Body() body: approveHospitalDoctor) {
+    return this.doctorService.approveHospitalDoctor(body);
+  }
+
+  @Patch('hospital/approve')
+  @Roles([Role.hospital_admin])
+  rejectHospitalDoctor(@Body() body: rejectHospitalDoctor) {
+    return this.doctorService.rejectHospitalDoctor(body);
+  }
+
   @Post('apply')
   @Roles([Role.user])
-  apply(@Body() body: applyDoctorDto, @Session() session: UserSession) {
+  applyDoctor(@Body() body: applyDoctor, @Session() session: UserSession) {
     return this.doctorService.applyDoctor(body, session);
   }
 
-  @Post('approve-request')
-  @Roles([Role.admin, Role.hospital_admin])
+  @Patch('approve')
+  @Roles([Role.admin])
   approve(@Body() body: approveDoctor) {
     return this.doctorService.approveDoctor(body);
   }
 
-  @Post('reject-request')
-  @Roles([Role.hospital_admin, Role.admin])
+  @Patch('reject')
+  @Roles([Role.admin])
   reject(@Body() body: rejectDoctor) {
     return this.doctorService.rejectDoctor(body);
   }

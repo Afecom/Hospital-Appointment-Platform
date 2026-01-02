@@ -1,18 +1,15 @@
-import { IsString, IsOptional, IsNotEmpty, IsInt, IsArray, isArray } from "class-validator";
+import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
 
-export class applyDoctorDto {
+export class applyDoctor {
+  @IsString()
+  @IsOptional()
+  bio: string;
 
-    @IsString()
-    @IsNotEmpty()
-    hospitalId: string
+  @IsString()
+  @IsNotEmpty()
+  yearsOfExperience: number;
 
-    @IsInt()
-    yearsOfExperience: number
-
-    @IsOptional()
-    @IsString()
-    bio: string
-
-    @IsArray()
-    specializationIds: string[]
+  @IsArray()
+  @IsNotEmpty()
+  specializationIds: string[];
 }

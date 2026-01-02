@@ -73,13 +73,16 @@ model DoctorApplication {
 }
 
 model DoctorHospitalApplication {
-  id         String   @id @default(uuid())
+  id         String                          @id @default(uuid())
   doctorId   String
   hospitalId String
-  createdAt  DateTime @default(now())
-  updatedAt  DateTime @updatedAt
-  Doctor     Doctor   @relation(fields: [doctorId], references: [id])
-  Hospital   Hospital @relation(fields: [hospitalId], references: [id])
+  status     DoctorHospitalApplicationStatus @default(pending)
+  createdAt  DateTime                        @default(now())
+  updatedAt  DateTime                        @updatedAt
+  Doctor     Doctor                          @relation(fields: [doctorId], references: [id])
+  Hospital   Hospital                        @relation(fields: [hospitalId], references: [id])
+
+  @@unique([doctorId, hospitalId])
 }
 
 model DoctorApplicationSpecialization {
@@ -422,6 +425,12 @@ enum ScheduleType {
   recurring
   temporary
   one_time
+}
+
+enum DoctorHospitalApplicationStatus {
+  pending
+  approved
+  rejected
 }
 
 enum SlotStatus {
