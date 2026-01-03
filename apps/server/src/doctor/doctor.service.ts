@@ -7,7 +7,10 @@ import {
 import { DatabaseService } from '../database/database.service.js';
 import { type UserSession } from '@thallesp/nestjs-better-auth';
 import { applyHospitalDoctorDto } from './dto/apply-hospital-doctor.dto.js';
-import { DoctorApplicationStatus } from '../../generated/prisma/enums.js';
+import {
+  DoctorApplicationStatus,
+  DoctorHospitalApplicationStatus,
+} from '../../generated/prisma/enums.js';
 import {
   buildPaginationMeta,
   normalizePagination,
@@ -164,7 +167,11 @@ export class DoctorService {
     });
   }
 
-  async getPendingDoctors(session: UserSession, page: number, limit: number) {
+  async getPendingHospitalDoctors(
+    session: UserSession,
+    page: number,
+    limit: number,
+  ) {
     const adminId = session.user.id;
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
       { page, limit },
@@ -176,56 +183,43 @@ export class DoctorService {
       const hospitalId = hospital.id;
       const whereClause = {
         hospitalId,
-        status: 'pending' as DoctorApplicationStatus,
+        status: 'pending' as DoctorHospitalApplicationStatus,
       };
-      let pendingDoctors: any = await tx.doctorApplication.findMany({
-        where: whereClause,
-        select: {
-          id: true,
-          yearsOfExperience: true,
-          specializationIds: true,
-          User: {
-            select: {
-              fullName: true,
-              gender: true,
-              phoneNumber: true,
-            },
-          },
-          DoctorApplicationSpecialization: {
-            select: {
-              Specialization: {
-                select: {
-                  name: true,
+      const pendingHospitalDoctors =
+        await tx.doctorHospitalApplication.findMany({
+          where: whereClause,
+          include: {
+            Doctor: {
+              include: {
+                User: {
+                  select: {
+                    fullName: true,
+                    phoneNumber: true,
+                    imageUrl: true,
+                  },
                 },
               },
             },
           },
-        },
-        skip,
-        take,
-      });
-      let total = await tx.doctorApplication.count({
+        });
+      const total = await tx.doctorHospitalApplication.count({
         where: whereClause,
       });
-      if (pendingDoctors.length === 0) {
-        pendingDoctors = {};
-        total = 0;
-      }
       return {
-        pendingDoctors,
+        pendingHospitalDoctors,
         meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
       };
     });
   }
 
-  async countPendingDoctors(session: UserSession) {
+  async countPendingHospitalDoctors(session: UserSession) {
     return await this.databaseService.$transaction(async (tx) => {
       const adminId = session.user.id;
       const hospital = await tx.hospital.findUniqueOrThrow({
         where: { adminId },
       });
       const hospitalId = hospital.id;
-      const pendingDoctors = await tx.doctorApplication.count({
+      const pendingDoctors = await tx.doctorHospitalApplication.count({
         where: {
           hospitalId,
           status: 'pending',
