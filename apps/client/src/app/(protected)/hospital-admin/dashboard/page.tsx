@@ -1,26 +1,76 @@
 import DashboardCard from "@/components/shared/ui/dasboardCard";
 import LogCardComponent from "@/components/shared/ui/logCard";
 import { User, BriefcaseMedical, ClipboardClock, Calendar } from "lucide-react";
-import api from "@/lib/axios";
+import { headers } from "next/headers";
 
-let totalPendingDoctors = 0;
-let totalPendingSchedules = 0;
-let totalDoctors = 0;
-let totalAppointments = 0;
-let hospitalName = "";
-let hospitalSlogan = "";
+async function getData() {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const fetchOptions = {
+    cache: "no-store" as RequestCache,
+    headers: await headers(),
+  };
 
-export default async function adminDashboardFunction() {
   try {
-    totalPendingDoctors = await api.get("/doctor/hospital/pending/count");
-    const PendingSchedules = await api.get("/schedule");
-    totalPendingSchedules = PendingSchedules.data.meta.total;
-    totalDoctors = await api.get("/doctor/hospital");
-    const appointments = await api.get("/appointment");
-    totalAppointments = appointments.data.meta.total;
+    const [
+      pendingDoctorsRes,
+      pendingSchedulesRes,
+      totalDoctorsRes,
+      appointmentsRes,
+      hospitalRes,
+    ] = await Promise.all([
+      fetch(`${apiBaseUrl}/doctor/hospital/pending/count`, fetchOptions),
+      fetch(`${apiBaseUrl}/schedule/pending/count`, fetchOptions),
+      fetch(`${apiBaseUrl}/doctor/hospital/count`, fetchOptions),
+      fetch(`${apiBaseUrl}/appointment/pending/count`, fetchOptions),
+      fetch(`${apiBaseUrl}/hospital/unique`, fetchOptions),
+    ]);
+
+    if (!pendingDoctorsRes.ok)
+      throw new Error("Failed to fetch pending doctors");
+    if (!pendingSchedulesRes.ok)
+      throw new Error("Failed to fetch pending schedules");
+    if (!totalDoctorsRes.ok) throw new Error("Failed to fetch total doctors");
+    if (!appointmentsRes.ok)
+      throw new Error("Failed to fetch pending appointments");
+    if (!hospitalRes.ok)
+      throw new Error("Failed to fetch pending appointments");
+
+    const pendingDoctorsData = await pendingDoctorsRes.json();
+    const pendingSchedulesData = await pendingSchedulesRes.json();
+    const totalDoctorsData = await totalDoctorsRes.json();
+    const appointmentsData = await appointmentsRes.json();
+    const hospitalData = await hospitalRes.json();
+
+    return {
+      totalPendingDoctors: pendingDoctorsData.pendingDoctors,
+      totalPendingSchedules: pendingSchedulesData.pendingSchedules,
+      totalDoctors: totalDoctorsData.total,
+      totalPendingAppointments: appointmentsData.totalAppointments,
+      hospitalName: hospitalData.data.name,
+      hospitalSlogan: hospitalData.data.slogan,
+    };
   } catch (error) {
-    console.warn(error);
+    return {
+      totalPendingDoctors: 0,
+      totalPendingSchedules: 0,
+      totalDoctors: 0,
+      totalPendingAppointments: 0,
+      hospitalName: "Hospital",
+      hospitalSlogan: "Error loading data",
+    };
   }
+}
+
+export default async function AdminDashboardFunction() {
+  const {
+    totalPendingDoctors,
+    totalPendingSchedules,
+    totalDoctors,
+    totalPendingAppointments,
+    hospitalName,
+    hospitalSlogan,
+  } = await getData();
+
   // Mock data for recent activities
   const recentActivities = [
     {
@@ -85,8 +135,8 @@ export default async function adminDashboardFunction() {
             icon={<BriefcaseMedical className="w-8 h-8 text-secondary" />}
           />
           <DashboardCard
-            text="Total Visits"
-            data={totalAppointments}
+            text="Upcoming Visits"
+            data={totalPendingAppointments}
             active={13}
             icon={<ClipboardClock className="w-8 h-8 text-secondary" />}
           />

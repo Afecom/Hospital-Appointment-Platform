@@ -225,7 +225,10 @@ export class DoctorService {
           status: 'pending',
         },
       });
-      return pendingDoctors;
+      return {
+        message: 'Pending hospital doctors counted successfully',
+        pendingDoctors,
+      };
     });
   }
   async getHospitalDoctors(session: UserSession, page: number, limit: number) {
@@ -313,7 +316,10 @@ export class DoctorService {
       const total = await tx.doctorHospitalProfile.count({
         where: { hospitalId },
       });
-      return total;
+      return {
+        message: 'Doctors counted successfully',
+        total,
+      };
     });
   }
 }

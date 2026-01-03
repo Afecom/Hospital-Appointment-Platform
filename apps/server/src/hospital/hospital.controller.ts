@@ -13,7 +13,7 @@ import {
 import { HospitalService } from './hospital.service.js';
 import { CreateHospitalDto } from './dto/create-hospital.dto.js';
 import { UpdateHospitalDto } from './dto/update-hospital.dto.js';
-import { Roles } from '@thallesp/nestjs-better-auth';
+import { Roles, Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { Role } from '../../generated/prisma/enums.js';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
@@ -26,7 +26,7 @@ export class HospitalController {
   ) {}
 
   @Post()
-  @Roles([Role.hospital_admin])
+  @Roles([Role.admin])
   @UseInterceptors(FileInterceptor('profilePicture'))
   async create(
     @Body(ValidationPipe) createHospitalDto: CreateHospitalDto,
@@ -55,12 +55,13 @@ export class HospitalController {
     return this.hospitalService.findAll();
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.hospitalService.findOne(id);
+  @Get('unique')
+  findOne(@Session() session: UserSession) {
+    return this.hospitalService.findOne(session);
   }
 
   @Patch(':id')
+  @Roles([Role.admin])
   update(
     @Param('id') id: string,
     @Body(ValidationPipe) updateHospitalDto: UpdateHospitalDto,
@@ -69,6 +70,7 @@ export class HospitalController {
   }
 
   @Delete(':id')
+  @Roles([Role.admin])
   remove(@Param('id') id: string) {
     return this.hospitalService.remove(id);
   }

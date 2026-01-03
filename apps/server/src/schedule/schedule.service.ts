@@ -162,6 +162,21 @@ export class ScheduleService {
 
   async countPendingHospitalSchedules(session: UserSession) {
     const adminId = session.user.id;
+    const hospital = await this.prisma.hospital.findUniqueOrThrow({
+      where: { adminId },
+    });
+    const hospitalId = hospital.id;
+    const whereClause = {
+      hospitalId,
+      status: 'pending' as ScheduleStatus,
+    };
+    const pendingSchedules = await this.prisma.schedule.count({
+      where: whereClause,
+    });
+    return {
+      message: 'Schedules counted successfully',
+      pendingSchedules,
+    };
   }
 
   async approve(id: string, session: UserSession, status: ScheduleStatus) {

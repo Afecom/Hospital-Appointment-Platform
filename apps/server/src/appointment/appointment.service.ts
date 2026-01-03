@@ -7,7 +7,7 @@ import { DatabaseService } from '../database/database.service.js';
 import { createAppointmentDto } from './dto/create-appointment.dto.js';
 import { updateAppointment } from './dto/update-appointment.dto.js';
 import { UserSession } from '@thallesp/nestjs-better-auth';
-import { Role } from '../../generated/prisma/enums.js';
+import { AppointmentStatus, Role } from '../../generated/prisma/enums.js';
 import {
   normalizePagination,
   buildPaginationMeta,
@@ -86,7 +86,7 @@ export class appointmentService {
   }
   async findAll(session: UserSession, page: number, limit: number) {
     const userRole = session.user.role as Role;
-    let whereClause: {};
+    let whereClause = {};
     if (userRole === 'hospital_admin') {
       const adminId = session.user.id;
       const hospital = await this.prisma.hospital.findUniqueOrThrow({
@@ -96,7 +96,7 @@ export class appointmentService {
         hospitalId: hospital.id,
       };
     }
-    whereClause = {};
+    if (userRole === 'admin') whereClause = {};
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
       {
         page,
@@ -117,6 +117,26 @@ export class appointmentService {
       meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
     };
   }
+
+  async countPendingHospitalAppointments(session: UserSession) {
+    const adminId = session.user.id;
+    const hospital = await this.prisma.hospital.findUniqueOrThrow({
+      where: { adminId },
+    });
+    const hospitalId = hospital.id;
+    const whereClause = {
+      hospitalId,
+      status: 'pending' as AppointmentStatus,
+    };
+    const totalAppointments = await this.prisma.appointment.count({
+      where: whereClause,
+    });
+    return {
+      message: 'Appointments counted successfully',
+      totalAppointments,
+    };
+  }
+
   async updateOne(id: string, dto: updateAppointment, session: UserSession) {
     const appointment = await this.prisma.appointment.findUnique({
       where: { id },

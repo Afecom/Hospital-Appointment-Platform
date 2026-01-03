@@ -5,9 +5,6 @@ import {
   Patch,
   Body,
   Param,
-  Headers,
-  HttpCode,
-  HttpStatus,
   Query,
 } from '@nestjs/common';
 import { Session, type UserSession, Roles } from '@thallesp/nestjs-better-auth';
@@ -15,7 +12,6 @@ import { createAppointmentDto } from './dto/create-appointment.dto.js';
 import { appointmentService } from './appointment.service.js';
 import { Role } from '../../generated/prisma/enums.js';
 import { updateAppointment } from './dto/update-appointment.dto.js';
-import { chapaWebhookPayload } from './dto/chapa-webhook-payload.dto.js';
 
 //TODO: SETUP A WEBHOOK FOR CHAPA
 
@@ -37,6 +33,12 @@ export class appointmentController {
     @Query('limit') limit: number,
   ) {
     return this.appointment.findAll(session, page, limit);
+  }
+
+  @Get('pending/count')
+  @Roles([Role.hospital_admin, Role.admin])
+  countPendingAppointments(@Session() session: UserSession) {
+    return this.appointment.countPendingHospitalAppointments(session);
   }
 
   @Get(':id')

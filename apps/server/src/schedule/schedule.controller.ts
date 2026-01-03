@@ -69,6 +69,12 @@ export class ScheduleController {
     );
   }
 
+  @Get('pending/count')
+  @Roles([Role.hospital_admin])
+  countPendingSchedules(@Session() session: UserSession) {
+    return this.scheduleService.countPendingHospitalSchedules(session);
+  }
+
   @Patch('admin/:id/status')
   @Roles([Role.hospital_admin])
   approve(

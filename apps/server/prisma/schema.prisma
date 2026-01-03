@@ -126,6 +126,7 @@ model Hospital {
   adminId                String                      @unique
   name                   String                      @unique
   description            String
+  slogan                 String?
   address                String
   city                   String
   latitude               Decimal
