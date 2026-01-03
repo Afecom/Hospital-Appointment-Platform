@@ -91,7 +91,7 @@ model DoctorApplicationSpecialization {
   specializationId    String
   createdAt           DateTime          @default(now())
   updatedAt           DateTime          @updatedAt
-  DoctorApplication   DoctorApplication @relation(fields: [doctorApplicationId], references: [id])
+  DoctorApplication   DoctorApplication @relation(fields: [doctorApplicationId], references: [id], onDelete: Cascade)
   Specialization      Specialization    @relation(fields: [specializationId], references: [id])
 }
 

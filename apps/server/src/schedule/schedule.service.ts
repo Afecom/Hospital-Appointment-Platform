@@ -159,6 +159,11 @@ export class ScheduleService {
       meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
     };
   }
+
+  async countPendingHospitalSchedules(session: UserSession) {
+    const adminId = session.user.id;
+  }
+
   async approve(id: string, session: UserSession, status: ScheduleStatus) {
     const schedule = await this.prisma.schedule.findUnique({ where: { id } });
     if (!schedule) throw new NotFoundException('Schedule not found');

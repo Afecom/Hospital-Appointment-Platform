@@ -33,7 +33,7 @@ export class DoctorController {
     return this.doctorService.findAll();
   }
 
-  @Get('pending')
+  @Get('hospital/pending')
   @Roles([Role.hospital_admin])
   getPendingHospitalDoctors(
     @Session() session: UserSession,
@@ -43,7 +43,7 @@ export class DoctorController {
     return this.doctorService.getPendingHospitalDoctors(session, page, limit);
   }
 
-  @Get('pending/count')
+  @Get('hospital/pending/count')
   @Roles([Role.hospital_admin])
   countPendingDoctors(@Session() session: UserSession) {
     return this.doctorService.countPendingHospitalDoctors(session);

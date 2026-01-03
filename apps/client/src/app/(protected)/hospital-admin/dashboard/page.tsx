@@ -12,14 +12,10 @@ let hospitalSlogan = "";
 
 export default async function adminDashboardFunction() {
   try {
-    const PendingDoctors = await api.get("/doctor/pending");
-    totalPendingDoctors = PendingDoctors.data.meta.total;
+    totalPendingDoctors = await api.get("/doctor/hospital/pending/count");
     const PendingSchedules = await api.get("/schedule");
     totalPendingSchedules = PendingSchedules.data.meta.total;
-    const totalDoctorsReq = await api.get("/doctor/hospital");
-    totalDoctors = totalDoctorsReq.data.meta.total;
-    hospitalName = totalDoctorsReq.data.hospital.name;
-    hospitalSlogan = totalDoctorsReq.data.hospital.description;
+    totalDoctors = await api.get("/doctor/hospital");
     const appointments = await api.get("/appointment");
     totalAppointments = appointments.data.meta.total;
   } catch (error) {
