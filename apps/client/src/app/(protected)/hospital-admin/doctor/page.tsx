@@ -24,8 +24,8 @@ const recentActivities = [
   },
 ];
 
-const fetchTotalDoctors = () =>
-  api
+const fetchTotalDoctors = async () =>
+  await api
     .get("/doctor/hospital/count")
     .then((res) => res.data)
     .catch((err) => {
@@ -33,15 +33,15 @@ const fetchTotalDoctors = () =>
     });
 
 const fetchDoctorApplication = async () =>
-  api
+  await api
     .get("/doctor/hospital/pending/count")
     .then((res) => res.data)
     .catch((err) => {
       throw new Error("Failed to fetch doctor applications");
     });
 
-const fetchInactiveDoctors = () =>
-  api
+const fetchInactiveDoctors = async () =>
+  await api
     .get("/doctor/hospital/inactive")
     .then((res) => res.data)
     .catch((err) => {

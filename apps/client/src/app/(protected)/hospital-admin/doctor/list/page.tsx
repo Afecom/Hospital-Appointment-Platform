@@ -3,6 +3,8 @@
 import { useState } from "react";
 import Modal from "@/components/shared/layout/Modal";
 import { Eye, Pencil, Trash } from "lucide-react";
+import api from "@/lib/axios";
+import { useQueries } from "@tanstack/react-query";
 const MOCK_DOCTORS = Array.from({ length: 10 }).map((_, i) => ({
   id: `doc-${i + 1}`,
   fullName: `Dr. John Doe ${i + 1}`,
