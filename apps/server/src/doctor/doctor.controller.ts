@@ -75,12 +75,6 @@ export class DoctorController {
     return this.doctorService.getInactiveHospitalDoctors(session, page, limit);
   }
 
-  @Get(':id')
-  @Roles([Role.admin, Role.hospital_admin])
-  findOne(@Param('id') id: string) {
-    return this.doctorService.findOne(id);
-  }
-
   @Patch(':id')
   @Roles([Role.doctor, Role.admin])
   update(@Param('id') id: string, @Body() updateDoctorDto: UpdateDoctorDto) {

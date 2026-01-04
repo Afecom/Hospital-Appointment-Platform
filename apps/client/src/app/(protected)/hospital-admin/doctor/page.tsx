@@ -34,7 +34,7 @@ const fetchTotalDoctors = () =>
 
 const fetchDoctorApplication = async () =>
   api
-    .get("/doctor/pending/count")
+    .get("/doctor/hospital/pending/count")
     .then((res) => res.data)
     .catch((err) => {
       throw new Error("Failed to fetch doctor applications");
@@ -69,8 +69,8 @@ export default function DoctorsPage() {
   const [totalDoctorsData, doctorApplicationsData, inactiveDoctorsData] =
     result;
 
-  const totalDoctors = totalDoctorsData.data ?? 2;
-  const doctorApplications = doctorApplicationsData.data ?? 5;
+  const totalDoctors = totalDoctorsData.data?.total ?? 0;
+  const doctorApplications = doctorApplicationsData.data?.pendingDoctors ?? 0;
   const inactiveDoctors: any[] =
     inactiveDoctorsData.data?.inactiveDoctors ?? [];
   const totalInactiveDoctors = inactiveDoctors.length ?? 8;
