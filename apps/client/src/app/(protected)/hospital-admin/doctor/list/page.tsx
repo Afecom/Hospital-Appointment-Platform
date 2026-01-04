@@ -16,6 +16,15 @@ const MOCK_DOCTORS = Array.from({ length: 10 }).map((_, i) => ({
   yearsOfExperience: 5 + i,
 }));
 
+const fetchDoctors = async (): Promise<any> => {
+  try {
+    const res = await api.get("/doctor/hospital");
+    return res.data;
+  } catch (error) {
+    throw new Error("Failed to fetch doctors.");
+  }
+};
+
 export default function DoctorsListPage() {
   const [doctors, setDoctors] = useState(MOCK_DOCTORS);
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,7 +37,18 @@ export default function DoctorsListPage() {
     doctor.fullName.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // Handlers
+  const result = useQueries({
+    queries: [
+      {
+        queryKey: ["doctors"],
+        queryFn: fetchDoctors,
+      },
+    ],
+  }) as any[];
+  let totalDoctors: any[] = [];
+  const [doctorsData] = result;
+  totalDoctors = doctorsData?.data?.doctors ?? [];
+
   const handleView = (doc: any) => {
     setSelectedDoctor(doc);
     setViewModalOpen(true);
