@@ -1,5 +1,6 @@
 import React from "react";
 import api from "@/lib/axios";
+import { useQueries } from "@tanstack/react-query";
 
 // Mock data for doctor applications
 const doctorApplications = [
@@ -37,12 +38,26 @@ const doctorApplications = [
   },
 ];
 
+const fetchPendingDoctors = async () => {
+  try {
+    await api.get("");
+  } catch (error) {
+    throw new Error("Unable to fetch pending doctors");
+  }
+};
+
 const DoctorApplicationsPage = async () => {
   let pendingDoctors: any[] = [];
-  try {
-    const fetchPendingDoctors = await api.get("/doctor/pending");
-    pendingDoctors = fetchPendingDoctors.data.pendingDoctors;
-  } catch (error) {}
+  const result = useQueries({
+    queries: [
+      {
+        queryKey: ["pendingDoctors"],
+        queryFn: fetchPendingDoctors,
+      },
+    ],
+  }) as any;
+  const [pendingDoctorsData] = result;
+  pendingDoctors = pendingDoctorsData.data?.pendings;
   const handleApprove = (id: string) => {
     console.log(`Approved doctor with id: ${id}`);
   };

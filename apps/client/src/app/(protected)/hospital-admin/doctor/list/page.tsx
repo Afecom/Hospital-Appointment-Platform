@@ -26,17 +26,6 @@ const fetchDoctors = async (): Promise<any> => {
 };
 
 export default function DoctorsListPage() {
-  const [doctors, setDoctors] = useState(MOCK_DOCTORS);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
-  const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
-  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
-
-  const filteredDoctors = doctors.filter((doctor) =>
-    doctor.fullName.toLowerCase().includes(searchQuery.toLowerCase())
-  );
-
   const result = useQueries({
     queries: [
       {
@@ -48,6 +37,17 @@ export default function DoctorsListPage() {
   let totalDoctors: any[] = [];
   const [doctorsData] = result;
   totalDoctors = doctorsData?.data?.doctors ?? [];
+
+  const [doctors, setDoctors] = useState(totalDoctors);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [viewModalOpen, setViewModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+
+  const filteredDoctors = doctors.filter((doctor) =>
+    doctor.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleView = (doc: any) => {
     setSelectedDoctor(doc);
