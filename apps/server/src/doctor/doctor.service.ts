@@ -25,13 +25,28 @@ import {
 export class DoctorService {
   constructor(private readonly databaseService: DatabaseService) {}
 
-  async findAll() {
-    const doctors = await this.databaseService.doctor.findMany({
-      include: { DoctorSpecialization: true },
+  async findAll(page: number, limit: number) {
+    const { normalizedLimit, normalizedPage, skip, take } = normalizePagination(
+      { page, limit },
+    );
+    return await this.databaseService.$transaction(async (tx) => {
+      const doctors = await tx.doctor.findMany({
+        skip,
+        take,
+      });
+      if (doctors.length === 0)
+        throw new NotFoundException("Couldn't find any doctors");
+
+      const total = await tx.doctor.count();
+      return {
+        message: 'Doctors fetched successfully',
+        status: 'success',
+        data: {
+          doctors,
+          meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+        },
+      };
     });
-    if (doctors.length === 0)
-      throw new NotFoundException("Couldn't find any doctors");
-    return doctors;
   }
 
   async findOne(id: string) {

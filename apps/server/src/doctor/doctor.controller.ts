@@ -8,12 +8,7 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import {
-  Session,
-  type UserSession,
-  Roles,
-  AllowAnonymous,
-} from '@thallesp/nestjs-better-auth';
+import { Session, type UserSession, Roles } from '@thallesp/nestjs-better-auth';
 import { DoctorService } from './doctor.service.js';
 import { UpdateDoctorDto } from './dto/update-doctor.dto.js';
 import { applyHospitalDoctorDto } from './dto/apply-hospital-doctor.dto.js';
@@ -34,8 +29,8 @@ export class DoctorController {
 
   @Get()
   @Roles([Role.admin])
-  findAll() {
-    return this.doctorService.findAll();
+  findAll(@Query('page') page: number, @Query('limit') limit: number) {
+    return this.doctorService.findAll(page, limit);
   }
 
   @Get('hospital/pending')
