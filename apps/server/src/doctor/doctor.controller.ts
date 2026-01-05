@@ -8,7 +8,12 @@ import {
   Delete,
   Query,
 } from '@nestjs/common';
-import { Session, type UserSession, Roles } from '@thallesp/nestjs-better-auth';
+import {
+  Session,
+  type UserSession,
+  Roles,
+  AllowAnonymous,
+} from '@thallesp/nestjs-better-auth';
 import { DoctorService } from './doctor.service.js';
 import { UpdateDoctorDto } from './dto/update-doctor.dto.js';
 import { applyHospitalDoctorDto } from './dto/apply-hospital-doctor.dto.js';
@@ -75,11 +80,11 @@ export class DoctorController {
     return this.doctorService.getInactiveHospitalDoctors(session, page, limit);
   }
 
-  @Patch(':id')
-  @Roles([Role.doctor, Role.admin])
-  update(@Param('id') id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
-    return this.doctorService.update(id, updateDoctorDto);
-  }
+  // @Patch(':id')
+  // @Roles([Role.doctor, Role.admin])
+  // update(@Param('id') id: string, @Body() updateDoctorDto: UpdateDoctorDto) {
+  //   return this.doctorService.update(id, updateDoctorDto);
+  // }
 
   @Delete(':id')
   @Roles([Role.doctor, Role.admin])
@@ -121,5 +126,14 @@ export class DoctorController {
   @Roles([Role.admin])
   reject(@Body() body: rejectDoctor) {
     return this.doctorService.rejectDoctor(body);
+  }
+
+  @Get('pending')
+  @Roles([Role.admin])
+  getPendingDoctors(
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    return this.doctorService.getPendingDoctors(page, limit);
   }
 }

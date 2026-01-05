@@ -41,47 +41,47 @@ export class DoctorService {
     });
   }
 
-  async update(id: string, dto: UpdateDoctorDto) {
-    if (dto.specializationIds && dto.specializationIds.length !== 0) {
-      const existingSpecialities =
-        await this.databaseService.doctorSpecialization.findMany({
-          where: { doctorId: id },
-          include: { Specialization: true },
-        });
-      const existingspecIds = existingSpecialities.map(
-        (s) => s.specializationId,
-      );
-      const toDelete = existingspecIds.filter(
-        (s) => !dto.specializationIds?.includes(s),
-      );
-      await this.databaseService.doctorSpecialization.deleteMany({
-        where: {
-          doctorId: id,
-          specializationId: { in: toDelete },
-        },
-      });
-      for (const spec of dto.specializationIds) {
-        await this.databaseService.doctorSpecialization.upsert({
-          where: {
-            doctorId_specializationId: {
-              doctorId: id,
-              specializationId: spec,
-            },
-          },
-          update: {},
-          create: {
-            doctorId: id,
-            specializationId: spec,
-          },
-        });
-      }
-    }
-    delete dto.specializationIds;
-    return await this.databaseService.doctor.update({
-      where: { id },
-      data: dto,
-    });
-  }
+  // async update(id: string, dto: UpdateDoctorDto) {
+  //   if (dto.specializationIds && dto.specializationIds.length !== 0) {
+  //     const existingSpecialities =
+  //       await this.databaseService.doctorSpecialization.findMany({
+  //         where: { doctorId: id },
+  //         include: { Specialization: true },
+  //       });
+  //     const existingspecIds = existingSpecialities.map(
+  //       (s) => s.specializationId,
+  //     );
+  //     const toDelete = existingspecIds.filter(
+  //       (s) => !dto.specializationIds?.includes(s),
+  //     );
+  //     await this.databaseService.doctorSpecialization.deleteMany({
+  //       where: {
+  //         doctorId: id,
+  //         specializationId: { in: toDelete },
+  //       },
+  //     });
+  //     for (const spec of dto.specializationIds) {
+  //       await this.databaseService.doctorSpecialization.upsert({
+  //         where: {
+  //           doctorId_specializationId: {
+  //             doctorId: id,
+  //             specializationId: spec,
+  //           },
+  //         },
+  //         update: {},
+  //         create: {
+  //           doctorId: id,
+  //           specializationId: spec,
+  //         },
+  //       });
+  //     }
+  //   }
+  //   delete dto.specializationIds;
+  //   return await this.databaseService.doctor.update({
+  //     where: { id },
+  //     data: dto,
+  //   });
+  // }
 
   async remove(id: string) {
     return await this.databaseService.doctor.delete({ where: { id } });
@@ -145,13 +145,36 @@ export class DoctorService {
   }
 
   async approveDoctor(data: approveDoctor) {
-    const doctorApplication =
-      await this.databaseService.doctorApplication.findUniqueOrThrow({
+    return await this.databaseService.$transaction(async (tx) => {
+      const doctorApplication = await tx.doctorApplication.findUniqueOrThrow({
         where: { id: data.applicationId },
       });
-    return await this.databaseService.doctorApplication.update({
-      where: { id: doctorApplication.id },
-      data: { status: 'approved' },
+      const specializationIds = doctorApplication.specializationIds;
+      await tx.doctorApplication.update({
+        where: { id: doctorApplication.id },
+        data: { status: 'approved' },
+      });
+      const doctor = await tx.doctor.create({
+        data: {
+          userId: doctorApplication.userId,
+          bio: doctorApplication.bio,
+          yearsOfExperience: doctorApplication.yearsOfExperience,
+          DoctorSpecialization: {
+            create: specializationIds.map((id) => ({
+              specializationId: id,
+            })),
+          },
+        },
+      });
+      await tx.user.update({
+        where: { id: doctorApplication.userId },
+        data: { role: 'doctor' },
+      });
+      return {
+        message: 'Doctor approved successfully',
+        status: 'success',
+        data: { doctor },
+      };
     });
   }
 
@@ -160,10 +183,33 @@ export class DoctorService {
       await this.databaseService.doctorApplication.findUniqueOrThrow({
         where: { id: data.applicationId },
       });
-
     return await this.databaseService.doctorApplication.update({
       where: { id: doctorApplication.id },
       data: { status: 'rejected' },
+    });
+  }
+
+  async getPendingDoctors(page: number, limit: number) {
+    const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
+      { page, limit },
+    );
+    return await this.databaseService.$transaction(async (tx) => {
+      const pendingDoctors = await tx.doctorApplication.findMany({
+        where: { status: 'pending' },
+        take,
+        skip,
+      });
+      const total = await tx.doctorApplication.count({
+        where: { status: 'pending' },
+      });
+      return {
+        message: 'Pending doctors fetched successfuly',
+        status: 'success',
+        data: {
+          pendingDoctors,
+          meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+        },
+      };
     });
   }
 

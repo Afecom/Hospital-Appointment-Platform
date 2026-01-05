@@ -1,11 +1,17 @@
-import { IsString, IsNotEmpty, IsOptional, IsArray } from 'class-validator';
+import {
+  IsString,
+  IsNotEmpty,
+  IsOptional,
+  IsArray,
+  IsNumber,
+} from 'class-validator';
 
 export class applyDoctor {
   @IsString()
   @IsOptional()
   bio: string;
 
-  @IsString()
+  @IsNumber()
   @IsNotEmpty()
   yearsOfExperience: number;
 

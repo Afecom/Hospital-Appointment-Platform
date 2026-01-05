@@ -67,6 +67,7 @@ model DoctorApplication {
   userId                          String
   yearsOfExperience               Int?
   bio                             String?
+  specializationIds               String[]
   status                          DoctorApplicationStatus           @default(pending)
   User                            User                              @relation(fields: [userId], references: [id])
   DoctorApplicationSpecialization DoctorApplicationSpecialization[]
