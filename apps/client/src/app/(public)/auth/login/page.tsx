@@ -74,7 +74,7 @@ export default function loginPage() {
             name="phoneNumber"
             id="phoneNumberInput"
             minLength={10}
-            maxLength={10}
+            // maxLength={10}
             required
             className={`rounded-md border border-gray-400 mt-2 h-10 md:h-14 lg:h-10 w-full px-3 md:text-2xl lg:text-lg outline-blue-950 ${
               isPhoneInvalid && phoneNumber ? "outline-none border-red-500" : ""

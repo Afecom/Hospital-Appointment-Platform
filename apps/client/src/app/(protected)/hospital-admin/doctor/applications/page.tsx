@@ -1,6 +1,5 @@
 import React from "react";
-import api from "@/lib/axios";
-import { useQueries } from "@tanstack/react-query";
+import { headers } from "next/headers";
 
 // Mock data for doctor applications
 const doctorApplications = [
@@ -38,26 +37,28 @@ const doctorApplications = [
   },
 ];
 
-const fetchPendingDoctors = async () => {
-  try {
-    await api.get("");
-  } catch (error) {
-    throw new Error("Unable to fetch pending doctors");
-  }
+const getData = async () => {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const fetchOptions = {
+    cache: "no-store" as RequestCache,
+    headers: await headers(),
+  };
+  const [pendingDoctorsRes] = await Promise.all([
+    fetch(`${apiBaseUrl}/doctor/hospital/pending`, fetchOptions),
+  ]);
+
+  if (!pendingDoctorsRes.ok) throw new Error("Failed to fetch pending doctors");
+
+  const pendingDoctorsData = await pendingDoctorsRes.json();
+
+  return {
+    totalPendingDoctors: pendingDoctorsData.pendingHospitalDoctors,
+  };
 };
 
 const DoctorApplicationsPage = async () => {
-  let pendingDoctors: any[] = [];
-  const result = useQueries({
-    queries: [
-      {
-        queryKey: ["pendingDoctors"],
-        queryFn: fetchPendingDoctors,
-      },
-    ],
-  }) as any;
-  const [pendingDoctorsData] = result;
-  pendingDoctors = pendingDoctorsData.data?.pendings;
+  const { totalPendingDoctors } = await getData();
+
   const handleApprove = (id: string) => {
     console.log(`Approved doctor with id: ${id}`);
   };
@@ -78,7 +79,7 @@ const DoctorApplicationsPage = async () => {
           </p>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {doctorApplications.map((app) => (
+          {totalPendingDoctors.map((app: any) => (
             <div
               key={app.id}
               className="rounded-lg border border-gray-200 bg-white shadow-sm hover:shadow-md transition-shadow duration-300"
@@ -102,14 +103,16 @@ const DoctorApplicationsPage = async () => {
                   <div>
                     <span className="font-medium">Specializations:</span>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {app.specializations.map((spec, index) => (
-                        <span
-                          key={index}
-                          className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
-                        >
-                          {spec}
-                        </span>
-                      ))}
+                      {app.specializations.map(
+                        (spec: string, index: number) => (
+                          <span
+                            key={index}
+                            className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
+                          >
+                            {spec}
+                          </span>
+                        )
+                      )}
                     </div>
                   </div>
                 </div>
