@@ -34,8 +34,6 @@ export class DoctorService {
         skip,
         take,
       });
-      if (doctors.length === 0)
-        throw new NotFoundException("Couldn't find any doctors");
 
       const total = await tx.doctor.count();
       return {

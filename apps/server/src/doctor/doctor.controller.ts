@@ -81,11 +81,11 @@ export class DoctorController {
   //   return this.doctorService.update(id, updateDoctorDto);
   // }
 
-  @Delete(':id')
-  @Roles([Role.doctor, Role.admin])
-  remove(@Param('id') id: string) {
-    return this.doctorService.remove(id);
-  }
+  // @Delete(':id')
+  // @Roles([Role.doctor, Role.admin])
+  // remove(@Param('id') id: string) {
+  //   return this.doctorService.remove(id);
+  // }
 
   @Post('apply/hospital')
   @Roles([Role.doctor])
@@ -99,7 +99,7 @@ export class DoctorController {
     return this.doctorService.approveHospitalDoctor(body);
   }
 
-  @Patch('hospital/approve')
+  @Patch('hospital/reject')
   @Roles([Role.hospital_admin])
   rejectHospitalDoctor(@Body() body: rejectHospitalDoctor) {
     return this.doctorService.rejectHospitalDoctor(body);

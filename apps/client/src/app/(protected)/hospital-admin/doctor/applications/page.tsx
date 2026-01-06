@@ -1,5 +1,8 @@
-import React from "react";
-import { headers } from "next/headers";
+"use client";
+
+import React, { use } from "react";
+import api from "@/lib/axios";
+import { useQueries } from "@tanstack/react-query";
 
 // Mock data for doctor applications
 const doctorApplications = [
@@ -37,27 +40,26 @@ const doctorApplications = [
   },
 ];
 
-const getData = async () => {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-  const fetchOptions = {
-    cache: "no-store" as RequestCache,
-    headers: await headers(),
-  };
-  const [pendingDoctorsRes] = await Promise.all([
-    fetch(`${apiBaseUrl}/doctor/hospital/pending`, fetchOptions),
-  ]);
-
-  if (!pendingDoctorsRes.ok) throw new Error("Failed to fetch pending doctors");
-
-  const pendingDoctorsData = await pendingDoctorsRes.json();
-
-  return {
-    totalPendingDoctors: pendingDoctorsData.pendingHospitalDoctors,
-  };
+const pendingDoctors = async () => {
+  try {
+    const pendingDocsData = await api.get("/doctor/pending");
+    return pendingDocsData.data.pendingHospitalDoctors;
+  } catch (error) {
+    throw new Error("Failed to fetch pending doctors");
+  }
 };
 
 const DoctorApplicationsPage = async () => {
-  const { totalPendingDoctors } = await getData();
+  const result = useQueries({
+    queries: [
+      {
+        queryKey: ["pendingDoctors"],
+        queryFn: pendingDoctors,
+      },
+    ],
+  });
+
+  const [totalPendingDoctors] = result[0].data || [];
 
   const handleApprove = (id: string) => {
     console.log(`Approved doctor with id: ${id}`);
