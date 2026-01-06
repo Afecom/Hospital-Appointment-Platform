@@ -5,16 +5,6 @@ import Modal from "@/components/shared/layout/Modal";
 import { Eye, Pencil, Trash } from "lucide-react";
 import api from "@/lib/axios";
 import { useQueries } from "@tanstack/react-query";
-const MOCK_DOCTORS = Array.from({ length: 10 }).map((_, i) => ({
-  id: `doc-${i + 1}`,
-  fullName: `Dr. John Doe ${i + 1}`,
-  specialization: i % 2 === 0 ? "Cardiologist" : "Dermatologist",
-  email: `john.doe${i + 1}@hospital.com`,
-  phone: `+1 234 567 890${i}`,
-  imageUrl: `https://i.pravatar.cc/150?u=${i}`,
-  bio: "Experienced specialist with over 10 years of practice in top-tier hospitals. Dedicated to patient care and continuous learning.",
-  yearsOfExperience: 5 + i,
-}));
 
 const fetchDoctors = async (): Promise<any> => {
   try {
