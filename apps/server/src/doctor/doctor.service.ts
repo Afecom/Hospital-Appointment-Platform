@@ -112,14 +112,16 @@ export class DoctorService {
     if (hospitals.length !== hospitalIds.length)
       throw new Error('Invalid hospital ids');
     return await this.databaseService.$transaction(async (tx) => {
-      hospitalIds.map(async (hospitalId) => {
-        return await tx.doctorHospitalApplication.create({
-          data: {
-            doctorId: doctorProfile.id,
-            hospitalId,
-          },
-        });
-      });
+      return Promise.all(
+        hospitalIds.map(async (hospitalId) => {
+          return tx.doctorHospitalApplication.create({
+            data: {
+              doctorId: doctorProfile.id,
+              hospitalId,
+            },
+          });
+        }),
+      );
     });
   }
 
@@ -255,6 +257,16 @@ export class DoctorService {
                     fullName: true,
                     phoneNumber: true,
                     imageUrl: true,
+                    gender: true,
+                  },
+                },
+                DoctorSpecialization: {
+                  select: {
+                    Specialization: {
+                      select: {
+                        name: true,
+                      },
+                    },
                   },
                 },
               },

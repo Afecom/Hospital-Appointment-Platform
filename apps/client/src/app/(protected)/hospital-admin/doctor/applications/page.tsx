@@ -42,14 +42,14 @@ const doctorApplications = [
 
 const pendingDoctors = async () => {
   try {
-    const pendingDocsData = await api.get("/doctor/pending");
+    const pendingDocsData = await api.get("/doctor/hospital/pending");
     return pendingDocsData.data.pendingHospitalDoctors;
   } catch (error) {
     throw new Error("Failed to fetch pending doctors");
   }
 };
 
-const DoctorApplicationsPage = async () => {
+const DoctorApplicationsPage = () => {
   const result = useQueries({
     queries: [
       {
@@ -59,7 +59,8 @@ const DoctorApplicationsPage = async () => {
     ],
   });
 
-  const [totalPendingDoctors] = result[0].data || [];
+  const [totalPendingDoctorsRes] = result;
+  const totalPendingDoctors: any[] = totalPendingDoctorsRes?.data || [];
 
   const handleApprove = (id: string) => {
     console.log(`Approved doctor with id: ${id}`);
@@ -88,30 +89,38 @@ const DoctorApplicationsPage = async () => {
             >
               <div className="p-6">
                 <h2 className="text-xl font-semibold mb-2 text-gray-800">
-                  {app.fullName}
+                  {app.Doctor.User.fullName}
                 </h2>
                 <div className="text-gray-600 space-y-2 mb-4">
                   <p>
-                    <span className="font-medium">Gender:</span> {app.gender}
+                    <span className="font-medium">Gender:</span>{" "}
+                    {app.Doctor.User.gender}
                   </p>
                   <p>
                     <span className="font-medium">Phone:</span>{" "}
-                    {app.phoneNumber}
+                    {app.Doctor.User.phoneNumber}
                   </p>
                   <p>
                     <span className="font-medium">Experience:</span>{" "}
-                    {app.yearsOfExperience} years
+                    {app.Doctor.yearsOfExperience} years
                   </p>
                   <div>
                     <span className="font-medium">Specializations:</span>
                     <div className="flex flex-wrap gap-2 mt-1">
-                      {app.specializations.map(
-                        (spec: string, index: number) => (
+                      {app.Doctor.DoctorSpecialization.map(
+                        (
+                          spec: {
+                            Specialization: {
+                              name: string;
+                            };
+                          },
+                          index: number
+                        ) => (
                           <span
                             key={index}
                             className="bg-blue-100 text-blue-800 text-xs font-medium px-2.5 py-0.5 rounded-full"
                           >
-                            {spec}
+                            {spec.Specialization.name}
                           </span>
                         )
                       )}
