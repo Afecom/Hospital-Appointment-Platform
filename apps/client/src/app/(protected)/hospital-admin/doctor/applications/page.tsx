@@ -5,40 +5,6 @@ import api from "@/lib/axios";
 import { useQueries } from "@tanstack/react-query";
 
 // Mock data for doctor applications
-const doctorApplications = [
-  {
-    id: "1",
-    fullName: "Dr. John Doe",
-    gender: "Male",
-    phoneNumber: "123-456-7890",
-    yearsOfExperience: 10,
-    specializations: ["Cardiology", "Internal Medicine"],
-  },
-  {
-    id: "2",
-    fullName: "Dr. Jane Smith",
-    gender: "Female",
-    phoneNumber: "098-765-4321",
-    yearsOfExperience: 8,
-    specializations: ["Dermatology"],
-  },
-  {
-    id: "3",
-    fullName: "Dr. Peter Jones",
-    gender: "Male",
-    phoneNumber: "555-555-5555",
-    yearsOfExperience: 15,
-    specializations: ["Neurology", "Psychiatry"],
-  },
-  {
-    id: "4",
-    fullName: "Dr. Susan Williams",
-    gender: "Female",
-    phoneNumber: "111-222-3333",
-    yearsOfExperience: 5,
-    specializations: ["Pediatrics"],
-  },
-];
 
 const pendingDoctors = async () => {
   try {
@@ -71,8 +37,8 @@ const DoctorApplicationsPage = () => {
   };
 
   return (
-    <div className="h-full w-full flex flex-col p-4 pt-12">
-      <div className="max-w-6xl w-full mx-auto">
+    <div className="h-full w-full flex flex-col p-4">
+      <div className="max-w-6xl w-full">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
             Doctor Applications
