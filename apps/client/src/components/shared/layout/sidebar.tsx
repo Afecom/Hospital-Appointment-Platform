@@ -132,7 +132,7 @@ export function SidebarItem({ alert, role }: { alert?: boolean; role: Role }) {
   return (
     <>
       {navSchema.map((item) => {
-        const isActive = path === item.path;
+        const isActive = path.startsWith(item.path);
         return (
           <li
             className={`
