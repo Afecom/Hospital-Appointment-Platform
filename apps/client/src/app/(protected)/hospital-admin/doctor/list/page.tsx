@@ -23,10 +23,10 @@ export default function DoctorsListPage() {
         queryFn: fetchDoctors,
       },
     ],
-  }) as any[];
+  });
   let totalDoctors: any[] = [];
-  const [doctorsData] = result;
-  totalDoctors = doctorsData?.data?.doctors ?? [];
+  const [doctorsRes] = result;
+  totalDoctors = doctorsRes.data || [];
 
   const [doctors, setDoctors] = useState(totalDoctors);
   const [searchQuery, setSearchQuery] = useState("");

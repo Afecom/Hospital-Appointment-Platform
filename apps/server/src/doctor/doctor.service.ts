@@ -427,6 +427,11 @@ export class DoctorService {
     return await this.databaseService.$transaction(async (tx) => {
       const hospital = await tx.hospital.findUniqueOrThrow({
         where: { adminId },
+        select: {
+          id: true,
+          name: true,
+          logoUrl: true,
+        },
       });
       const hospitalId = hospital.id;
       const doctors = await tx.doctorHospitalProfile.findMany({
@@ -452,9 +457,13 @@ export class DoctorService {
         where: { hospitalId },
       });
       return {
-        doctors,
-        hospital,
-        meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+        message: 'Hospital doctors fetched successfully',
+        status: 'success',
+        data: {
+          doctors,
+          hospital,
+          meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+        },
       };
     });
   }
