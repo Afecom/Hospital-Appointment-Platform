@@ -20,7 +20,7 @@ import { Role } from '../../generated/prisma/enums.js';
 import { applyDoctor } from './dto/apply-doctor.dto.js';
 import {
   approveHospitalDoctor,
-  rejectHospitalDoctor,
+  doctorHospitalApplication,
 } from './dto/approve-reject-hospital-doctor.dto.js';
 
 @Controller('doctor')
@@ -99,9 +99,25 @@ export class DoctorController {
     return this.doctorService.approveHospitalDoctor(body);
   }
 
+  @Get('hospital/application')
+  @Roles([Role.hospital_admin, Role.admin])
+  getHospitalDoctorApplications(
+    @Session() session: UserSession,
+    @Query('status') status: 'approved' | 'rejected' | 'pending',
+    @Query('page') page: number,
+    @Query('limit') limit: number,
+  ) {
+    return this.doctorService.getHospitalDoctorApplications(
+      session,
+      status,
+      page,
+      limit,
+    );
+  }
+
   @Patch('hospital/reject')
   @Roles([Role.hospital_admin])
-  rejectHospitalDoctor(@Body() body: rejectHospitalDoctor) {
+  rejectHospitalDoctor(@Body() body: doctorHospitalApplication) {
     return this.doctorService.rejectHospitalDoctor(body);
   }
 

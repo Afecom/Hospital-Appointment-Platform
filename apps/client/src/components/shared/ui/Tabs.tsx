@@ -1,0 +1,35 @@
+"use client";
+import React from "react";
+
+interface Tab {
+  label: string;
+  value: string;
+}
+
+interface TabsProps {
+  tabs: Tab[];
+  activeTab: string;
+  onTabClick: (tab: string) => void;
+}
+
+const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onTabClick }) => {
+  return (
+    <div className="flex border-b">
+      {tabs.map((tab) => (
+        <button
+          key={tab.value}
+          className={`px-4 py-2 text-sm font-medium ${
+            activeTab === tab.value
+              ? "border-b-2 border-secondary text-secondary"
+              : "text-gray-500 hover:text-gray-700"
+          }`}
+          onClick={() => onTabClick(tab.value)}
+        >
+          {tab.label}
+        </button>
+      ))}
+    </div>
+  );
+};
+
+export default Tabs;

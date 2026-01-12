@@ -18,7 +18,7 @@ import {
 import { applyDoctor } from './dto/apply-doctor.dto.js';
 import {
   approveHospitalDoctor,
-  rejectHospitalDoctor,
+  doctorHospitalApplication,
 } from './dto/approve-reject-hospital-doctor.dto.js';
 
 @Injectable()
@@ -126,20 +126,104 @@ export class DoctorService {
   }
 
   async approveHospitalDoctor(dto: approveHospitalDoctor) {
-    const { applicationId, ...rest } = dto;
-    const application =
-      await this.databaseService.doctorHospitalApplication.findUniqueOrThrow({
-        where: { id: applicationId },
-      });
-    return await this.databaseService.doctorHospitalApplication.update({
-      where: { id: application.id },
-      data: {
-        ...rest,
-        status: 'approved',
-      },
+    const { applicationId, slotDuration } = dto;
+    return await this.databaseService.$transaction(async (tx) => {
+      try {
+        const application =
+          await tx.doctorHospitalApplication.findUniqueOrThrow({
+            where: { id: applicationId },
+          });
+        await tx.doctorHospitalApplication.update({
+          where: { id: application.id },
+          data: {
+            status: 'approved',
+          },
+        });
+        const profile = await tx.doctorHospitalProfile.create({
+          data: {
+            doctorId: application.doctorId,
+            hospitalId: application.hospitalId,
+            slotDuration,
+          },
+        });
+        return {
+          message: 'Hospital doctor approved successfully',
+          status: 'success',
+          data: { profile },
+        };
+      } catch (error) {
+        throw new Error('Error approving hospital doctor');
+      }
     });
   }
-  async rejectHospitalDoctor(dto: rejectHospitalDoctor) {
+
+  async getHospitalDoctorApplications(
+    session: UserSession,
+    status: 'approved' | 'rejected' | 'pending',
+    page: number,
+    limit: number,
+  ) {
+    const adminId = session.user.id;
+    const hospital = await this.databaseService.hospital.findUniqueOrThrow({
+      where: { adminId },
+    });
+    const hospitalId = hospital.id;
+    const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
+      { page, limit },
+    );
+    return await this.databaseService.$transaction(async (tx) => {
+      try {
+        const Applications = await tx.doctorHospitalApplication.findMany({
+          where: {
+            hospitalId,
+            status,
+          },
+          include: {
+            Doctor: {
+              include: {
+                User: {
+                  select: {
+                    fullName: true,
+                    phoneNumber: true,
+                    imageUrl: true,
+                    gender: true,
+                  },
+                },
+                DoctorSpecialization: {
+                  select: {
+                    Specialization: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+          skip,
+          take,
+        });
+        const total = await tx.doctorHospitalApplication.count({
+          where: {
+            status,
+          },
+        });
+        return {
+          message: `${status === 'approved' ? 'Approved' : status === 'rejected' ? 'Rejected' : 'Pending'} hospital doctors fetched successfully`,
+          status: 'success',
+          data: {
+            Applications,
+            meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+          },
+        };
+      } catch (error) {
+        throw new Error('Error fetching approved hospital doctors');
+      }
+    });
+  }
+
+  async rejectHospitalDoctor(dto: doctorHospitalApplication) {
     const application =
       await this.databaseService.doctorHospitalApplication.findUniqueOrThrow({
         where: { id: dto.applicationId },
@@ -147,6 +231,39 @@ export class DoctorService {
     return await this.databaseService.doctorHospitalApplication.update({
       where: { id: application.id },
       data: { status: 'rejected' },
+    });
+  }
+
+  async getRejectedHospitalDoctor(page: number, limit: number) {
+    const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
+      { page, limit },
+    );
+    return await this.databaseService.$transaction(async (tx) => {
+      try {
+        const rejectedApplications =
+          await tx.doctorHospitalApplication.findMany({
+            where: {
+              status: 'rejected',
+            },
+            skip,
+            take,
+          });
+        const total = await tx.doctorHospitalApplication.count({
+          where: {
+            status: 'rejected',
+          },
+        });
+        return {
+          message: 'Rejected hospital doctors fetched successfully',
+          status: 'success',
+          data: {
+            rejectedApplications,
+            meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+          },
+        };
+      } catch (error) {
+        throw new Error('Error fetching rejected hospital doctors');
+      }
     });
   }
 

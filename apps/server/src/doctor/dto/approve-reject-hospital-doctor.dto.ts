@@ -1,9 +1,6 @@
-import { IsInt, IsEnum, IsString } from 'class-validator';
+import { IsInt, IsString } from 'class-validator';
 
 export class approveHospitalDoctor {
-  @IsEnum(['permanent', 'rotating'])
-  doctorType: 'permanent' | 'rotating';
-
   @IsInt()
   slotDuration: number;
 
@@ -11,7 +8,7 @@ export class approveHospitalDoctor {
   applicationId: string;
 }
 
-export class rejectHospitalDoctor {
+export class doctorHospitalApplication {
   @IsString()
   applicationId: string;
 }
