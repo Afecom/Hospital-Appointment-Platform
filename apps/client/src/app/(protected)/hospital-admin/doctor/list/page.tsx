@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Modal from "@/components/shared/layout/Modal";
 import { Eye, Pencil, Trash } from "lucide-react";
 import api from "@/lib/axios";
@@ -24,11 +24,15 @@ export default function DoctorsListPage() {
       },
     ],
   });
-  let totalDoctors: any[] = [];
-  const [doctorsRes] = result;
-  totalDoctors = doctorsRes.data || [];
 
-  const [doctors, setDoctors] = useState(totalDoctors);
+  const [doctorsRes] = result;
+  const [doctors, setDoctors] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (doctorsRes.data?.data?.doctors) {
+      setDoctors(doctorsRes.data.data.doctors);
+    }
+  }, [doctorsRes.data]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
@@ -36,7 +40,9 @@ export default function DoctorsListPage() {
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
   const filteredDoctors = doctors.filter((doctor) =>
-    doctor.fullName.toLowerCase().includes(searchQuery.toLowerCase())
+    doctor.Doctor.User.fullName
+      .toLowerCase()
+      .includes(searchQuery.toLowerCase())
   );
 
   const handleView = (doc: any) => {
@@ -83,24 +89,25 @@ export default function DoctorsListPage() {
           >
             <div className="flex items-center gap-4 mb-4">
               <img
-                src={doctor.imageUrl}
-                alt={doctor.fullName}
+                src={doctor.Doctor.User.imageUrl}
+                alt={doctor.Doctor.User.fullName}
                 className="w-16 h-16 rounded-full object-cover border-2 border-primary"
               />
               <div>
                 <h3 className="font-semibold text-lg text-gray-800">
-                  {doctor.fullName}
+                  {doctor.Doctor.User.fullName}
                 </h3>
-                <p className="text-sm text-gray-500">{doctor.specialization}</p>
               </div>
             </div>
 
             <div className="grow">
               <p className="text-sm text-gray-600 mb-1">
-                <span className="font-medium">Email:</span> {doctor.email}
+                <span className="font-medium">Email:</span>{" "}
+                {doctor.Doctor.User.email}
               </p>
               <p className="text-sm text-gray-600">
-                <span className="font-medium">Phone:</span> {doctor.phone}
+                <span className="font-medium">Phone:</span>{" "}
+                {doctor.Doctor.User.phoneNumber}
               </p>
             </div>
 
@@ -136,32 +143,25 @@ export default function DoctorsListPage() {
         <Modal onClose={() => setViewModalOpen(false)} title="Doctor Details">
           <div className="flex flex-col items-center mb-6">
             <img
-              src={selectedDoctor.imageUrl}
-              alt={selectedDoctor.fullName}
+              src={selectedDoctor.Doctor.User.imageUrl}
+              alt={selectedDoctor.Doctor.User.fullName}
               className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-primary"
             />
             <h2 className="text-xl font-bold text-gray-800">
-              {selectedDoctor.fullName}
+              {selectedDoctor.Doctor.User.fullName}
             </h2>
-            <p className="text-secondary font-medium">
-              {selectedDoctor.specialization}
-            </p>
           </div>
           <div className="space-y-3">
             <p>
-              <strong>Email:</strong> {selectedDoctor.email}
+              <strong>Email:</strong> {selectedDoctor.Doctor.User.email}
             </p>
             <p>
-              <strong>Phone:</strong> {selectedDoctor.phone}
+              <strong>Phone:</strong> {selectedDoctor.Doctor.User.phoneNumber}
             </p>
             <p>
-              <strong>Experience:</strong> {selectedDoctor.yearsOfExperience}{" "}
-              years
+              <strong>Experience:</strong>{" "}
+              {selectedDoctor.Doctor.yearsOfExperience} years
             </p>
-            <div>
-              <strong>Bio:</strong>
-              <p className="text-gray-600 mt-1">{selectedDoctor.bio}</p>
-            </div>
           </div>
           <div className="mt-6 flex justify-end">
             <button
@@ -190,7 +190,7 @@ export default function DoctorsListPage() {
               </label>
               <input
                 type="text"
-                defaultValue={selectedDoctor.fullName}
+                defaultValue={selectedDoctor.Doctor.User.fullName}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
               />
             </div>
@@ -200,7 +200,7 @@ export default function DoctorsListPage() {
               </label>
               <input
                 type="text"
-                defaultValue={selectedDoctor.specialization}
+                defaultValue={""}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
               />
             </div>
@@ -231,8 +231,8 @@ export default function DoctorsListPage() {
         >
           <p className="text-gray-600 mb-6">
             Are you sure you want to delete{" "}
-            <strong>{selectedDoctor.fullName}</strong>? This action cannot be
-            undone.
+            <strong>{selectedDoctor.Doctor.User.fullName}</strong>? This action
+            cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
             <button

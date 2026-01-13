@@ -82,8 +82,6 @@ model DoctorHospitalApplication {
   updatedAt  DateTime                        @updatedAt
   Doctor     Doctor                          @relation(fields: [doctorId], references: [id])
   Hospital   Hospital                        @relation(fields: [hospitalId], references: [id])
-
-  @@unique([doctorId, hospitalId])
 }
 
 model DoctorApplicationSpecialization {

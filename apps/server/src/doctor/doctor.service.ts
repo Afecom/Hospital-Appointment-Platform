@@ -424,21 +424,25 @@ export class DoctorService {
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
       { page, limit },
     );
+    const hospital = await this.databaseService.hospital.findUniqueOrThrow({
+      where: { adminId },
+      select: {
+        id: true,
+        name: true,
+        logoUrl: true,
+      },
+    });
+    const hospitalId = hospital.id;
     return await this.databaseService.$transaction(async (tx) => {
-      const hospital = await tx.hospital.findUniqueOrThrow({
-        where: { adminId },
-        select: {
-          id: true,
-          name: true,
-          logoUrl: true,
-        },
-      });
-      const hospitalId = hospital.id;
       const doctors = await tx.doctorHospitalProfile.findMany({
         where: { hospitalId },
-        include: {
+        select: {
+          id: true,
+          slotDuration: true,
           Doctor: {
-            include: {
+            select: {
+              id: true,
+              yearsOfExperience: true,
               User: {
                 select: {
                   fullName: true,
@@ -465,7 +469,7 @@ export class DoctorService {
           meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
         },
       };
-    });
+    }, {});
   }
   async getInactiveHospitalDoctors(
     session: UserSession,
