@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import Modal from "@/components/shared/layout/Modal";
-import { Eye, Pencil, Trash } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import api from "@/lib/axios";
-import { useQueries } from "@tanstack/react-query";
+import { useState } from "react";
+import Modal from "@/components/shared/layout/Modal";
+import { Trash, Eye } from "lucide-react";
+import DoctorCardSkeleton from "@/components/shared/DoctorCardSkeleton";
 
 const fetchDoctors = async (): Promise<any> => {
   try {
@@ -16,30 +17,24 @@ const fetchDoctors = async (): Promise<any> => {
 };
 
 export default function DoctorsListPage() {
-  const result = useQueries({
-    queries: [
-      {
-        queryKey: ["doctors"],
-        queryFn: fetchDoctors,
-      },
-    ],
+  const {
+    data: doctorsRes,
+    isLoading,
+    isError,
+    error,
+  } = useQuery({
+    queryKey: ["doctors"],
+    queryFn: fetchDoctors,
   });
 
-  const [doctorsRes] = result;
-  const [doctors, setDoctors] = useState<any[]>([]);
+  const doctors = doctorsRes?.data?.doctors || [];
 
-  useEffect(() => {
-    if (doctorsRes.data?.data?.doctors) {
-      setDoctors(doctorsRes.data.data.doctors);
-    }
-  }, [doctorsRes.data]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
   const [viewModalOpen, setViewModalOpen] = useState(false);
-  const [editModalOpen, setEditModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const filteredDoctors = doctors.filter((doctor) =>
+  const filteredDoctors = doctors.filter((doctor: any) =>
     doctor.Doctor.User.fullName
       .toLowerCase()
       .includes(searchQuery.toLowerCase())
@@ -50,39 +45,40 @@ export default function DoctorsListPage() {
     setViewModalOpen(true);
   };
 
-  const handleEdit = (doc: any) => {
-    setSelectedDoctor(doc);
-    setEditModalOpen(true);
-  };
-
   const handleDeleteClick = (doc: any) => {
     setSelectedDoctor(doc);
     setDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    setDoctors((prev) => prev.filter((d) => d.id !== selectedDoctor.id));
-    setDeleteModalOpen(false);
-    setSelectedDoctor(null);
-  };
+  const confirmDelete = () => {};
 
-  return (
-    <div className="p-6">
-      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-        <h1 className="text-2xl font-bold text-primary text-center mb-4 md:mb-0">
-          Doctors List
-        </h1>
-        <input
-          type="text"
-          placeholder="Search doctors by name..."
-          className="w-full md:w-auto p-2 border border-primary rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-        />
-      </div>
+  const renderContent = () => {
+    if (isLoading) {
+      return (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {Array.from({ length: 9 }).map((_, index) => (
+            <DoctorCardSkeleton key={index} />
+          ))}
+        </div>
+      );
+    }
 
+    if (isError) {
+      return (
+        <div className="text-center text-red-500">
+          Error:{" "}
+          {error instanceof Error ? error.message : "Failed to fetch doctors."}
+        </div>
+      );
+    }
+
+    if (filteredDoctors.length === 0) {
+      return <div className="text-center text-gray-500">No doctors found.</div>;
+    }
+
+    return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {filteredDoctors.map((doctor) => (
+        {filteredDoctors.map((doctor: any) => (
           <div
             key={doctor.id}
             className="bg-white rounded-lg shadow-md p-4 flex flex-col border border-gray-100"
@@ -95,7 +91,7 @@ export default function DoctorsListPage() {
               />
               <div>
                 <h3 className="font-semibold text-lg text-gray-800">
-                  {doctor.Doctor.User.fullName}
+                  Dr. {doctor.Doctor.User.fullName}
                 </h3>
               </div>
             </div>
@@ -120,13 +116,6 @@ export default function DoctorsListPage() {
                 <Eye className="w-5 h-5" />
               </button>
               <button
-                onClick={() => handleEdit(doctor)}
-                className="p-2 text-secondary hover:bg-blue-50 rounded-md transition-colors"
-                title="Edit"
-              >
-                <Pencil className="w-5 h-5" />
-              </button>
-              <button
                 onClick={() => handleDeleteClick(doctor)}
                 className="p-2 text-white bg-red-500 hover:bg-red-600 rounded-md transition-colors shadow-sm"
                 title="Delete"
@@ -137,6 +126,26 @@ export default function DoctorsListPage() {
           </div>
         ))}
       </div>
+    );
+  };
+
+  return (
+    <div className="p-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
+        <h1 className="text-2xl font-bold text-primary text-center mb-4 md:mb-0">
+          Doctors List
+        </h1>
+        <input
+          type="text"
+          placeholder="Search doctors by name..."
+          className="w-full md:w-auto p-2 border border-primary rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-secondary"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          disabled={isLoading || isError}
+        />
+      </div>
+
+      {renderContent()}
 
       {/* View Modal */}
       {viewModalOpen && selectedDoctor && (
@@ -148,7 +157,7 @@ export default function DoctorsListPage() {
               className="w-24 h-24 rounded-full object-cover mb-4 border-4 border-primary"
             />
             <h2 className="text-xl font-bold text-gray-800">
-              {selectedDoctor.Doctor.User.fullName}
+              Dr. {selectedDoctor.Doctor.User.fullName}
             </h2>
           </div>
           <div className="space-y-3">
@@ -174,55 +183,6 @@ export default function DoctorsListPage() {
         </Modal>
       )}
 
-      {/* Edit Modal (Mock Form) */}
-      {editModalOpen && selectedDoctor && (
-        <Modal onClose={() => setEditModalOpen(false)} title="Edit Doctor">
-          <form
-            className="space-y-4"
-            onSubmit={(e) => {
-              e.preventDefault();
-              setEditModalOpen(false);
-            }}
-          >
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Full Name
-              </label>
-              <input
-                type="text"
-                defaultValue={selectedDoctor.Doctor.User.fullName}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700">
-                Specialization
-              </label>
-              <input
-                type="text"
-                defaultValue={""}
-                className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2"
-              />
-            </div>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setEditModalOpen(false)}
-                className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 bg-primary text-white rounded hover:opacity-90"
-              >
-                Save Changes
-              </button>
-            </div>
-          </form>
-        </Modal>
-      )}
-
       {/* Delete Confirmation Modal */}
       {deleteModalOpen && selectedDoctor && (
         <Modal
@@ -231,8 +191,8 @@ export default function DoctorsListPage() {
         >
           <p className="text-gray-600 mb-6">
             Are you sure you want to delete{" "}
-            <strong>{selectedDoctor.Doctor.User.fullName}</strong>? This action
-            cannot be undone.
+            <strong>Dr. {selectedDoctor.Doctor.User.fullName}</strong>? This
+            action cannot be undone.
           </p>
           <div className="flex justify-end gap-3">
             <button

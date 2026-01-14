@@ -69,7 +69,7 @@ export default function DoctorsPage() {
   const [totalDoctorsData, doctorApplicationsData, inactiveDoctorsData] =
     result;
 
-  const totalDoctors = totalDoctorsData.data?.total ?? 0;
+  const totalDoctors = totalDoctorsData.data?.total ?? 5;
   const doctorApplications = doctorApplicationsData.data?.pendingDoctors ?? 0;
   const inactiveDoctors: any[] =
     inactiveDoctorsData.data?.inactiveDoctors ?? [];
