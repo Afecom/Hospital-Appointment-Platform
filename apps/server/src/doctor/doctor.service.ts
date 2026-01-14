@@ -20,6 +20,7 @@ import {
   approveHospitalDoctor,
   doctorHospitalApplication,
 } from './dto/approve-reject-hospital-doctor.dto.js';
+import { IsIn } from 'class-validator';
 
 @Injectable()
 export class DoctorService {
@@ -96,8 +97,55 @@ export class DoctorService {
   //   });
   // }
 
-  async remove(id: string) {
-    return await this.databaseService.doctor.delete({ where: { id } });
+  async removeDoctorFromHospital(doctorId: string, session: UserSession) {
+    const adminId = session.user.id;
+    const hospital = await this.databaseService.hospital.findUniqueOrThrow({
+      where: { adminId },
+    });
+    const hospitalId = hospital.id;
+    const hospitalDoctor =
+      await this.databaseService.doctorHospitalProfile.findUniqueOrThrow({
+        where: {
+          doctorId_hospitalId: {
+            doctorId,
+            hospitalId,
+          },
+        },
+      });
+    // we got to check if the doctor has an active appointment
+    const appointment = await this.databaseService.appointment.findFirst({
+      where: {
+        doctorId: hospitalDoctor.doctorId,
+        hospitalId: hospitalDoctor.hospitalId,
+        status: {
+          in: ['pending', 'approved'],
+        },
+      },
+    });
+    if (appointment)
+      throw new Error('Doctor has an a pendinc or an approved appointment');
+    return await this.databaseService.$transaction(async (tx) => {
+      try {
+        await tx.schedule.updateMany({
+          where: {
+            doctorId: hospitalDoctor.doctorId,
+            hospitalId: hospitalDoctor.hospitalId,
+          },
+          data: {
+            isDeactivated: true,
+          },
+        });
+        await tx.doctorHospitalProfile.delete({
+          where: { id: hospitalDoctor.id },
+        });
+      } catch (error) {
+        throw new Error('Error removing doctor from hospital');
+      }
+      return {
+        message: 'Doctor removed from hospital successfully',
+        status: 'success',
+      };
+    });
   }
 
   async applyHospitalDoctor(dto: applyHospitalDoctorDto, session: UserSession) {

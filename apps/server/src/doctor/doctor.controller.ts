@@ -4,7 +4,6 @@ import {
   Post,
   Body,
   Patch,
-  Param,
   Delete,
   Query,
 } from '@nestjs/common';
@@ -81,11 +80,14 @@ export class DoctorController {
   //   return this.doctorService.update(id, updateDoctorDto);
   // }
 
-  // @Delete(':id')
-  // @Roles([Role.doctor, Role.admin])
-  // remove(@Param('id') id: string) {
-  //   return this.doctorService.remove(id);
-  // }
+  @Delete()
+  @Roles([Role.hospital_admin, Role.admin])
+  removeFromHospital(
+    @Query('doctorId') doctorId: string,
+    @Session() session: UserSession,
+  ) {
+    return this.doctorService.removeDoctorFromHospital(doctorId, session);
+  }
 
   @Post('apply/hospital')
   @Roles([Role.doctor])

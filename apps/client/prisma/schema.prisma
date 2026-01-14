@@ -378,6 +378,9 @@ enum AppointmentStatus {
   pending
   approved
   rejected
+  cancelled
+  completed
+  expired
 }
 
 enum DoctorApplicationStatus {

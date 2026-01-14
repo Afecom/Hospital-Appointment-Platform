@@ -1,6 +1,6 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import api from "@/lib/axios";
 import { useState } from "react";
 import Modal from "@/components/shared/layout/Modal";
@@ -17,6 +17,7 @@ const fetchDoctors = async (): Promise<any> => {
 };
 
 export default function DoctorsListPage() {
+  const queryClient = useQueryClient();
   const {
     data: doctorsRes,
     isLoading,
@@ -27,6 +28,18 @@ export default function DoctorsListPage() {
     queryFn: fetchDoctors,
   });
 
+  const deleteDoctorMutation = useMutation({
+    mutationFn: (doctorId: string) => {
+      return api.delete(`/doctor?doctorId=${doctorId}`);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["doctors"] });
+    },
+    onError: (error) => {
+      console.error("Failed to delete doctor:", error);
+    },
+  });
+
   const doctors = doctorsRes?.data?.doctors || [];
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -34,10 +47,15 @@ export default function DoctorsListPage() {
   const [viewModalOpen, setViewModalOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
 
-  const filteredDoctors = doctors.filter((doctor: any) =>
-    doctor.Doctor.User.fullName
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
+  const filteredDoctors = doctors.filter(
+    (doctor: any) =>
+      doctor &&
+      doctor.Doctor &&
+      doctor.Doctor.User &&
+      doctor.Doctor.User.fullName &&
+      doctor.Doctor.User.fullName
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase())
   );
 
   const handleView = (doc: any) => {
@@ -50,7 +68,13 @@ export default function DoctorsListPage() {
     setDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {};
+  const confirmDelete = () => {
+    if (selectedDoctor) {
+      deleteDoctorMutation.mutate(selectedDoctor.Doctor.id);
+    }
+    setDeleteModalOpen(false);
+    setSelectedDoctor(null);
+  };
 
   const renderContent = () => {
     if (isLoading) {

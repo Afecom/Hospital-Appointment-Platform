@@ -229,7 +229,6 @@ model Schedule {
   startTime             String
   endTime               String
   status                ScheduleStatus @default(pending)
-  createdBy             String
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
   doctorId              String
@@ -243,7 +242,6 @@ model Schedule {
   isExpired             Boolean        @default(false)
   slotLastGeneratedDate String?
   Appointment           Appointment[]
-  User                  User           @relation(fields: [createdBy], references: [id])
   Doctor                Doctor         @relation(fields: [doctorId], references: [id])
   Hospital              Hospital       @relation(fields: [hospitalId], references: [id])
   Slot                  Slot[]
@@ -320,7 +318,6 @@ model User {
   Payment                                  Payment[]
   Review                                   Review[]
   SavedDoctorHospital                      SavedDoctorHospital[]
-  Schedule                                 Schedule[]
   SearchLog                                SearchLog[]
   account                                  account[]
   session                                  session[]
@@ -378,6 +375,9 @@ enum AppointmentStatus {
   pending
   approved
   rejected
+  cancelled
+  completed
+  expired
 }
 
 enum DoctorApplicationStatus {
