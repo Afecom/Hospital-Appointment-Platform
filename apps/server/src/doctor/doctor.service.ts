@@ -535,7 +535,13 @@ export class DoctorService {
       const hospitalId = hospital.id;
       const whereClause = {
         hospitalId,
-        Doctor: { Schedule: { none: {} } },
+        Doctor: {
+          Schedule: {
+            none: {
+              hospitalId,
+            },
+          },
+        },
       };
       const inactiveDoctors = await tx.doctorHospitalProfile.findMany({
         where: whereClause,
