@@ -125,9 +125,13 @@ export default function DoctorsListPage() {
                 <span className="font-medium">Email:</span>{" "}
                 {doctor.Doctor.User.email}
               </p>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 mb-1">
                 <span className="font-medium">Phone:</span>{" "}
                 {doctor.Doctor.User.phoneNumber}
+              </p>
+              <p className="text-sm text-gray-600">
+                <span className="font-medium">Slot Duration:</span>{" "}
+                {doctor.slotDuration} minutes
               </p>
             </div>
 
@@ -171,7 +175,6 @@ export default function DoctorsListPage() {
 
       {renderContent()}
 
-      {/* View Modal */}
       {viewModalOpen && selectedDoctor && (
         <Modal onClose={() => setViewModalOpen(false)} title="Doctor Details">
           <div className="flex flex-col items-center mb-6">
