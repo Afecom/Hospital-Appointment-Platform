@@ -539,8 +539,21 @@ export class DoctorService {
       };
       const inactiveDoctors = await tx.doctorHospitalProfile.findMany({
         where: whereClause,
-        include: {
-          Doctor: { include: { User: true } },
+        select: {
+          id: true,
+          slotDuration: true,
+          Doctor: {
+            select: {
+              id: true,
+              User: {
+                select: {
+                  id: true,
+                  fullName: true,
+                  phoneNumber: true,
+                },
+              },
+            },
+          },
         },
         skip,
         take,

@@ -140,13 +140,24 @@ export default function DoctorsPage() {
             <h2 className="text-2xl font-bold mb-4 text-secondary">
               Doctors with No Schedules
             </h2>
-            <ul>
+            <div className="grid grid-cols-1 gap-4 max-h-96 overflow-y-auto pr-2">
               {inactiveDoctors.map((doctor) => (
-                <li key={doctor.id} className="text-gray-700 py-1">
-                  {doctor.user.fullName}
-                </li>
+                <div
+                  key={doctor.Doctor.id}
+                  className="bg-gray-100 p-4 rounded-lg shadow-md"
+                >
+                  <h3 className="text-lg font-bold text-gray-800">
+                    Dr. {doctor.Doctor.User.fullName}
+                  </h3>
+                  <p className="text-gray-600">
+                    Phone: {doctor.Doctor.User.phoneNumber}
+                  </p>
+                  <p className="text-gray-600">
+                    Slot Duration: {doctor.slotDuration} minutes
+                  </p>
+                </div>
               ))}
-            </ul>
+            </div>
             <button
               className="mt-6 bg-secondary text-white px-4 py-2 rounded-lg hover:bg-blue-950 transition-colors hover:cursor-pointer"
               onClick={() => setIsModalOpen(false)}
