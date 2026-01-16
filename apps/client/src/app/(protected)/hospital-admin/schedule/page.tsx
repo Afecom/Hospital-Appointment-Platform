@@ -1,4 +1,3 @@
-"use client";
 import { AlertTriangle, CalendarDays } from "lucide-react";
 import DashboardCard from "@/components/shared/ui/DashboardCard";
 import ActivityLog from "@/components/shared/ui/ActivityLog";
