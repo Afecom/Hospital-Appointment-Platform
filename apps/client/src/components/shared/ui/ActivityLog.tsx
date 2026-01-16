@@ -4,7 +4,7 @@ interface LogCardProps {
   timestamp: string;
 }
 
-export default function DoctorActivityLog({
+export default function ActivityLog({
   activity,
   timestamp,
 }: LogCardProps) {

@@ -10,7 +10,7 @@ interface DashboardCardProps {
   onClick?: () => void;
 }
 
-export default function DoctorDashboardCard({
+export default function DashboardCard({
   text,
   path,
   data,
@@ -19,21 +19,18 @@ export default function DoctorDashboardCard({
   onClick,
   isLoading,
 }: DashboardCardProps) {
+  const dashboardClassName = `bg-white p-6 rounded-lg shadow-md`;
+
   const content = (
-    <div
-      className="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition-shadow cursor-pointer"
-      onClick={onClick}
-    >
-      <div className="flex items-center">
-        <div>{icon}</div>
-        <div className="ml-4">
-          <h2 className="text-xl font-bold text-primary">{text}</h2>
-          <div className="flex items-center">
-            <p className="text-gray-600 text-3xl font-extrabold">{data}</p>
-            {active && (
-              <p className="text-sm text-gray-500 ml-2">({active} active)</p>
-            )}
-          </div>
+    <div className="flex items-center">
+      <div>{icon}</div>
+      <div className="ml-4">
+        <h2 className="text-xl font-bold text-primary">{text}</h2>
+        <div className="flex items-center">
+          <p className="text-gray-600 text-3xl font-extrabold">{data}</p>
+          {active && (
+            <p className="text-sm text-gray-500 ml-2">({active} active)</p>
+          )}
         </div>
       </div>
     </div>
@@ -57,8 +54,16 @@ export default function DoctorDashboardCard({
   if (isLoading) return skeleton;
 
   if (path) {
-    return <Link href={path}>{content}</Link>;
+    return (
+      <Link href={path} className={dashboardClassName}>
+        {content}
+      </Link>
+    );
   }
 
-  return content;
+  return (
+    <div className={dashboardClassName} onClick={onClick}>
+      {content}
+    </div>
+  );
 }

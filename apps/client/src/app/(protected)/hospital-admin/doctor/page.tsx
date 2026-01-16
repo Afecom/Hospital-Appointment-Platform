@@ -2,8 +2,8 @@
 import { useState } from "react";
 import { Users, UserPlus, AlertTriangle } from "lucide-react";
 import { useQueries } from "@tanstack/react-query";
-import DoctorDashboardCard from "@/components/shared/ui/DoctorDashboardCard";
-import DoctorActivityLog from "@/components/shared/ui/DoctorActivityLog";
+import DashboardCard from "@/components/shared/ui/DashboardCard";
+import ActivityLog from "@/components/shared/ui/ActivityLog";
 import api from "@/lib/axios";
 
 const recentActivities = [
@@ -84,14 +84,14 @@ export default function DoctorsPage() {
 
       {/* Doctors Management Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        <DoctorDashboardCard
+        <DashboardCard
           text="Total Doctors"
           isLoading={totalDoctorsData.isFetching}
           path="/hospital-admin/doctor/list"
           data={totalDoctors}
           icon={<Users className="w-8 h-8 text-secondary" />}
         />
-        <DoctorDashboardCard
+        <DashboardCard
           text="Doctor Applications"
           isLoading={doctorApplicationsData.isFetching}
           path="/hospital-admin/doctor/applications"
@@ -105,7 +105,7 @@ export default function DoctorsPage() {
         <h2 className="text-2xl font-bold mb-4 text-primary">
           Attention Required
         </h2>
-        <DoctorDashboardCard
+        <DashboardCard
           text="Doctors with No Schedules"
           isLoading={inactiveDoctorsData.isFetching}
           data={totalInactiveDoctors}
@@ -121,7 +121,7 @@ export default function DoctorsPage() {
         </h2>
         <div className="bg-white p-6 rounded-lg shadow-md">
           {recentActivities.map((activity) => (
-            <DoctorActivityLog
+            <ActivityLog
               key={activity.id}
               activity={activity.activity}
               timestamp={activity.timestamp}
