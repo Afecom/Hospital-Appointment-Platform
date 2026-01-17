@@ -174,8 +174,9 @@ export class ScheduleService {
       where: whereClause,
     });
     return {
+      status: 'success',
       message: 'Schedules counted successfully',
-      pendingSchedules,
+      total: pendingSchedules,
     };
   }
 

@@ -575,8 +575,8 @@ export class DoctorService {
   }
 
   async countHospitalDoctors(session: UserSession) {
+    const adminId = session.user.id;
     return await this.databaseService.$transaction(async (tx) => {
-      const adminId = session.user.id;
       const hospital = await tx.hospital.findUniqueOrThrow({
         where: { adminId },
       });
