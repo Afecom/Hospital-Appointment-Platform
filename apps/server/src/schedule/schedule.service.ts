@@ -161,17 +161,13 @@ export class ScheduleService {
         skip,
         include: {
           Doctor: {
-            include: {
+            select: {
+              id: true,
               User: {
                 select: {
                   fullName: true,
                   phoneNumber: true,
-                  email: true,
-                  imageUrl: true,
                 },
-              },
-              DoctorSpecialization: {
-                include: { Specialization: true },
               },
             },
           },
@@ -181,8 +177,12 @@ export class ScheduleService {
       this.prisma.schedule.count({ where: whereClause }),
     ]);
     return {
-      schedules,
-      meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+      status: 'Success',
+      message: 'Schedules fetched successfuly',
+      data: {
+        schedules,
+        meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+      },
     };
   }
 
