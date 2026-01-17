@@ -31,6 +31,12 @@ export class ScheduleController {
     return this.scheduleService.createSchedule(createScheduleDto, session);
   }
 
+  @Get('count')
+  @Roles([Role.hospital_admin])
+  countActiveSchedules(@Session() session: UserSession) {
+    return this.scheduleService.countActiveSchedules(session);
+  }
+
   @Get('approved/:id')
   @Roles([Role.admin])
   findMany(

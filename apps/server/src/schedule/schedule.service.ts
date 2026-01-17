@@ -82,6 +82,32 @@ export class ScheduleService {
     }
     return schedule;
   }
+
+  async countActiveSchedules(session: UserSession) {
+    const adminId = session.user.id;
+    try {
+      const hospital = await this.prisma.hospital.findUniqueOrThrow({
+        where: { adminId },
+      });
+      const hospitalId = hospital.id;
+      const totalActiveSchedules = await this.prisma.schedule.count({
+        where: {
+          hospitalId,
+          status: 'approved',
+          isDeactivated: false,
+          isExpired: false,
+        },
+      });
+      return {
+        status: 'success',
+        message: 'Active schedules counted successfuly',
+        total: totalActiveSchedules,
+      };
+    } catch (error) {
+      throw new Error("Couldn't fetch active schedules");
+    }
+  }
+
   async findApprovedSchedules(
     doctorId: string,
     hospitalId?: string,
