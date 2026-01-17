@@ -1,6 +1,7 @@
 import { AlertTriangle, CalendarDays } from "lucide-react";
 import DashboardCard from "@/components/shared/ui/DashboardCard";
 import ActivityLog from "@/components/shared/ui/ActivityLog";
+import { headers } from "next/headers";
 
 const recentActivities = [
   {
@@ -20,7 +21,32 @@ const recentActivities = [
   },
 ];
 
-export default function SchedulesPage() {
+const getData = async () => {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const fetchOptions = {
+    cache: "no-store" as RequestCache,
+    headers: await headers(),
+  };
+
+  try {
+    const [pendingSchedulesRes] = await Promise.all([
+      fetch(`${apiBaseUrl}/schedule/pending/count`, fetchOptions),
+    ]);
+    if (!pendingSchedulesRes.ok)
+      throw new Error("Failed to fetch pending schedules");
+    const pendingSchedulesData = await pendingSchedulesRes.json();
+    return {
+      totalPendingSchedules: pendingSchedulesData.total,
+    };
+  } catch (error) {
+    return {
+      totalPendingSchedules: 0,
+    };
+  }
+};
+
+export default async function SchedulesPage() {
+  const { totalPendingSchedules } = await getData();
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4 text-primary text-center">
@@ -37,7 +63,7 @@ export default function SchedulesPage() {
             text="Schedule applications"
             isLoading={false}
             path="/hospital-admin/schedule/applications"
-            data={10}
+            data={totalPendingSchedules}
             icon={<AlertTriangle className="w-8 h-8 text-yellow-500" />}
           />
         </div>
