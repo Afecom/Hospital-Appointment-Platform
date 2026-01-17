@@ -29,24 +29,30 @@ const getData = async () => {
   };
 
   try {
-    const [pendingSchedulesRes] = await Promise.all([
+    const [pendingSchedulesRes, activeSchedulesRes] = await Promise.all([
       fetch(`${apiBaseUrl}/schedule/pending/count`, fetchOptions),
+      fetch(`${apiBaseUrl}/schedule/active/count`, fetchOptions),
     ]);
     if (!pendingSchedulesRes.ok)
       throw new Error("Failed to fetch pending schedules");
+    if (!activeSchedulesRes.ok)
+      throw new Error("Failed to fetch active schedules");
     const pendingSchedulesData = await pendingSchedulesRes.json();
+    const activeSchedulesData = await activeSchedulesRes.json();
     return {
       totalPendingSchedules: pendingSchedulesData.total,
+      totalActiveSchedules: activeSchedulesData.total,
     };
   } catch (error) {
     return {
       totalPendingSchedules: 0,
+      totalActiveSchedules: 0,
     };
   }
 };
 
 export default async function SchedulesPage() {
-  const { totalPendingSchedules } = await getData();
+  const { totalPendingSchedules, totalActiveSchedules } = await getData();
   return (
     <div className="p-6">
       <h1 className="text-3xl font-bold mb-4 text-primary text-center">
@@ -79,7 +85,7 @@ export default async function SchedulesPage() {
             text="Total schedules"
             isLoading={false}
             path="/hospital-admin/schedule/list"
-            data={50}
+            data={totalActiveSchedules}
             icon={<CalendarDays className="w-8 h-8 text-secondary" />}
           />
         </div>
