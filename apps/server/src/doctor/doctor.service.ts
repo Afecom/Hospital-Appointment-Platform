@@ -276,10 +276,18 @@ export class DoctorService {
       await this.databaseService.doctorHospitalApplication.findUniqueOrThrow({
         where: { id: dto.applicationId },
       });
-    return await this.databaseService.doctorHospitalApplication.update({
-      where: { id: application.id },
-      data: { status: 'rejected' },
-    });
+    const rejectedDoctor =
+      await this.databaseService.doctorHospitalApplication.update({
+        where: { id: application.id },
+        data: { status: 'rejected' },
+      });
+    return {
+      status: 'Success',
+      message: 'Doctor rejected successfuly',
+      data: {
+        rejectedDoctor,
+      },
+    };
   }
 
   async getRejectedHospitalDoctor(page: number, limit: number) {

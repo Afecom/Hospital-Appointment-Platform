@@ -87,7 +87,7 @@ const DoctorApplicationsPage = () => {
       closeModal();
     } catch (error) {
       addToast({ type: "error", message: "Failed to approve doctor" });
-      console.error("Failed to approve doctor", error);
+      throw new Error("Failed to approve doctor");
     } finally {
       setIsSubmitting(false);
     }
