@@ -132,7 +132,7 @@ export interface getHospitalDoctorsRes {
         yearsOfExperience: number | null;
       };
       slotDuration: number;
-    }[];
+    };
     hospital: {
       id: string;
       name: string;
