@@ -114,3 +114,42 @@ export interface rejectDoctorRes {
 export interface rejectHospitalDoctorBody {
   applicationId: string;
 }
+
+export interface getHospitalDoctorsRes {
+  message: string;
+  status: "Success" | "Failed";
+  data: {
+    doctors: {
+      id: string;
+      Doctor: {
+        id: string;
+        User: {
+          email: string | null;
+          fullName: string;
+          phoneNumber: string | null;
+          imageUrl: string | null;
+        };
+        yearsOfExperience: number | null;
+      };
+      slotDuration: number;
+    }[];
+    hospital: {
+      id: string;
+      name: string;
+      logoUrl: string;
+    };
+    meta: {
+      total: number;
+      page: number;
+      limit: number;
+      lastPage: number;
+      hasNextPage: boolean;
+      hasPrevPage: boolean;
+    };
+  };
+}
+
+export interface removeDoctorFromHospitalRes {
+  message: string;
+  status: "Success" | "Failed";
+}
