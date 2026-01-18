@@ -1,5 +1,11 @@
 export interface countPendingSchedulesRes {
-  status: string;
+  status: "Success" | "Failed";
+  message: string;
+  total: number;
+}
+
+export interface countActiveSchedulesRes {
+  status: "Success" | "Failed";
   message: string;
   total: number;
 }
