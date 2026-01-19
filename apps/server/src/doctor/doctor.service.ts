@@ -1,5 +1,4 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { UpdateDoctorDto } from './dto/update-doctor.dto.js';
 import {
   approveDoctor,
   rejectDoctor,
@@ -20,7 +19,7 @@ import {
   approveHospitalDoctor,
   doctorHospitalApplication,
 } from './dto/approve-reject-hospital-doctor.dto.js';
-import { IsIn } from 'class-validator';
+import { countPendingDoctorsRes } from '@hap/contract';
 
 @Injectable()
 export class DoctorService {
@@ -456,7 +455,9 @@ export class DoctorService {
     });
   }
 
-  async countPendingHospitalDoctors(session: UserSession) {
+  async countPendingHospitalDoctors(
+    session: UserSession,
+  ): Promise<countPendingDoctorsRes> {
     return await this.databaseService.$transaction(async (tx) => {
       const adminId = session.user.id;
       const hospital = await tx.hospital.findUniqueOrThrow({
@@ -593,7 +594,7 @@ export class DoctorService {
     });
     return {
       status: 'Success',
-      message: 'Doctors counted successfully',
+      message: 'Doctors counted successfuly',
       total,
     };
   }

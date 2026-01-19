@@ -21,7 +21,9 @@
     "strictBindCallApply": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
-      "@/*": ["./*"]
+      "@/*": ["./*"],
+      "@hap/contract": ["../../packages/contract/src"],
+      "@hap/contract/*": ["../../packages/contract/src/*"]
     }
   }
 }

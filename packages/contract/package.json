@@ -2,13 +2,13 @@
   "name": "@hap/contract",
   "version": "1.0.0",
   "description": "",
-  "main": "./dist/main.js",
-  "types": "./dist/main.d.ts",
+  "main": "./src/main.ts",
+  "types": "./src/main.ts",
   "type": "module",
   "exports": {
-    ":": {
-      "types": "./dist/main.d.ts",
-      "default": "./dist/main.js"
+    ".": {
+      "types": "./src/main.ts",
+      "default": "./src/main.ts"
     }
   },
   "files": [

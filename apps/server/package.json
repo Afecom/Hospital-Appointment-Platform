@@ -26,6 +26,7 @@
   },
   "dependencies": {
     "@better-auth/cli": "^1.4.7",
+    "@hap/contract": "workspace:*",
     "@nestjs/bullmq": "^11.0.4",
     "@nestjs/common": "^11.1.9",
     "@nestjs/core": "^11.0.1",
