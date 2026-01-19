@@ -584,18 +584,17 @@ export class DoctorService {
 
   async countHospitalDoctors(session: UserSession) {
     const adminId = session.user.id;
-    return await this.databaseService.$transaction(async (tx) => {
-      const hospital = await tx.hospital.findUniqueOrThrow({
-        where: { adminId },
-      });
-      const hospitalId = hospital.id;
-      const total = await tx.doctorHospitalProfile.count({
-        where: { hospitalId },
-      });
-      return {
-        message: 'Doctors counted successfully',
-        total,
-      };
+    const hospital = await this.databaseService.hospital.findUniqueOrThrow({
+      where: { adminId },
     });
+    const hospitalId = hospital.id;
+    const total = await this.databaseService.doctorHospitalProfile.count({
+      where: { hospitalId },
+    });
+    return {
+      status: 'Success',
+      message: 'Doctors counted successfully',
+      total,
+    };
   }
 }
