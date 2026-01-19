@@ -227,16 +227,16 @@ export class ScheduleService {
   }
 
   async remove(id: string, session: UserSession) {
-    const schedule = await this.prisma.schedule.findUnique({ where: { id } });
-    if (!schedule)
-      throw new NotFoundException(
-        "Couldn't find a schedule with the provided ID",
-      );
-    if (schedule.createdBy !== session.user.id)
-      throw new UnauthorizedException(
-        'A schedule can only deleted by the owner',
-      );
-    return await this.prisma.schedule.delete({ where: { id } });
+    const doctor = await this.prisma.doctor.findUniqueOrThrow({
+      where: {
+        userId: session.user.id,
+      },
+    });
+    await this.prisma.schedule.delete({ where: { id, doctorId: doctor.id } });
+    return {
+      status: 'Success',
+      message: 'Schedule deleted successfuly',
+    };
   }
 
   async doctorsSchedule(
