@@ -8,6 +8,7 @@ import { CreateHospitalDto } from './dto/create-hospital.dto.js';
 import { UpdateHospitalDto } from './dto/update-hospital.dto.js';
 import { chapaAxios } from '../lib/chapaaxios.js';
 import { UserSession } from '@thallesp/nestjs-better-auth';
+import { uniqueHospital } from '@hap/contract/main.js';
 
 @Injectable()
 export class HospitalService {
@@ -78,7 +79,7 @@ export class HospitalService {
     return hospitals;
   }
 
-  async findOne(session: UserSession) {
+  async findOne(session: UserSession): Promise<uniqueHospital> {
     const adminId = session.user.id;
     const hospital = await this.databaseService.hospital.findUniqueOrThrow({
       where: { adminId },

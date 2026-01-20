@@ -19,7 +19,7 @@ import {
   approveHospitalDoctor,
   doctorHospitalApplication,
 } from './dto/approve-reject-hospital-doctor.dto.js';
-import { countPendingDoctorsRes } from '@hap/contract';
+import { countHospitalDoctorsRes, countPendingDoctorsRes } from '@hap/contract';
 
 @Injectable()
 export class DoctorService {
@@ -583,7 +583,9 @@ export class DoctorService {
     });
   }
 
-  async countHospitalDoctors(session: UserSession) {
+  async countHospitalDoctors(
+    session: UserSession,
+  ): Promise<countHospitalDoctorsRes> {
     const adminId = session.user.id;
     const hospital = await this.databaseService.hospital.findUniqueOrThrow({
       where: { adminId },

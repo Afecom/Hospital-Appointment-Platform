@@ -13,6 +13,7 @@ import {
   buildPaginationMeta,
 } from '../common/pagination/pagination.js';
 import { createHmac } from 'node:crypto';
+import { countPendingAppointmentsRes } from '@hap/contract/main.js';
 
 //TODO: Connect payment gatway via axios call
 
@@ -118,7 +119,9 @@ export class appointmentService {
     };
   }
 
-  async countPendingHospitalAppointments(session: UserSession) {
+  async countPendingHospitalAppointments(
+    session: UserSession,
+  ): Promise<countPendingAppointmentsRes> {
     const adminId = session.user.id;
     const hospital = await this.prisma.hospital.findUniqueOrThrow({
       where: { adminId },

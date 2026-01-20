@@ -4,6 +4,7 @@ export interface countPendingDoctorsRes {
 }
 
 export interface countHospitalDoctorsRes {
+  status: "Success" | "Failed";
   message: string;
   total: number;
 }

@@ -17,6 +17,7 @@ import {
   normalizePagination,
 } from '../common/pagination/pagination.js';
 import { expireSchedule } from './schedule-expiry-queue.service.js';
+import { countPendingSchedulesRes } from '@hap/contract/main.js';
 
 @Injectable()
 export class ScheduleService {
@@ -186,7 +187,9 @@ export class ScheduleService {
     };
   }
 
-  async countPendingHospitalSchedules(session: UserSession) {
+  async countPendingHospitalSchedules(
+    session: UserSession,
+  ): Promise<countPendingSchedulesRes> {
     const adminId = session.user.id;
     const hospital = await this.prisma.hospital.findUniqueOrThrow({
       where: { adminId },
@@ -200,7 +203,7 @@ export class ScheduleService {
       where: whereClause,
     });
     return {
-      status: 'success',
+      status: 'Success',
       message: 'Schedules counted successfully',
       total: pendingSchedules,
     };
