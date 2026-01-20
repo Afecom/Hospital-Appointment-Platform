@@ -6,10 +6,7 @@ import {
 import { DatabaseService } from '../database/database.service.js';
 import { type UserSession } from '@thallesp/nestjs-better-auth';
 import { applyHospitalDoctorDto } from './dto/apply-hospital-doctor.dto.js';
-import {
-  DoctorApplicationStatus,
-  DoctorHospitalApplicationStatus,
-} from '../../generated/prisma/enums.js';
+import { DoctorHospitalApplicationStatus } from '../../generated/prisma/enums.js';
 import {
   buildPaginationMeta,
   normalizePagination,
@@ -19,7 +16,13 @@ import {
   approveHospitalDoctor,
   doctorHospitalApplication,
 } from './dto/approve-reject-hospital-doctor.dto.js';
-import { countHospitalDoctorsRes, countPendingDoctorsRes } from '@hap/contract';
+import {
+  countHospitalDoctorsRes,
+  countPendingDoctorsRes,
+  getHospitalDoctorsRes,
+  inactiveHospitalDoctorsRes,
+  removeDoctorFromHospitalRes,
+} from '@hap/contract';
 
 @Injectable()
 export class DoctorService {
@@ -96,7 +99,10 @@ export class DoctorService {
   //   });
   // }
 
-  async removeDoctorFromHospital(doctorId: string, session: UserSession) {
+  async removeDoctorFromHospital(
+    doctorId: string,
+    session: UserSession,
+  ): Promise<removeDoctorFromHospitalRes> {
     const adminId = session.user.id;
     const hospital = await this.databaseService.hospital.findUniqueOrThrow({
       where: { adminId },
@@ -142,7 +148,7 @@ export class DoctorService {
       }
       return {
         message: 'Doctor removed from hospital successfully',
-        status: 'success',
+        status: 'Success',
       };
     });
   }
@@ -476,7 +482,11 @@ export class DoctorService {
       };
     });
   }
-  async getHospitalDoctors(session: UserSession, page: number, limit: number) {
+  async getHospitalDoctors(
+    session: UserSession,
+    page: number,
+    limit: number,
+  ): Promise<getHospitalDoctorsRes> {
     const adminId = session.user.id;
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
       { page, limit },
@@ -490,49 +500,47 @@ export class DoctorService {
       },
     });
     const hospitalId = hospital.id;
-    return await this.databaseService.$transaction(async (tx) => {
-      const doctors = await tx.doctorHospitalProfile.findMany({
-        where: { hospitalId },
-        select: {
-          id: true,
-          slotDuration: true,
-          Doctor: {
-            select: {
-              id: true,
-              yearsOfExperience: true,
-              User: {
-                select: {
-                  fullName: true,
-                  imageUrl: true,
-                  phoneNumber: true,
-                  email: true,
-                },
+    const doctors = await this.databaseService.doctorHospitalProfile.findMany({
+      where: { hospitalId },
+      select: {
+        id: true,
+        slotDuration: true,
+        Doctor: {
+          select: {
+            id: true,
+            yearsOfExperience: true,
+            User: {
+              select: {
+                fullName: true,
+                imageUrl: true,
+                phoneNumber: true,
+                email: true,
               },
             },
           },
         },
-        skip,
-        take,
-      });
-      const total = await tx.doctorHospitalProfile.count({
-        where: { hospitalId },
-      });
-      return {
-        message: 'Hospital doctors fetched successfully',
-        status: 'success',
-        data: {
-          doctors,
-          hospital,
-          meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
-        },
-      };
-    }, {});
+      },
+      skip,
+      take,
+    });
+    const total = await this.databaseService.doctorHospitalProfile.count({
+      where: { hospitalId },
+    });
+    return {
+      message: 'Hospital doctors fetched successfully',
+      status: 'Success',
+      data: {
+        doctors,
+        hospital,
+        meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
+      },
+    };
   }
   async getInactiveHospitalDoctors(
     session: UserSession,
     page: number,
     limit: number,
-  ) {
+  ): Promise<inactiveHospitalDoctorsRes> {
     const adminId = session.user.id;
     const { skip, take, normalizedLimit, normalizedPage } = normalizePagination(
       { page, limit },

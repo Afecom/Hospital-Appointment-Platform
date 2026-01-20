@@ -6,8 +6,12 @@ import { useState } from "react";
 import Modal from "@/components/shared/layout/Modal";
 import { Trash, Eye } from "lucide-react";
 import DoctorCardSkeleton from "@/components/shared/DoctorCardSkeleton";
+import {
+  getHospitalDoctorsRes,
+  removeDoctorFromHospitalRes,
+} from "@hap/contract";
 
-const fetchDoctors = async (): Promise<any> => {
+const fetchDoctors = async (): Promise<getHospitalDoctorsRes> => {
   try {
     const res = await api.get("/doctor/hospital");
     return res.data;
@@ -29,7 +33,7 @@ export default function DoctorsListPage() {
   });
 
   const deleteDoctorMutation = useMutation({
-    mutationFn: (doctorId: string) => {
+    mutationFn: (doctorId: string): Promise<removeDoctorFromHospitalRes> => {
       return api.delete(`/doctor?doctorId=${doctorId}`);
     },
     onSuccess: () => {
@@ -55,7 +59,7 @@ export default function DoctorsListPage() {
       doctor.Doctor.User.fullName &&
       doctor.Doctor.User.fullName
         .toLowerCase()
-        .includes(searchQuery.toLowerCase())
+        .includes(searchQuery.toLowerCase()),
   );
 
   const handleView = (doc: any) => {
