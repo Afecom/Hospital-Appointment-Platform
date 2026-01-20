@@ -5,6 +5,11 @@ import { useQueries } from "@tanstack/react-query";
 import DashboardCard from "@/components/shared/ui/DashboardCard";
 import ActivityLog from "@/components/shared/ui/ActivityLog";
 import api from "@/lib/axios";
+import {
+  countHospitalDoctorsRes,
+  countPendingDoctorsRes,
+  inactiveHospitalDoctorsRes,
+} from "@hap/contract";
 
 const recentActivities = [
   {
@@ -24,7 +29,7 @@ const recentActivities = [
   },
 ];
 
-const fetchTotalDoctors = async () =>
+const fetchTotalDoctors = async (): Promise<countHospitalDoctorsRes> =>
   await api
     .get("/doctor/hospital/count")
     .then((res) => res.data)
@@ -32,7 +37,7 @@ const fetchTotalDoctors = async () =>
       throw new Error("Failed to fetch total doctors");
     });
 
-const fetchDoctorApplication = async () =>
+const fetchDoctorApplication = async (): Promise<countPendingDoctorsRes> =>
   await api
     .get("/doctor/hospital/pending/count")
     .then((res) => res.data)
@@ -40,7 +45,7 @@ const fetchDoctorApplication = async () =>
       throw new Error("Failed to fetch doctor applications");
     });
 
-const fetchInactiveDoctors = async () =>
+const fetchInactiveDoctors = async (): Promise<inactiveHospitalDoctorsRes> =>
   await api
     .get("/doctor/hospital/inactive")
     .then((res) => res.data)
@@ -71,8 +76,7 @@ export default function DoctorsPage() {
 
   const totalDoctors = totalDoctorsData.data?.total ?? 5;
   const doctorApplications = doctorApplicationsData.data?.pendingDoctors ?? 0;
-  const inactiveDoctors: any[] =
-    inactiveDoctorsData.data?.inactiveDoctors ?? [];
+  const inactiveDoctors = inactiveDoctorsData.data?.inactiveDoctors ?? [];
   const totalInactiveDoctors = inactiveDoctors.length ?? 8;
   // TODO: Fetch recent doctor activities from /api/doctors/activities
 

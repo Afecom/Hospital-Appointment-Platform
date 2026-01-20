@@ -21,7 +21,7 @@ export interface inactiveHospitalDoctorsRes {
       };
     };
     slotDuration: number;
-  };
+  }[];
   meta: {
     total: number;
     page: number;
