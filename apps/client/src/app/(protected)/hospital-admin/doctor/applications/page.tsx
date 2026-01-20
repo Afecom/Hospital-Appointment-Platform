@@ -47,7 +47,7 @@ const DoctorApplicationsPage = () => {
       { label: "Approved", value: "approved" },
       { label: "Rejected", value: "rejected" },
     ],
-    []
+    [],
   );
 
   if (isError) {
@@ -163,7 +163,7 @@ const DoctorApplicationsPage = () => {
                                     name: string;
                                   };
                                 },
-                                index: number
+                                index: number,
                               ) => (
                                 <span
                                   key={index}
@@ -171,7 +171,7 @@ const DoctorApplicationsPage = () => {
                                 >
                                   {spec.Specialization.name}
                                 </span>
-                              )
+                              ),
                             )}
                           </div>
                         </div>
