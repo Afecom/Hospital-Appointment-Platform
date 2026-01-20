@@ -124,16 +124,16 @@ export interface getHospitalDoctorsRes {
       id: string;
       Doctor: {
         id: string;
+        yearsOfExperience: number | null;
         User: {
           email: string | null;
           fullName: string;
           phoneNumber: string | null;
           imageUrl: string | null;
         };
-        yearsOfExperience: number | null;
       };
       slotDuration: number;
-    };
+    }[];
     hospital: {
       id: string;
       name: string;
