@@ -2,6 +2,13 @@ import DashboardCard from "@/components/shared/ui/dasboardCard";
 import LogCardComponent from "@/components/shared/ui/logCard";
 import { User, BriefcaseMedical, ClipboardClock, Calendar } from "lucide-react";
 import { headers } from "next/headers";
+import {
+  countHospitalDoctorsRes,
+  countPendingAppointmentsRes,
+  countPendingDoctorsRes,
+  countPendingSchedulesRes,
+  uniqueHospital,
+} from "@hap/contract";
 
 async function getData() {
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -35,15 +42,19 @@ async function getData() {
     if (!hospitalRes.ok)
       throw new Error("Failed to fetch pending appointments");
 
-    const pendingDoctorsData = await pendingDoctorsRes.json();
-    const pendingSchedulesData = await pendingSchedulesRes.json();
-    const totalDoctorsData = await totalDoctorsRes.json();
-    const appointmentsData = await appointmentsRes.json();
-    const hospitalData = await hospitalRes.json();
+    const pendingDoctorsData: countPendingDoctorsRes =
+      await pendingDoctorsRes.json();
+    const pendingSchedulesData: countPendingSchedulesRes =
+      await pendingSchedulesRes.json();
+    const totalDoctorsData: countHospitalDoctorsRes =
+      await totalDoctorsRes.json();
+    const appointmentsData: countPendingAppointmentsRes =
+      await appointmentsRes.json();
+    const hospitalData: uniqueHospital = await hospitalRes.json();
 
     return {
       totalPendingDoctors: pendingDoctorsData.pendingDoctors,
-      totalPendingSchedules: pendingSchedulesData.pendingSchedules,
+      totalPendingSchedules: pendingSchedulesData.total,
       totalDoctors: totalDoctorsData.total,
       totalPendingAppointments: appointmentsData.totalAppointments,
       hospitalName: hospitalData.data.name,
