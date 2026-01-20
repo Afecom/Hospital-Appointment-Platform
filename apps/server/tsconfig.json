@@ -12,7 +12,7 @@
     "allowSyntheticDefaultImports": true,
     "target": "ES2023",
     "sourceMap": true,
-    "rootDir": "../..",
+    "rootDir": ".",
     "outDir": "./dist",
     "incremental": true,
     "skipLibCheck": true,
@@ -23,8 +23,8 @@
     "noFallthroughCasesInSwitch": false,
     "paths": {
       "@/*": ["./*"],
-      "@hap/contract": ["../../packages/contract/src"],
-      "@hap/contract/*": ["../../packages/contract/src/*"]
+      "@hap/contract": ["../../packages/contract/dist"],
+      "@hap/contract/*": ["../../packages/contract/dist/*"]
     }
   }
 }

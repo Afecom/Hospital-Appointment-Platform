@@ -2,19 +2,20 @@
   "name": "@hap/contract",
   "version": "1.0.0",
   "description": "",
-  "main": "./src/main.ts",
-  "types": "./src/main.ts",
+  "main": "./dist/main.js",
+  "types": "./dist/main.d.ts",
   "type": "module",
   "exports": {
     ".": {
-      "types": "./src/main.ts",
-      "default": "./src/main.ts"
+      "types": "./dist/main.d.ts",
+      "default": "./dist/main.js"
     }
   },
   "files": [
     "dist"
   ],
   "scripts": {
+    "build": "tsc -p tsconfig.json",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

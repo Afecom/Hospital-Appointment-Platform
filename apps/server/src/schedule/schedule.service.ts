@@ -17,7 +17,7 @@ import {
   normalizePagination,
 } from '../common/pagination/pagination.js';
 import { expireSchedule } from './schedule-expiry-queue.service.js';
-import { countPendingSchedulesRes } from '@hap/contract/main.js';
+import { countPendingSchedulesRes } from '@hap/contract';
 
 @Injectable()
 export class ScheduleService {
