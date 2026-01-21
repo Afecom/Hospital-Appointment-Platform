@@ -2,6 +2,10 @@ import { AlertTriangle, CalendarDays } from "lucide-react";
 import DashboardCard from "@/components/shared/ui/DashboardCard";
 import ActivityLog from "@/components/shared/ui/ActivityLog";
 import { headers } from "next/headers";
+import {
+  countPendingSchedulesRes,
+  countActiveSchedulesRes,
+} from "@hap/contract";
 
 const recentActivities = [
   {
@@ -37,8 +41,10 @@ const getData = async () => {
       throw new Error("Failed to fetch pending schedules");
     if (!activeSchedulesRes.ok)
       throw new Error("Failed to fetch active schedules");
-    const pendingSchedulesData = await pendingSchedulesRes.json();
-    const activeSchedulesData = await activeSchedulesRes.json();
+    const pendingSchedulesData: countPendingSchedulesRes =
+      await pendingSchedulesRes.json();
+    const activeSchedulesData: countActiveSchedulesRes =
+      await activeSchedulesRes.json();
     return {
       totalPendingSchedules: pendingSchedulesData.total,
       totalActiveSchedules: activeSchedulesData.total,
