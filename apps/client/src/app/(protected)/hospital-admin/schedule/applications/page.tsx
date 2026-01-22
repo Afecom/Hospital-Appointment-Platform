@@ -30,9 +30,15 @@ export default async function ScheduleApplicationsPage() {
         </h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {schedulesData.map((schedule) => (
-          <ScheduleCard key={schedule.id} schedule={schedule} />
-        ))}
+        {schedulesData.length > 0 ? (
+          schedulesData.map((schedule) => (
+            <ScheduleCard key={schedule.id} schedule={schedule} />
+          ))
+        ) : (
+          <p className="text-center col-span-full">
+            There are no pending schedule applications at the moment
+          </p>
+        )}
       </div>
     </div>
   );

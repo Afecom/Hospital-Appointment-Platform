@@ -15,7 +15,7 @@ type ScheduleApplication = {
 };
 
 const dayNumberToName = (dayNumber: number): string => {
-  const days = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"];
+  const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   return days[dayNumber] || "";
 };
 

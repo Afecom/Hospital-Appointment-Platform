@@ -260,7 +260,7 @@ export class ScheduleOverlapService {
     endDate: string | null;
     startTime: string;
     endTime: string;
-    hospital?: { timezone?: string | null } | null;
+    Hospital?: { timezone?: string | null } | null;
     status: ScheduleStatus;
   }): IncomingSchedule {
     return {
@@ -270,7 +270,7 @@ export class ScheduleOverlapService {
       dayOfWeek: db.dayOfWeek ?? [],
       startTime: db.startTime,
       endTime: db.endTime,
-      timezone: db.hospital?.timezone || 'UTC',
+      timezone: db.Hospital?.timezone || 'Africa_Addis_Ababa',
     };
   }
 
