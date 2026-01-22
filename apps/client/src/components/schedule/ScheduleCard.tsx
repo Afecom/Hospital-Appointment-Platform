@@ -1,19 +1,6 @@
 import React from "react";
 import { getScheduleForAdminRes } from "@hap/contract";
 
-type ScheduleApplication = {
-  doctorName: string;
-  phoneNumber: string;
-  status: string;
-  type: string;
-  period: string;
-  startDate: string;
-  endDate?: string;
-  startTime: string;
-  endTime: string;
-  daysOfWeek: number[];
-};
-
 const dayNumberToName = (dayNumber: number): string => {
   const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
   return days[dayNumber] || "";
