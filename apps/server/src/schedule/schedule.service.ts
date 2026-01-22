@@ -17,7 +17,10 @@ import {
   normalizePagination,
 } from '../common/pagination/pagination.js';
 import { expireSchedule } from './schedule-expiry-queue.service.js';
-import { countPendingSchedulesRes } from '@hap/contract';
+import {
+  countPendingSchedulesRes,
+  getScheduleForAdminRes,
+} from '@hap/contract';
 
 @Injectable()
 export class ScheduleService {
@@ -28,20 +31,15 @@ export class ScheduleService {
     private expire: expireSchedule,
   ) {}
   async createSchedule(data: CreateScheduleDto, session: UserSession) {
-    const doctor = await this.prisma.doctor.findUnique({
+    const doctor = await this.prisma.doctor.findFirstOrThrow({
       where: { userId: session.user.id },
     });
-    if (!doctor)
-      throw new NotFoundException(
-        "Couldn't find a doctor profile with the given userId",
-      );
     const doctorId = doctor.id;
     const { dayOfWeek, startDate, endDate, startTime, endTime, type } = data;
     // Get hospital timezone (timezone moved to hospital)
-    const hospital = await this.prisma.hospital.findUnique({
+    const hospital = await this.prisma.hospital.findUniqueOrThrow({
       where: { id: data.hospitalId },
     });
-    if (!hospital) throw new NotFoundException('Hospital not found');
     const tz = hospital.timezone || 'UTC';
 
     // one_time schedules should set `startDate` (we removed `date` from schema)
@@ -57,7 +55,6 @@ export class ScheduleService {
     const schedule = await this.prisma.schedule.create({
       data: {
         doctorId: doctor.id,
-        createdBy: session.user.id,
         ...(data as any),
       },
       include: { Hospital: { select: { timezone: true } } },
@@ -131,7 +128,7 @@ export class ScheduleService {
     doctorId?: string,
     page?: number,
     limit?: number,
-  ) {
+  ): Promise<getScheduleForAdminRes> {
     const adminId = session.user.id;
     const hospital = await this.prisma.hospital.findUnique({
       where: { adminId },
@@ -160,7 +157,17 @@ export class ScheduleService {
         where: whereClause,
         take,
         skip,
-        include: {
+        select: {
+          id: true,
+          type: true,
+          startDate: true,
+          endDate: true,
+          dayOfWeek: true,
+          startTime: true,
+          endTime: true,
+          status: true,
+          name: true,
+          period: true,
           Doctor: {
             select: {
               id: true,

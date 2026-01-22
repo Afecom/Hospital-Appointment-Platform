@@ -19,13 +19,12 @@ export class CreateScheduleDto {
   @IsIn(['recurring', 'temporary', 'one_time'])
   type: 'recurring' | 'temporary' | 'one_time';
 
-  @IsOptional()
   @IsArray()
   @ArrayNotEmpty()
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(6, { each: true })
-  dayOfWeek?: number[];
+  dayOfWeek: number[];
 
   @IsOptional()
   @IsDateString()
@@ -60,13 +59,15 @@ export class CreateScheduleDto {
       }
       return `${hh.toString().padStart(2, '0')}:${mm}`;
     }
-    return s; // leave as-is; validation will catch invalid formats
+    return s;
   }
 
+  @IsString()
   @Transform(({ value }) => CreateScheduleDto.normalizeTime(value))
   @Matches(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
   startTime: string;
 
+  @IsString()
   @Transform(({ value }) => CreateScheduleDto.normalizeTime(value))
   @Matches(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
   endTime: string;

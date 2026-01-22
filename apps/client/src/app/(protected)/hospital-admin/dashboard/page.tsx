@@ -123,7 +123,7 @@ export default async function AdminDashboardFunction() {
           />
           <DashboardCard
             text="Schedule Approvals"
-            path="/hospital-admin/schedule/review"
+            path="/hospital-admin/schedule/applications"
             data={totalPendingSchedules}
             icon={<Calendar className="w-8 h-8 text-secondary" />}
           />

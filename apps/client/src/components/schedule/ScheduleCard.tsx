@@ -1,4 +1,5 @@
 import React from "react";
+import { getScheduleForAdminRes } from "@hap/contract";
 
 type ScheduleApplication = {
   doctorName: string;
@@ -18,15 +19,17 @@ const dayNumberToName = (dayNumber: number): string => {
   return days[dayNumber] || "";
 };
 
-const ScheduleCard: React.FC<{ schedule: ScheduleApplication }> = ({
-  schedule,
-}) => {
+const ScheduleCard: React.FC<{
+  schedule: getScheduleForAdminRes["data"]["schedules"][0];
+}> = ({ schedule }) => {
   const isRecurring = schedule.type === "reccuring";
   return (
     <div className="bg-white shadow-md rounded-lg p-4 flex flex-col">
       <div className="mb-3">
-        <p className="font-bold text-md">{schedule.doctorName}</p>
-        <p className="text-gray-500 text-sm">{schedule.phoneNumber}</p>
+        <p className="font-bold text-md">{schedule.Doctor.User.fullName}</p>
+        <p className="text-gray-500 text-sm">
+          {schedule.Doctor.User.phoneNumber}
+        </p>
       </div>
       <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm mb-3">
         <div>
@@ -57,7 +60,7 @@ const ScheduleCard: React.FC<{ schedule: ScheduleApplication }> = ({
       <div className="mb-4">
         <p className="text-sm text-gray-500 mb-1">Days of Week</p>
         <div className="flex flex-wrap gap-1">
-          {schedule.daysOfWeek.map((day) => (
+          {schedule.dayOfWeek.map((day) => (
             <span
               key={day}
               className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full"
