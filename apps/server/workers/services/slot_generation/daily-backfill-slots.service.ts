@@ -1,5 +1,5 @@
 import { prisma } from '../../../src/lib/prisma.js';
-import { DateTime } from '../../../node_modules/@types/luxon/index.js';
+import { DateTime } from 'luxon';
 
 export async function fillMissingSlotsWorker(scheduleId: string) {
   // Fetch schedule + hospital (timezone)

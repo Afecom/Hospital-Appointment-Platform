@@ -81,14 +81,10 @@ export class ScheduleController {
     return this.scheduleService.countPendingHospitalSchedules(session);
   }
 
-  @Patch('admin/:id/status')
+  @Patch('approve/:id')
   @Roles([Role.hospital_admin])
-  approve(
-    @Body() status: ScheduleStatus,
-    @Param('id') id: string,
-    @Session() session: UserSession,
-  ) {
-    return this.scheduleService.approve(id, session, status);
+  approve(@Param('id') id: string, @Session() session: UserSession) {
+    return this.scheduleService.approve(id, session);
   }
 
   @Patch('update/:id')

@@ -6,11 +6,15 @@
   },
   "scripts": {
     "build": "turbo run build",
+    "build:server": "pnpm --filter api run build",
+    "worker:build": "pnpm --filter api run build",
     "db:migrate:deploy": "turbo run db:migrate:deploy",
     "db:migrate:dev": "turbo run db:migrate:dev",
     "db:push": "turbo run db:push",
     "db:seed": "turbo run db:seed",
     "dev": "turbo run dev",
+    "worker:run:dev": "pnpm --filter api run start-workers:dev",
+    "worker:run:prod": "pnpm --filter api run start-workers:prod",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "generate": "turbo run generate",
     "lint": "turbo run lint"

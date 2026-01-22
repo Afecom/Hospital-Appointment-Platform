@@ -12,6 +12,7 @@ import { DatabaseService } from '../database/database.service.js';
 import { ScheduleFilterService } from './schedule-filter.service.js';
 import { UpdateScheduleDto } from './dto/update-schedule.dto.js';
 import { ScheduleOverlapService } from './schedule-overlap-checker.service.js';
+import { slotService } from '../slot/slot.service.js';
 import {
   buildPaginationMeta,
   normalizePagination,
@@ -29,6 +30,7 @@ export class ScheduleService {
     private filterService: ScheduleFilterService,
     private checkOverlap: ScheduleOverlapService,
     private expire: expireSchedule,
+    private slotService: slotService,
   ) {}
   async createSchedule(data: CreateScheduleDto, session: UserSession) {
     const doctor = await this.prisma.doctor.findFirstOrThrow({
@@ -216,24 +218,32 @@ export class ScheduleService {
     };
   }
 
-  async approve(id: string, session: UserSession, status: ScheduleStatus) {
-    const schedule = await this.prisma.schedule.findUnique({ where: { id } });
-    if (!schedule) throw new NotFoundException('Schedule not found');
-    const hospital = await this.prisma.hospital.findUnique({
-      where: { adminId: session.user.id },
-    });
-    if (!hospital)
-      throw new UnauthorizedException(
-        'no hospital administered under the admin',
-      );
-    if (schedule.hospitalId !== hospital.id)
-      throw new UnauthorizedException(
-        'Schedule belongs to another hospital so couldnt be updated by the admin of this hospital',
-      );
-    return await this.prisma.schedule.update({
-      where: { id },
-      data: { status },
-    });
+  async approve(id: string, session: UserSession) {
+    try {
+      const schedule = await this.prisma.schedule.findUniqueOrThrow({
+        where: { id },
+      });
+      const hospital = await this.prisma.hospital.findUniqueOrThrow({
+        where: { adminId: session.user.id },
+      });
+      if (schedule.hospitalId !== hospital.id)
+        throw new UnauthorizedException(
+          'Schedule belongs to another hospital so couldnt be updated by the admin of this hospital',
+        );
+      if (schedule.status === 'approved')
+        throw new BadRequestException('Schedule is already approved');
+      const approvedSchedule = await this.prisma.schedule.update({
+        where: { id },
+        data: { status: 'approved' },
+      });
+      await this.slotService.onScheduleApproved(approvedSchedule.id);
+      return {
+        status: 'Success',
+        message: 'Schedule approved successfuly',
+      };
+    } catch (error) {
+      throw new Error("Couldn't approve schedule");
+    }
   }
 
   async remove(id: string, session: UserSession) {

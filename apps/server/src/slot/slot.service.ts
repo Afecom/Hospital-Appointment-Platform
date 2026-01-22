@@ -15,7 +15,7 @@ export class slotService {
     await this.queue.add(
       'generate-initial-slots',
       { scheduleId },
-      { jobId: `initialSlot-${scheduleId}` },
+      { jobId: `initialSlott-${scheduleId}` },
     );
   }
   async dailyBackFill(scheduleId: string) {

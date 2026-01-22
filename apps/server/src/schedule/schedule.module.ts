@@ -6,6 +6,7 @@ import { ScheduleFilterService } from './schedule-filter.service.js';
 import { DatabaseService } from '../database/database.service.js';
 import { ScheduleOverlapService } from './schedule-overlap-checker.service.js';
 import { expireSchedule } from './schedule-expiry-queue.service.js';
+import { slotModule } from '../slot/slot.module.js';
 
 @Module({
   controllers: [ScheduleController],
@@ -16,6 +17,6 @@ import { expireSchedule } from './schedule-expiry-queue.service.js';
     ScheduleOverlapService,
     expireSchedule,
   ],
-  imports: [DatabaseModule],
+  imports: [DatabaseModule, slotModule],
 })
 export class SchedulesModule {}
