@@ -10,14 +10,6 @@ export class slotService {
       connection: redisConfig,
     });
   }
-
-  async onScheduleApproved(scheduleId: string) {
-    await this.queue.add(
-      'generate-initial-slots',
-      { scheduleId },
-      { jobId: `initialSlot-${scheduleId}` },
-    );
-  }
   async dailyBackFill(scheduleId: string) {
     return this.queue.add(
       'fill-missing-slots',

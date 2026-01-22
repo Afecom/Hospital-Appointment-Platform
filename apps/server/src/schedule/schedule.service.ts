@@ -12,7 +12,7 @@ import { DatabaseService } from '../database/database.service.js';
 import { ScheduleFilterService } from './schedule-filter.service.js';
 import { UpdateScheduleDto } from './dto/update-schedule.dto.js';
 import { ScheduleOverlapService } from './schedule-overlap-checker.service.js';
-import { slotService } from '../slot/slot.service.js';
+import { generateInitialSlots } from '../slot/initial-slot-generator.service.js';
 import {
   buildPaginationMeta,
   normalizePagination,
@@ -30,7 +30,7 @@ export class ScheduleService {
     private filterService: ScheduleFilterService,
     private checkOverlap: ScheduleOverlapService,
     private expire: expireSchedule,
-    private slotService: slotService,
+    private generate: generateInitialSlots,
   ) {}
   async createSchedule(data: CreateScheduleDto, session: UserSession) {
     const doctor = await this.prisma.doctor.findFirstOrThrow({
@@ -232,17 +232,26 @@ export class ScheduleService {
         );
       if (schedule.status === 'approved')
         throw new BadRequestException('Schedule is already approved');
-      const approvedSchedule = await this.prisma.schedule.update({
+      const genResult = await this.generate.generateInitialSlot(schedule.id);
+      const createdCount = genResult.createdCount || 0;
+      console.log(createdCount);
+      if (createdCount <= 0)
+        throw new BadRequestException(
+          "Couln't create slots due to date ranges",
+        );
+
+      await this.prisma.schedule.update({
         where: { id },
         data: { status: 'approved' },
       });
-      await this.slotService.onScheduleApproved(approvedSchedule.id);
+
       return {
         status: 'Success',
         message: 'Schedule approved successfuly',
       };
     } catch (error) {
-      throw new Error("Couldn't approve schedule");
+      console.error('Failed to approve schedule:', error);
+      throw error;
     }
   }
 

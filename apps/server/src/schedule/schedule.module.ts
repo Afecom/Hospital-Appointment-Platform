@@ -13,7 +13,6 @@ import { slotModule } from '../slot/slot.module.js';
   providers: [
     ScheduleService,
     ScheduleFilterService,
-    DatabaseService,
     ScheduleOverlapService,
     expireSchedule,
   ],
