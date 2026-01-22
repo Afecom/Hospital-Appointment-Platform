@@ -26,7 +26,7 @@ const ScheduleCard: React.FC<{
   return (
     <div className="bg-white shadow-md rounded-lg p-4 flex flex-col">
       <div className="mb-3">
-        <p className="font-bold text-md">{schedule.Doctor.User.fullName}</p>
+        <p className="font-bold text-md">Dr. {schedule.Doctor.User.fullName}</p>
         <p className="text-gray-500 text-sm">
           {schedule.Doctor.User.phoneNumber}
         </p>
