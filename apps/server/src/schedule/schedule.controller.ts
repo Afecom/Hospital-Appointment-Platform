@@ -87,6 +87,12 @@ export class ScheduleController {
     return this.scheduleService.approve(id, session);
   }
 
+  @Patch('reject/:id')
+  @Roles([Role.hospital_admin])
+  reject(@Param('id') id: string, @Session() session: UserSession) {
+    return this.scheduleService.reject(id, session);
+  }
+
   @Patch('update/:id')
   @Roles([Role.doctor])
   update(
