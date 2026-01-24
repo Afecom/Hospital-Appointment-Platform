@@ -2,7 +2,8 @@
 
 import React, { useState, useTransition } from "react";
 import { getScheduleForAdminRes } from "@hap/contract";
-import { approveSchedule } from "@/actions/approveRejectSchedule";
+import api from "@/lib/axios";
+import { useRouter } from "next/navigation";
 import ConfirmationModal from "../shared/ui/ConfirmationModal";
 
 const dayNumberToName = (dayNumber: number): string => {
@@ -15,12 +16,18 @@ const ScheduleCard: React.FC<{
 }> = ({ schedule }) => {
   const [isApprovePending, startApproveTransition] = useTransition();
   const [isRjectPending, startRejectTransition] = useTransition();
+  const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const isRecurring = schedule.type === "reccuring";
 
-  const handleReject = () => {
-    startRejectTransition(() => {
-      approveSchedule(schedule.id, "reject");
+  const handleReject = async () => {
+    startRejectTransition(async () => {
+      try {
+        await api.patch(`/schedule/reject/${schedule.id}`);
+        router.refresh();
+      } catch (err) {
+        console.error("Failed to reject schedule", err);
+      }
     });
     setIsModalOpen(false);
   };
@@ -80,8 +87,13 @@ const ScheduleCard: React.FC<{
             className={`bg-secondary ${!isApprovePending && "hover:bg-blue-950 hover:cursor-pointer"}  transition-all text-white font-bold py-1 px-3 text-sm rounded`}
             disabled={isApprovePending}
             onClick={() => {
-              startApproveTransition(() => {
-                approveSchedule(schedule.id, "approve");
+              startApproveTransition(async () => {
+                try {
+                  await api.patch(`/schedule/approve/${schedule.id}`);
+                  router.refresh();
+                } catch (err) {
+                  console.error("Failed to approve schedule", err);
+                }
               });
             }}
           >
@@ -102,6 +114,7 @@ const ScheduleCard: React.FC<{
         onConfirm={handleReject}
         title="Confirm Rejection"
         message="Are you sure you want to reject this schedule?"
+        isPending={isRjectPending}
       />
     </>
   );
