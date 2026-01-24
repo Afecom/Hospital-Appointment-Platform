@@ -146,14 +146,10 @@ export class ScheduleService {
       { page, limit },
     );
     const whereClause = {
+      hospitalId,
       status,
       ...(type && { type }),
       ...(doctorId && { doctorId }),
-      Doctor: {
-        DoctorHospitalProfile: {
-          some: { hospitalId },
-        },
-      },
     };
     const [schedules, total] = await this.prisma.$transaction([
       this.prisma.schedule.findMany({

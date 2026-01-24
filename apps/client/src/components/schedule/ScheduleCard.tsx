@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { useTransition } from "react";
 import { getScheduleForAdminRes } from "@hap/contract";
 import approveSchedule from "@/actions/approveSchedule";
 
@@ -12,6 +12,7 @@ const dayNumberToName = (dayNumber: number): string => {
 const ScheduleCard: React.FC<{
   schedule: getScheduleForAdminRes["data"]["schedules"][0];
 }> = ({ schedule }) => {
+  const [isPending, startTransition] = useTransition();
   const isRecurring = schedule.type === "reccuring";
   return (
     <div className="bg-white shadow-md rounded-lg p-4 flex flex-col">
@@ -62,14 +63,17 @@ const ScheduleCard: React.FC<{
       </div>
       <div className="flex justify-end space-x-2 mt-auto">
         <button
-          className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 text-sm rounded"
+          className={`bg-secondary ${!isPending && "hover:bg-blue-950 hover:cursor-pointer"}  transition-all text-white font-bold py-1 px-3 text-sm rounded`}
+          disabled={isPending}
           onClick={() => {
-            approveSchedule(schedule.id);
+            startTransition(() => {
+              approveSchedule(schedule.id);
+            });
           }}
         >
-          Approve
+          {isPending ? "Approving..." : "Approve"}
         </button>
-        <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 text-sm rounded">
+        <button className="bg-red-500 hover:bg-red-600 transition-all hover:cursor-pointer text-white font-bold py-1 px-3 text-sm rounded">
           Reject
         </button>
       </div>
