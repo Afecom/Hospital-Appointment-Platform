@@ -251,6 +251,32 @@ export class ScheduleService {
     }
   }
 
+  async reject(id: string, session: UserSession) {
+    const adminId = session.user.id;
+    try {
+      const hospital = await this.prisma.hospital.findUniqueOrThrow({
+        where: { adminId },
+      });
+      const schedule = await this.prisma.schedule.findUniqueOrThrow({
+        where: { id },
+      });
+      if (schedule.hospitalId !== hospital.id)
+        throw new UnauthorizedException(
+          "The schedule doesn't belong to this hospital",
+        );
+      await this.prisma.schedule.update({
+        where: { id },
+        data: { status: 'rejected' },
+      });
+      return {
+        status: 'Success',
+        message: 'Schedule rejected successfuly',
+      };
+    } catch (error) {
+      throw new Error('Failed to reject schedule');
+    }
+  }
+
   async remove(id: string, session: UserSession) {
     const doctor = await this.prisma.doctor.findUniqueOrThrow({
       where: {
