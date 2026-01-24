@@ -1,5 +1,8 @@
+"use client";
+
 import React from "react";
 import { getScheduleForAdminRes } from "@hap/contract";
+import approveSchedule from "@/actions/approveSchedule";
 
 const dayNumberToName = (dayNumber: number): string => {
   const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -58,7 +61,12 @@ const ScheduleCard: React.FC<{
         </div>
       </div>
       <div className="flex justify-end space-x-2 mt-auto">
-        <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 text-sm rounded">
+        <button
+          className="bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 text-sm rounded"
+          onClick={() => {
+            approveSchedule(schedule.id);
+          }}
+        >
           Approve
         </button>
         <button className="bg-red-500 hover:bg-red-600 text-white font-bold py-1 px-3 text-sm rounded">

@@ -43,3 +43,8 @@ export interface getScheduleForAdminRes {
     };
   };
 }
+
+export interface approveScheduleRes {
+  status: "Success" | "Failed";
+  message: string;
+}

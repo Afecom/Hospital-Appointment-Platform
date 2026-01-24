@@ -21,6 +21,7 @@ import { expireSchedule } from './schedule-expiry-queue.service.js';
 import {
   countPendingSchedulesRes,
   getScheduleForAdminRes,
+  approveScheduleRes,
 } from '@hap/contract';
 
 @Injectable()
@@ -218,7 +219,7 @@ export class ScheduleService {
     };
   }
 
-  async approve(id: string, session: UserSession) {
+  async approve(id: string, session: UserSession): Promise<approveScheduleRes> {
     try {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
@@ -234,7 +235,6 @@ export class ScheduleService {
         throw new BadRequestException('Schedule is already approved');
       const genResult = await this.generate.generateInitialSlot(schedule.id);
       const createdCount = genResult.createdCount || 0;
-      console.log(createdCount);
       if (createdCount <= 0)
         throw new BadRequestException(
           "Couln't create slots due to date ranges",
