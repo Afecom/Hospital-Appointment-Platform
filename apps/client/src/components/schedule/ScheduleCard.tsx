@@ -2,7 +2,7 @@
 
 import React, { useTransition } from "react";
 import { getScheduleForAdminRes } from "@hap/contract";
-import approveSchedule from "@/actions/approveSchedule";
+import { approveSchedule } from "@/actions/approveRejectSchedule";
 
 const dayNumberToName = (dayNumber: number): string => {
   const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -67,14 +67,22 @@ const ScheduleCard: React.FC<{
           disabled={isPending}
           onClick={() => {
             startTransition(() => {
-              approveSchedule(schedule.id);
+              approveSchedule(schedule.id, "approve");
             });
           }}
         >
           {isPending ? "Approving..." : "Approve"}
         </button>
-        <button className="bg-red-500 hover:bg-red-600 transition-all hover:cursor-pointer text-white font-bold py-1 px-3 text-sm rounded">
-          Reject
+        <button
+          className="bg-red-500 hover:bg-red-600 transition-all hover:cursor-pointer text-white font-bold py-1 px-3 text-sm rounded"
+          onClick={() => {
+            startTransition(() => {
+              approveSchedule(schedule.id, "reject");
+            });
+          }}
+          disabled={isPending}
+        >
+          {isPending ? "Rejecting..." : "Reject"}
         </button>
       </div>
     </div>
