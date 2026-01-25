@@ -4,6 +4,7 @@ import React, { useState, useTransition } from "react";
 import ConfirmationModal from "../shared/ui/ConfirmationModal";
 import { scheduleApplicationSchedule } from "@hap/contract";
 import { useRouter } from "next/navigation";
+import { useToast } from "@/context/ToastContext";
 
 const dayNumberToName = (dayNumber: number): string => {
   const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
@@ -34,11 +35,14 @@ const ScheduleCard: React.FC<{
   const [isPendingTransition, startTransition] = useTransition();
   const router = useRouter();
 
+  const { addToast } = useToast();
+
   const runAction = async (action: Action) => {
     setPendingMap((s) => ({ ...s, [action.key]: true }));
     try {
       if (action.onClick) {
         await Promise.resolve(action.onClick());
+        addToast({ type: "success", message: `${action.label} successful` });
       } else if (action.endpoint) {
         const res = await fetch(action.endpoint, {
           method: action.method ?? "PATCH",
@@ -49,9 +53,15 @@ const ScheduleCard: React.FC<{
           throw new Error(`Request failed: ${res.status} ${text}`);
         }
         startTransition(() => router.refresh());
+        addToast({ type: "success", message: `${action.label} successful` });
       }
     } catch (err) {
       console.error(`Action ${action.key} failed`, err);
+      const message = err instanceof Error ? err.message : String(err);
+      addToast({
+        type: "error",
+        message: `${action.label} failed: ${message}`,
+      });
     } finally {
       setPendingMap((s) => ({ ...s, [action.key]: false }));
     }
