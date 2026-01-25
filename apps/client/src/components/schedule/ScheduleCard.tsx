@@ -50,6 +50,10 @@ const ScheduleCard: React.FC<{
         });
         if (!res.ok) {
           const text = await res.text().catch(() => "");
+          addToast({
+            type: "error",
+            message: `Request failed: ${res.status} ${text}`,
+          });
           throw new Error(`Request failed: ${res.status} ${text}`);
         }
         startTransition(() => router.refresh());

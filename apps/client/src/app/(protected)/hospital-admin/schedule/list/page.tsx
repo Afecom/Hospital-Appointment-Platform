@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 const ScheduleListPage = () => {
   const router = useRouter();
@@ -19,6 +20,7 @@ const ScheduleListPage = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const pathname = usePathname();
   const { addToast } = useToast();
+  const queryClient = useQueryClient();
 
   const {
     data: schedules = [],
@@ -48,32 +50,26 @@ const ScheduleListPage = () => {
   const handleUndo = (id: string) =>
     scheduleAction(id, "undo")
       .then(() => {
-        router.refresh();
-        addToast({ type: "success", message: "Undo successful!" });
+        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
       })
       .catch(() => {
-        addToast({ type: "error", message: "Undo failed!" });
-        router.refresh();
+        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
       });
   const handleApprove = (id: string) =>
     scheduleAction(id, "approve")
       .then(() => {
-        addToast({ type: "success", message: "Approve successful!" });
-        router.refresh();
+        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
       })
       .catch(() => {
-        addToast({ type: "error", message: "Approve failed!" });
-        router.refresh();
+        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
       });
   const handleReject = (id: string) =>
     scheduleAction(id, "reject")
       .then(() => {
-        addToast({ type: "success", message: "Reject successful!" });
-        router.refresh();
+        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
       })
       .catch(() => {
-        addToast({ type: "error", message: "Reject failed!" });
-        router.refresh();
+        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
       });
 
   const filteredSchedules = schedules
