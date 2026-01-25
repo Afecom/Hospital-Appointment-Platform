@@ -19,6 +19,35 @@ const schedulesReq = async () => {
   }
 };
 
+const scheduleAction = async (
+  scheduleId: string,
+  action: "approve" | "reject",
+) => {
+  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+  const fetchOptions = {
+    cache: "no-store" as RequestCache,
+    headers: await headers(),
+    method: "PATCH",
+  };
+  try {
+    if (action === "reject") {
+      const res = await fetch(
+        `${apiBaseUrl}/schedule/reject/${scheduleId}`,
+        fetchOptions,
+      );
+      if (!res.ok) throw new Error("Failed to reject schedule");
+    } else if (action === "approve") {
+      const res = await fetch(
+        `${apiBaseUrl}/schedule/approve/${scheduleId}`,
+        fetchOptions,
+      );
+      if (!res.ok) throw new Error("Failed to approve schedule");
+    } else throw new Error("Invalid action");
+  } catch (error) {
+    throw new Error(`Failed to ${action} schedule`);
+  }
+};
+
 export default async function ScheduleApplicationsPage() {
   const schedules = await schedulesReq();
   const schedulesData = schedules?.data.schedules || [];

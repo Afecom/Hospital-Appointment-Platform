@@ -48,3 +48,23 @@ export interface approveScheduleRes {
   status: "Success" | "Failed";
   message: string;
 }
+
+export interface scheduleApplicationSchedule {
+  type: string;
+  id: string;
+  name: string;
+  Doctor: {
+    id: string;
+    User: {
+      fullName: string;
+      phoneNumber: string | null;
+    };
+  };
+  dayOfWeek: number[];
+  startDate: string;
+  endDate: string | null;
+  startTime: string;
+  endTime: string;
+  status: string;
+  period: string;
+}
