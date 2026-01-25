@@ -90,7 +90,7 @@ export default async function SchedulesPage() {
           <DashboardCard
             text="Total schedules"
             isLoading={false}
-            path="/hospital-admin/schedule/list"
+            path="/hospital-admin/schedule/list?status=approved"
             data={totalActiveSchedules}
             icon={<CalendarDays className="w-8 h-8 text-secondary" />}
           />

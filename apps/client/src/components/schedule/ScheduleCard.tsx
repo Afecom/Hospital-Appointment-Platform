@@ -42,7 +42,7 @@ const ScheduleCard: React.FC<{
     try {
       if (action.onClick) {
         await Promise.resolve(action.onClick());
-        addToast({ type: "success", message: `${action.label} successful` });
+        addToast({ type: "success", message: `${action.label} successful!` });
       } else if (action.endpoint) {
         const res = await fetch(action.endpoint, {
           method: action.method ?? "PATCH",
@@ -53,7 +53,7 @@ const ScheduleCard: React.FC<{
           throw new Error(`Request failed: ${res.status} ${text}`);
         }
         startTransition(() => router.refresh());
-        addToast({ type: "success", message: `${action.label} successful` });
+        addToast({ type: "success", message: `${action.label} successful!` });
       }
     } catch (err) {
       console.error(`Action ${action.key} failed`, err);

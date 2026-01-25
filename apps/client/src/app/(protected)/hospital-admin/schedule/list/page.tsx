@@ -3,69 +3,33 @@
 import React, { useState, useMemo } from "react";
 import Tabs from "@/components/shared/ui/Tabs";
 import ScheduleCard from "@/components/schedule/ScheduleCard";
+import ShimmerCard from "@/components/shared/ui/ShimmerCard";
 import { scheduleApplicationSchedule } from "@hap/contract";
-
-// Mock data for schedules
-const mockSchedules = [
-  {
-    id: "1",
-    doctorName: "Dr. Smith",
-    specialization: "Cardiology",
-    date: "2026-02-10",
-    time: "10:00 - 11:00",
-    status: "active",
-  },
-  {
-    id: "2",
-    doctorName: "Dr. Jones",
-    specialization: "Neurology",
-    date: "2026-02-11",
-    time: "14:00 - 15:00",
-    status: "active",
-  },
-  {
-    id: "3",
-    doctorName: "Dr. Brown",
-    specialization: "Pediatrics",
-    date: "2026-02-12",
-    time: "09:00 - 10:00",
-    status: "pending",
-  },
-  {
-    id: "4",
-    doctorName: "Dr. White",
-    specialization: "Dermatology",
-    date: "2026-02-13",
-    time: "11:00 - 12:00",
-    status: "pending",
-  },
-  {
-    id: "5",
-    doctorName: "Dr. Green",
-    specialization: "Oncology",
-    date: "2026-02-14",
-    time: "16:00 - 17:00",
-    status: "rejected",
-  },
-  {
-    id: "6",
-    doctorName: "Dr. Black",
-    specialization: "Psychiatry",
-    date: "2026-02-15",
-    time: "13:00 - 14:00",
-    status: "rejected",
-  },
-];
-
-type ScheduleStatus = "active" | "pending" | "rejected";
+import { useQuery } from "@tanstack/react-query";
+import { getSchedules } from "@/actions/api";
+import { useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 
 const ScheduleListPage = () => {
-  const [activeTab, setActiveTab] = useState<ScheduleStatus>("active");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const status = searchParams.get("status") || "approved";
   const [searchTerm, setSearchTerm] = useState("");
+  const pathname = usePathname();
+
+  const {
+    data: schedules = [],
+    isLoading,
+    isError,
+  } = useQuery<scheduleApplicationSchedule[]>({
+    queryKey: ["schedules", status],
+    queryFn: () => getSchedules(status),
+  });
 
   const tabs = useMemo(
     () => [
-      { label: "Active", value: "active" },
+      { label: "Active", value: "approved" },
       { label: "Pending", value: "pending" },
       { label: "Rejected", value: "rejected" },
     ],
@@ -73,7 +37,7 @@ const ScheduleListPage = () => {
   );
 
   const handleTabClick = (tab: string) => {
-    setActiveTab(tab as ScheduleStatus);
+    router.push(`${pathname}?status=${tab}`);
   };
 
   // Button handlers (for now, they just log to the console)
@@ -84,14 +48,14 @@ const ScheduleListPage = () => {
   const handleApprove = (id: string) => console.log(`Approving schedule ${id}`);
   const handleReject = (id: string) => console.log(`Rejecting schedule ${id}`);
 
-  const filteredSchedules = mockSchedules
-    .filter((s) => s.status === activeTab)
+  const filteredSchedules = schedules
+    .filter((s) => s.status === status)
     .filter((s) => {
       if (!searchTerm) return true;
       const lower = searchTerm.toLowerCase();
-      const startTime = s.time.split(" - ")[0] || "";
+      const startTime = s.startTime.split(" - ")[0] || "";
       return (
-        s.doctorName.toLowerCase().includes(lower) ||
+        s.Doctor.User.fullName.toLowerCase().includes(lower) ||
         startTime.toLowerCase().includes(lower)
       );
     });
@@ -120,39 +84,23 @@ const ScheduleListPage = () => {
           </div>
         </div>
 
-        <Tabs tabs={tabs} activeTab={activeTab} onTabClick={handleTabClick} />
+        <Tabs tabs={tabs} activeTab={status} onTabClick={handleTabClick} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
-          {filteredSchedules.length > 0 ? (
-            filteredSchedules.map((s) => {
-              const [startTime, endTime] = s.time.split(" - ");
-
-              const scheduleObj: scheduleApplicationSchedule = {
-                name: s.doctorName,
-                Doctor: {
-                  id: s.id,
-                  User: {
-                    fullName: s.doctorName,
-                    phoneNumber: "1234567890",
-                  },
-                },
-                id: s.id,
-                startDate: s.date,
-                endDate: s.date,
-                startTime,
-                endTime,
-                status: s.status,
-                period: "",
-                type: "one-time",
-                dayOfWeek: [3, 4],
-              };
-
+          {isLoading ? (
+            Array.from({ length: 6 }).map((_, i) => <ShimmerCard key={i} />)
+          ) : isError ? (
+            <div className="col-span-full text-center">
+              <p className="text-lg text-red-600">Failed to load schedules.</p>
+            </div>
+          ) : filteredSchedules.length > 0 ? (
+            filteredSchedules.map((schedule) => {
               const actions =
-                s.status === "active"
+                schedule.status === "active"
                   ? [
                       {
-                        key: `delete-${s.id}`,
+                        key: `delete-${schedule.id}`,
                         label: "Delete",
-                        onClick: () => handleDelete(s.id),
+                        onClick: () => handleDelete(schedule.id),
                         className: "bg-red-600 hover:bg-red-800",
                         requiresConfirmation: true,
                         confirmTitle: "Confirm Delete",
@@ -160,18 +108,18 @@ const ScheduleListPage = () => {
                           "Are you sure you want to delete this schedule?",
                       },
                     ]
-                  : s.status === "rejected"
+                  : schedule.status === "rejected"
                     ? [
                         {
-                          key: `undo-${s.id}`,
+                          key: `undo-${schedule.id}`,
                           label: "Undo",
-                          onClick: () => handleUndo(s.id),
+                          onClick: () => handleUndo(schedule.id),
                           className: "bg-yellow-500 hover:bg-yellow-600",
                         },
                         {
-                          key: `delete-${s.id}`,
+                          key: `delete-${schedule.id}`,
                           label: "Delete",
-                          onClick: () => handleDelete(s.id),
+                          onClick: () => handleDelete(schedule.id),
                           className: "bg-red-600 hover:bg-red-800",
                           requiresConfirmation: true,
                           confirmTitle: "Confirm Delete",
@@ -181,15 +129,15 @@ const ScheduleListPage = () => {
                       ]
                     : [
                         {
-                          key: `approve-${s.id}`,
+                          key: `approve-${schedule.id}`,
                           label: "Approve",
-                          onClick: () => handleApprove(s.id),
+                          onClick: () => handleApprove(schedule.id),
                           className: "bg-secondary hover:bg-blue-950",
                         },
                         {
-                          key: `reject-${s.id}`,
+                          key: `reject-${schedule.id}`,
                           label: "Reject",
-                          onClick: () => handleReject(s.id),
+                          onClick: () => handleReject(schedule.id),
                           className: "bg-red-600 hover:bg-red-800",
                           requiresConfirmation: true,
                           confirmTitle: "Confirm Reject",
@@ -200,8 +148,8 @@ const ScheduleListPage = () => {
 
               return (
                 <ScheduleCard
-                  key={s.id}
-                  schedule={scheduleObj}
+                  key={schedule.id}
+                  schedule={schedule}
                   actions={actions}
                 />
               );
@@ -209,7 +157,7 @@ const ScheduleListPage = () => {
           ) : (
             <div className="col-span-full text-center">
               <p className="text-lg text-gray-600">
-                No {activeTab} schedules at the moment.
+                No {status} schedules at the moment.
               </p>
             </div>
           )}
