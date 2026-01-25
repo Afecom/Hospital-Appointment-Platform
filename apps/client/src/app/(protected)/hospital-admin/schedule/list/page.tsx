@@ -95,7 +95,7 @@ const ScheduleListPage = () => {
           ) : filteredSchedules.length > 0 ? (
             filteredSchedules.map((schedule) => {
               const actions =
-                schedule.status === "active"
+                schedule.status === "approved"
                   ? [
                       {
                         key: `delete-${schedule.id}`,
