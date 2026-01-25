@@ -122,6 +122,13 @@ const ScheduleListPage = () => {
                 schedule.status === "approved"
                   ? [
                       {
+                        key: `undo-${schedule.id}`,
+                        label: "Undo",
+                        onClick: () => handleUndo(schedule.id),
+                        className:
+                          "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer",
+                      },
+                      {
                         key: `delete-${schedule.id}`,
                         label: "Delete",
                         onClick: () => handleDelete(schedule.id),
