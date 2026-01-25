@@ -6,10 +6,11 @@ import ScheduleCard from "@/components/schedule/ScheduleCard";
 import ShimmerCard from "@/components/shared/ui/ShimmerCard";
 import { scheduleApplicationSchedule } from "@hap/contract";
 import { useQuery } from "@tanstack/react-query";
-import { getSchedules } from "@/actions/api";
+import { getSchedules, scheduleAction } from "@/actions/api";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
+import { useToast } from "@/context/ToastContext";
 
 const ScheduleListPage = () => {
   const router = useRouter();
@@ -17,6 +18,7 @@ const ScheduleListPage = () => {
   const status = searchParams.get("status") || "approved";
   const [searchTerm, setSearchTerm] = useState("");
   const pathname = usePathname();
+  const { addToast } = useToast();
 
   const {
     data: schedules = [],
@@ -44,9 +46,35 @@ const ScheduleListPage = () => {
   const handleDelete = (id: string) =>
     console.log(`Soft deleting schedule ${id}`);
   const handleUndo = (id: string) =>
-    console.log(`Undoing rejection for schedule ${id}`);
-  const handleApprove = (id: string) => console.log(`Approving schedule ${id}`);
-  const handleReject = (id: string) => console.log(`Rejecting schedule ${id}`);
+    scheduleAction(id, "undo")
+      .then(() => {
+        router.refresh();
+        addToast({ type: "success", message: "Undo successful!" });
+      })
+      .catch(() => {
+        addToast({ type: "error", message: "Undo failed!" });
+        router.refresh();
+      });
+  const handleApprove = (id: string) =>
+    scheduleAction(id, "approve")
+      .then(() => {
+        addToast({ type: "success", message: "Approve successful!" });
+        router.refresh();
+      })
+      .catch(() => {
+        addToast({ type: "error", message: "Approve failed!" });
+        router.refresh();
+      });
+  const handleReject = (id: string) =>
+    scheduleAction(id, "reject")
+      .then(() => {
+        addToast({ type: "success", message: "Reject successful!" });
+        router.refresh();
+      })
+      .catch(() => {
+        addToast({ type: "error", message: "Reject failed!" });
+        router.refresh();
+      });
 
   const filteredSchedules = schedules
     .filter((s) => s.status === status)
@@ -101,7 +129,8 @@ const ScheduleListPage = () => {
                         key: `delete-${schedule.id}`,
                         label: "Delete",
                         onClick: () => handleDelete(schedule.id),
-                        className: "bg-red-600 hover:bg-red-800",
+                        className:
+                          "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
                         requiresConfirmation: true,
                         confirmTitle: "Confirm Delete",
                         confirmMessage:
@@ -114,13 +143,15 @@ const ScheduleListPage = () => {
                           key: `undo-${schedule.id}`,
                           label: "Undo",
                           onClick: () => handleUndo(schedule.id),
-                          className: "bg-yellow-500 hover:bg-yellow-600",
+                          className:
+                            "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer",
                         },
                         {
                           key: `delete-${schedule.id}`,
                           label: "Delete",
                           onClick: () => handleDelete(schedule.id),
-                          className: "bg-red-600 hover:bg-red-800",
+                          className:
+                            "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
                           requiresConfirmation: true,
                           confirmTitle: "Confirm Delete",
                           confirmMessage:
@@ -132,13 +163,15 @@ const ScheduleListPage = () => {
                           key: `approve-${schedule.id}`,
                           label: "Approve",
                           onClick: () => handleApprove(schedule.id),
-                          className: "bg-secondary hover:bg-blue-950",
+                          className:
+                            "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
                         },
                         {
                           key: `reject-${schedule.id}`,
                           label: "Reject",
                           onClick: () => handleReject(schedule.id),
-                          className: "bg-red-600 hover:bg-red-800",
+                          className:
+                            "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
                           requiresConfirmation: true,
                           confirmTitle: "Confirm Reject",
                           confirmMessage:

@@ -1,3 +1,5 @@
+"use server";
+
 import api from "@/lib/axios";
 import { DoctorApplication } from "@/lib/types";
 import {
@@ -26,5 +28,26 @@ export const getSchedules = async (
     return response.data?.data?.schedules ?? [];
   } catch (error) {
     throw new Error(`Failed to fetch ${status} schedules`);
+  }
+};
+
+export const scheduleAction = async (
+  id: string,
+  action: "approve" | "reject" | "undo",
+) => {
+  try {
+    if (action === "reject") {
+      await api.patch(`/schedule/reject/${id}`);
+      return;
+    } else if (action === "approve") {
+      await api.patch(`/schedule/approve/${id}`);
+      return;
+    } else if (action === "undo") {
+      await api.patch(`/schedule/undo/${id}`);
+      return;
+    }
+    throw new Error(`Invalid action: ${action}`);
+  } catch (error) {
+    throw new Error(`Failed to approve schedule`);
   }
 };

@@ -93,6 +93,12 @@ export class ScheduleController {
     return this.scheduleService.reject(id, session);
   }
 
+  @Patch('undo/:id')
+  @Roles([Role.hospital_admin])
+  undo(@Param('id') id: string, @Session() session: UserSession) {
+    return this.scheduleService.undo(id, session);
+  }
+
   @Patch('update/:id')
   @Roles([Role.doctor])
   update(

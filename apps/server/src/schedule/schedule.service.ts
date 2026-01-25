@@ -277,6 +277,34 @@ export class ScheduleService {
     }
   }
 
+  async undo(id: string, session: UserSession) {
+    const adminId = session.user.id;
+    try {
+      const hospital = await this.prisma.hospital.findUniqueOrThrow({
+        where: { adminId },
+      });
+      const schedule = await this.prisma.schedule.findUniqueOrThrow({
+        where: { id },
+      });
+      if (schedule.hospitalId !== hospital.id)
+        throw new UnauthorizedException(
+          "The schedule doesn't belong to this hospital",
+        );
+      if (schedule.status === 'pending')
+        throw new BadRequestException('Schedule is already in pending state');
+      await this.prisma.schedule.update({
+        where: { id },
+        data: { status: 'pending' },
+      });
+      return {
+        status: 'Success',
+        message: 'Schedule reverted successfuly',
+      };
+    } catch (error) {
+      throw new Error('Failed to undo schedule');
+    }
+  }
+
   async remove(id: string, session: UserSession) {
     const doctor = await this.prisma.doctor.findUniqueOrThrow({
       where: {
