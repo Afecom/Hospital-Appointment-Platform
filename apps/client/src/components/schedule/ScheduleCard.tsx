@@ -73,12 +73,9 @@ const ScheduleCard: React.FC<{
     setConfirmState({ isOpen: false, actionKey: null });
   };
 
-  const isRecurring = schedule?.type === "reccuring";
-
   const defaultActions: Action[] = [];
   if ((!actions || actions.length === 0) && schedule?.id) {
-    const apiBaseUrl =
-      process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
+    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
     defaultActions.push(
       {
         key: `approve-${schedule.id}`,
@@ -128,9 +125,7 @@ const ScheduleCard: React.FC<{
             <p className="text-gray-500">Start Date</p>
             <p className="font-semibold">
               {schedule?.startDate}{" "}
-              {!isRecurring && schedule?.endDate
-                ? `to ${schedule.endDate}`
-                : ""}
+              {schedule?.endDate ? `to ${schedule.endDate}` : ""}
             </p>
           </div>
           <div className="col-span-2">
