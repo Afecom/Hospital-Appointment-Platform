@@ -68,3 +68,17 @@ export interface scheduleApplicationSchedule {
   status: string;
   period: string;
 }
+
+export interface scheduleActionApiError {
+  message: string;
+  code: string;
+  appointments: {
+    id: string;
+    Slot: {
+      id: string;
+      date: Date;
+      slotStart: Date;
+      slotEnd: Date;
+    } | null;
+  }[];
+}
