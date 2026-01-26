@@ -36,14 +36,8 @@ export const scheduleAction = async (
   action: "approve" | "reject" | "undo" | "delete" | "deactivate",
 ) => {
   try {
-    if (action === "reject") {
-      await api.patch(`/schedule/reject/${id}`);
-      return;
-    } else if (action === "approve") {
-      await api.patch(`/schedule/approve/${id}`);
-      return;
-    } else if (action === "undo") {
-      await api.patch(`/schedule/undo/${id}`);
+    if (action !== "delete" && action !== "deactivate") {
+      await api.patch(`/schedule/${action}/${id}`);
       return;
     } else if (action === "delete" || action === "deactivate") {
       await api.patch(`/schedule/${id}`, { action });
@@ -51,6 +45,6 @@ export const scheduleAction = async (
     }
     throw new Error(`Invalid action: ${action}`);
   } catch (error) {
-    throw new Error(`Failed to approve schedule`);
+    throw new Error(`Failed to ${action} schedule`);
   }
 };
