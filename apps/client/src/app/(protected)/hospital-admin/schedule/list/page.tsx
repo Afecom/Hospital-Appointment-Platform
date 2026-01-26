@@ -19,7 +19,6 @@ const ScheduleListPage = () => {
   const status = searchParams.get("status") || "approved";
   const [searchTerm, setSearchTerm] = useState("");
   const pathname = usePathname();
-  const { addToast } = useToast();
   const queryClient = useQueryClient();
 
   const {
