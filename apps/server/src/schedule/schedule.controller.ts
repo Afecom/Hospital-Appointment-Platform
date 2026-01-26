@@ -109,10 +109,13 @@ export class ScheduleController {
     return this.scheduleService.updateSchedule(data, session, scheduleId);
   }
 
-  @Delete(':id')
-  @Roles([Role.doctor])
-  remove(@Param('id') id: string, @Session() session: UserSession) {
-    return this.scheduleService.remove(id, session);
+  @Patch(':id')
+  @Roles([Role.doctor, Role.hospital_admin, Role.admin])
+  actionHandler(
+    @Param('id') id: string,
+    @Body() action: 'delete' | 'deactivate',
+  ) {
+    return this.scheduleService.handleAction(id, action);
   }
   @Get('doctor/my')
   @Roles([Role.doctor])

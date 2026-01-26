@@ -305,17 +305,60 @@ export class ScheduleService {
     }
   }
 
-  async remove(id: string, session: UserSession) {
-    const doctor = await this.prisma.doctor.findUniqueOrThrow({
-      where: {
-        userId: session.user.id,
-      },
-    });
-    await this.prisma.schedule.delete({ where: { id, doctorId: doctor.id } });
-    return {
-      status: 'Success',
-      message: 'Schedule deleted successfuly',
-    };
+  async handleAction(id: string, action: 'delete' | 'deactivate') {
+    try {
+      const schedule = await this.prisma.schedule.findUniqueOrThrow({
+        where: { id },
+      });
+      const appointments = await this.prisma.appointment.findMany({
+        where: {
+          scheduleId: schedule.id,
+          status: {
+            in: ['approved', 'pending'],
+          },
+        },
+        select: {
+          id: true,
+          Slot: {
+            select: {
+              id: true,
+              slotStart: true,
+              slotEnd: true,
+              date: true,
+            },
+          },
+        },
+      });
+      if (appointments.length > 0) {
+        throw new BadRequestException({
+          message: 'The schedule has active appointments',
+          code: 'SCHEDULE_HAS_ACTIVE_APPOINTMENTS',
+          appointments,
+        });
+      }
+      if (action === 'deactivate') {
+        await this.prisma.schedule.update({
+          where: { id },
+          data: { isDeactivated: true },
+        });
+      } else if (action === 'delete') {
+        await this.prisma.schedule.update({
+          where: { id },
+          data: { isDeleted: true },
+        });
+      }
+      return {
+        status: 'Success',
+        code:
+          action === 'deactivate' ? 'SCHEDULE_DEACTIVATED' : 'SCHEDULE_DELETED',
+        message:
+          action === 'deactivate'
+            ? 'Schedule deactivated successfuly'
+            : 'Schedule deleted successfuly',
+      };
+    } catch (error) {
+      throw new Error(`failed to ${action} schedule`);
+    }
   }
 
   async doctorsSchedule(
