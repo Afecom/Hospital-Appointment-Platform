@@ -2,10 +2,7 @@
 
 import api from "@/lib/axios";
 import { DoctorApplication } from "@/lib/types";
-import {
-  getScheduleForAdminRes,
-  scheduleApplicationSchedule,
-} from "@hap/contract";
+import { scheduleApplicationSchedule } from "@hap/contract";
 
 export const getDoctorApplications = async (
   status: string,
