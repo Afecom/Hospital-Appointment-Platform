@@ -240,6 +240,7 @@ model Schedule {
   period                SchedulePeriod
   isDeactivated         Boolean        @default(false)
   isExpired             Boolean        @default(false)
+  isDeleted             Boolean        @default(false)
   slotLastGeneratedDate String?
   Appointment           Appointment[]
   Doctor                Doctor         @relation(fields: [doctorId], references: [id])

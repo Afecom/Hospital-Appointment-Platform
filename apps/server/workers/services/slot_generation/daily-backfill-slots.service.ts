@@ -13,8 +13,8 @@ export async function fillMissingSlotsWorker(scheduleId: string) {
     return;
   }
 
-  // Guard: schedule must be active and not expired
-  if (schedule.isDeactivated || schedule.isExpired) {
+  // Guard: schedule must be active, not expired and deleted
+  if (schedule.isDeactivated || schedule.isExpired || schedule.isDeleted) {
     return;
   }
 
