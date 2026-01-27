@@ -21,7 +21,8 @@ import { expireSchedule } from './schedule-expiry-queue.service.js';
 import {
   countPendingSchedulesRes,
   getScheduleForAdminRes,
-  approveScheduleRes,
+  scheduleActionRes,
+  approveRejectScheuleRes,
 } from '@hap/contract';
 import { start } from 'node:repl';
 
@@ -216,7 +217,10 @@ export class ScheduleService {
     };
   }
 
-  async approve(id: string, session: UserSession): Promise<approveScheduleRes> {
+  async approve(
+    id: string,
+    session: UserSession,
+  ): Promise<approveRejectScheuleRes> {
     try {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
@@ -244,6 +248,7 @@ export class ScheduleService {
 
       return {
         status: 'Success',
+        code: 'SCHEDULE_APPROVED',
         message: 'Schedule approved successfuly',
       };
     } catch (error) {
@@ -252,7 +257,10 @@ export class ScheduleService {
     }
   }
 
-  async reject(id: string, session: UserSession) {
+  async reject(
+    id: string,
+    session: UserSession,
+  ): Promise<approveRejectScheuleRes> {
     const adminId = session.user.id;
     try {
       const hospital = await this.prisma.hospital.findUniqueOrThrow({
@@ -271,6 +279,7 @@ export class ScheduleService {
       });
       return {
         status: 'Success',
+        code: 'SCHEDULE_REJECTED',
         message: 'Schedule rejected successfuly',
       };
     } catch (error) {
@@ -281,8 +290,7 @@ export class ScheduleService {
   async handleAction(
     id: string,
     action: 'delete' | 'deactivate' | 'undo' | 'activate',
-  ) {
-    console.log(action);
+  ): Promise<scheduleActionRes> {
     try {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
@@ -360,7 +368,7 @@ export class ScheduleService {
       return {
         status: 'Success',
         code: `SCHEDULE_${action}D`,
-        message: `Schedule ${action}D successfuly`,
+        message: `Schedule ${action === 'undo' ? 'Schedule reverted successffuly' : action.toUpperCase()}D successfuly`,
       };
     } catch (error) {
       console.log(error);

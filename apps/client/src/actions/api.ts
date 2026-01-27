@@ -2,7 +2,11 @@
 
 import api from "@/lib/axios";
 import { DoctorApplication } from "@/lib/types";
-import { scheduleApplicationSchedule } from "@hap/contract";
+import {
+  approveRejectScheuleRes,
+  scheduleActionRes,
+  scheduleApplicationSchedule,
+} from "@hap/contract";
 
 export const getDoctorApplications = async (
   status: string,
@@ -34,12 +38,15 @@ export const scheduleAction = async (
 ) => {
   try {
     if (action === "approve" || action === "reject") {
-      await api.patch(`/schedule/${action}/${id}`);
-      return;
+      const { data } = await api.patch<approveRejectScheuleRes>(
+        `/schedule/${action}/${id}`,
+      );
+      return data;
     } else {
-      const res = await api.patch(`/schedule/${id}`, { action });
-      console.log(res.data);
-      return res.status;
+      const { data } = await api.patch<scheduleActionRes>(`/schedule/${id}`, {
+        action: action,
+      });
+      return data;
     }
   } catch (error) {
     throw new Error(`Failed to ${action} schedule`);

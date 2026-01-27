@@ -44,8 +44,9 @@ export interface getScheduleForAdminRes {
   };
 }
 
-export interface approveScheduleRes {
+export interface approveRejectScheuleRes {
   status: "Success" | "Failed";
+  code: string;
   message: string;
 }
 
@@ -81,4 +82,10 @@ export interface scheduleActionApiError {
       slotEnd: Date;
     } | null;
   }[];
+}
+
+export interface scheduleActionRes {
+  status: "Success" | "Failed";
+  code: string;
+  message: string;
 }

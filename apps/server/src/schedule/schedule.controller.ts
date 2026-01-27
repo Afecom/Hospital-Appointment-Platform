@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { ScheduleService } from './schedule.service.js';
 import { CreateScheduleDto } from './dto/create-schedule.dto.js';
@@ -107,8 +108,15 @@ export class ScheduleController {
   @Roles([Role.doctor, Role.hospital_admin, Role.admin])
   actionHandler(
     @Param('id') id: string,
-    @Body() action: 'delete' | 'deactivate' | 'undo' | 'activate',
+    @Body()
+    body: { action?: 'delete' | 'deactivate' | 'undo' | 'activate' },
   ) {
+    const action =
+      typeof body === 'string' ? body : body && (body.action as any);
+    if (!action) {
+      throw new BadRequestException('No action provided');
+    }
+    console.log(action);
     return this.scheduleService.handleAction(id, action);
   }
   @Get('doctor/my')
