@@ -19,7 +19,6 @@ type Action = {
   requiresConfirmation?: boolean;
   confirmTitle?: string;
   confirmMessage?: string;
-  endpoint?: string;
   method?: string;
 };
 
@@ -42,21 +41,6 @@ const ScheduleCard: React.FC<{
     try {
       if (action.onClick) {
         await Promise.resolve(action.onClick());
-        addToast({ type: "success", message: `${action.label} successful!` });
-      } else if (action.endpoint) {
-        const res = await fetch(action.endpoint, {
-          method: action.method ?? "PATCH",
-          credentials: "include",
-        });
-        if (!res.ok) {
-          const text = await res.text().catch(() => "");
-          addToast({
-            type: "error",
-            message: `Request failed: ${res.status} ${text}`,
-          });
-          throw new Error(`Request failed: ${res.status} ${text}`);
-        }
-        startTransition(() => router.refresh());
         addToast({ type: "success", message: `${action.label} successful!` });
       }
     } catch (err) {
@@ -89,18 +73,15 @@ const ScheduleCard: React.FC<{
 
   const defaultActions: Action[] = [];
   if ((!actions || actions.length === 0) && schedule?.id) {
-    const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL;
     defaultActions.push(
       {
         key: `approve-${schedule.id}`,
         label: "Approve",
-        endpoint: `${apiBaseUrl || ""}/schedule/approve/${schedule.id}`,
         className: "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
       },
       {
         key: `reject-${schedule.id}`,
         label: "Reject",
-        endpoint: `${apiBaseUrl || ""}/schedule/reject/${schedule.id}`,
         className: "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
         requiresConfirmation: true,
         confirmTitle: "Confirm Reject",
