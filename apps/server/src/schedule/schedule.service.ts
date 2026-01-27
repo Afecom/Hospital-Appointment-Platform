@@ -282,6 +282,7 @@ export class ScheduleService {
     id: string,
     action: 'delete' | 'deactivate' | 'undo' | 'activate',
   ) {
+    console.log(action);
     try {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
@@ -350,7 +351,7 @@ export class ScheduleService {
             code: 'SCHEDULE_ALREADY_PENDING',
           });
         await this.prisma.schedule.update({
-          where: { id: schedule.id },
+          where: { id },
           data: {
             status: 'pending',
           },
@@ -358,10 +359,11 @@ export class ScheduleService {
       }
       return {
         status: 'Success',
-        code: `SCHEDULE_${action.toUpperCase()}D`,
-        message: `Schedule ${action.toUpperCase()}D successfuly`,
+        code: `SCHEDULE_${action}D`,
+        message: `Schedule ${action}D successfuly`,
       };
     } catch (error) {
+      console.log(error);
       throw new Error(`failed to ${action} schedule`);
     }
   }

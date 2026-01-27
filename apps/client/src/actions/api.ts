@@ -37,8 +37,9 @@ export const scheduleAction = async (
       await api.patch(`/schedule/${action}/${id}`);
       return;
     } else {
-      await api.patch(`/schedule/${id}`, { action });
-      return;
+      const res = await api.patch(`/schedule/${id}`, { action });
+      console.log(res.data);
+      return res.status;
     }
   } catch (error) {
     throw new Error(`Failed to ${action} schedule`);
