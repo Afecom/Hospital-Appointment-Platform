@@ -23,6 +23,7 @@ import {
   getScheduleForAdminRes,
   approveScheduleRes,
 } from '@hap/contract';
+import { start } from 'node:repl';
 
 @Injectable()
 export class ScheduleService {
@@ -277,39 +278,30 @@ export class ScheduleService {
     }
   }
 
-  async undo(id: string, session: UserSession) {
-    const adminId = session.user.id;
-    try {
-      const hospital = await this.prisma.hospital.findUniqueOrThrow({
-        where: { adminId },
-      });
-      const schedule = await this.prisma.schedule.findUniqueOrThrow({
-        where: { id },
-      });
-      if (schedule.hospitalId !== hospital.id)
-        throw new UnauthorizedException(
-          "The schedule doesn't belong to this hospital",
-        );
-      if (schedule.status === 'pending')
-        throw new BadRequestException('Schedule is already in pending state');
-      await this.prisma.schedule.update({
-        where: { id },
-        data: { status: 'pending' },
-      });
-      return {
-        status: 'Success',
-        message: 'Schedule reverted successfuly',
-      };
-    } catch (error) {
-      throw new Error('Failed to undo schedule');
-    }
-  }
-
-  async handleAction(id: string, action: 'delete' | 'deactivate') {
+  async handleAction(
+    id: string,
+    action: 'delete' | 'deactivate' | 'undo' | 'activate',
+  ) {
     try {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
       });
+      if (action === 'activate') {
+        if (!schedule.isDeactivated)
+          throw new BadRequestException({
+            message: 'The schedule is not deactivated',
+            code: 'SCHEDULE_NOT_DEACTIVATED',
+          });
+        await this.prisma.schedule.update({
+          where: { id: schedule.id },
+          data: { isDeactivated: false },
+        });
+        return {
+          status: 'Success',
+          code: 'SCHEDULE_ACTIVATED',
+          message: 'Schedule activated successfuly',
+        };
+      }
       const appointments = await this.prisma.appointment.findMany({
         where: {
           scheduleId: schedule.id,
@@ -337,24 +329,37 @@ export class ScheduleService {
         });
       }
       if (action === 'deactivate') {
+        if (schedule.isDeactivated)
+          throw new BadRequestException({
+            message: 'The schedule is already deactivated',
+            code: 'SCHEDULE_ALREADY_DEACTIVATED',
+          });
         await this.prisma.schedule.update({
-          where: { id },
+          where: { id: schedule.id },
           data: { isDeactivated: true },
         });
       } else if (action === 'delete') {
         await this.prisma.schedule.update({
-          where: { id },
+          where: { id: schedule.id },
           data: { isDeleted: true },
+        });
+      } else if (action === 'undo') {
+        if (schedule.status === 'pending')
+          throw new BadRequestException({
+            message: 'The schedule is already pending',
+            code: 'SCHEDULE_ALREADY_PENDING',
+          });
+        await this.prisma.schedule.update({
+          where: { id: schedule.id },
+          data: {
+            status: 'pending',
+          },
         });
       }
       return {
         status: 'Success',
-        code:
-          action === 'deactivate' ? 'SCHEDULE_DEACTIVATED' : 'SCHEDULE_DELETED',
-        message:
-          action === 'deactivate'
-            ? 'Schedule deactivated successfuly'
-            : 'Schedule deleted successfuly',
+        code: `SCHEDULE_${action.toUpperCase()}D`,
+        message: `Schedule ${action.toUpperCase()}D successfuly`,
       };
     } catch (error) {
       throw new Error(`failed to ${action} schedule`);

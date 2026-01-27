@@ -30,17 +30,16 @@ export const getSchedules = async (
 
 export const scheduleAction = async (
   id: string,
-  action: "approve" | "reject" | "undo" | "delete" | "deactivate",
+  action: "approve" | "reject" | "undo" | "delete" | "deactivate" | "activate",
 ) => {
   try {
-    if (action !== "delete" && action !== "deactivate") {
+    if (action === "approve" || action === "reject") {
       await api.patch(`/schedule/${action}/${id}`);
       return;
-    } else if (action === "delete" || action === "deactivate") {
+    } else {
       await api.patch(`/schedule/${id}`, { action });
       return;
     }
-    throw new Error(`Invalid action: ${action}`);
   } catch (error) {
     throw new Error(`Failed to ${action} schedule`);
   }

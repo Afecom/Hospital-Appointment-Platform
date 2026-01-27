@@ -10,7 +10,6 @@ import { getSchedules, scheduleAction } from "@/actions/api";
 import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
-import { useToast } from "@/context/ToastContext";
 import { useQueryClient } from "@tanstack/react-query";
 
 const ScheduleListPage = () => {
@@ -19,7 +18,6 @@ const ScheduleListPage = () => {
   const status = searchParams.get("status") || "approved";
   const [searchTerm, setSearchTerm] = useState("");
   const pathname = usePathname();
-  const { addToast } = useToast();
   const queryClient = useQueryClient();
 
   const {

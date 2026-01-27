@@ -93,12 +93,6 @@ export class ScheduleController {
     return this.scheduleService.reject(id, session);
   }
 
-  @Patch('undo/:id')
-  @Roles([Role.hospital_admin])
-  undo(@Param('id') id: string, @Session() session: UserSession) {
-    return this.scheduleService.undo(id, session);
-  }
-
   @Patch('update/:id')
   @Roles([Role.doctor])
   update(
@@ -113,7 +107,7 @@ export class ScheduleController {
   @Roles([Role.doctor, Role.hospital_admin, Role.admin])
   actionHandler(
     @Param('id') id: string,
-    @Body() action: 'delete' | 'deactivate',
+    @Body() action: 'delete' | 'deactivate' | 'undo' | 'activate',
   ) {
     return this.scheduleService.handleAction(id, action);
   }
