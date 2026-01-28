@@ -238,7 +238,8 @@ export class ScheduleService {
       const createdCount = genResult.createdCount || 0;
       if (createdCount <= 0)
         throw new BadRequestException({
-          message: "Couldn't generate slot due to date ranges",
+          message:
+            "Couldn't generate slots due to date ranges or slots already exist",
           code: 'SLOT_GENERATION_FAILED',
           data: genResult,
         });
