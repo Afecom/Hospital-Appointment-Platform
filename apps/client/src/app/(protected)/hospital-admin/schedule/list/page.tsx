@@ -42,32 +42,37 @@ const ScheduleListPage = () => {
     router.push(`${pathname}?status=${tab}`);
   };
 
-  // Button handlers (for now, they just log to the console)
   const handleDelete = (id: string) =>
     console.log(`Soft deleting schedule ${id}`);
   const handleUndo = (id: string) =>
     scheduleAction(id, "undo")
-      .then(() => {
+      .then((res) => {
         queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        return res;
       })
-      .catch(() => {
+      .catch((err) => {
         queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        throw err;
       });
   const handleApprove = (id: string) =>
     scheduleAction(id, "approve")
-      .then(() => {
+      .then((res) => {
         queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        return res;
       })
-      .catch(() => {
+      .catch((err) => {
         queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        throw err;
       });
   const handleReject = (id: string) =>
     scheduleAction(id, "reject")
-      .then(() => {
+      .then((res) => {
         queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        return res;
       })
-      .catch(() => {
+      .catch((err) => {
         queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        throw err;
       });
 
   const filteredSchedules = schedules
@@ -122,14 +127,18 @@ const ScheduleListPage = () => {
                       {
                         key: `undo-${schedule.id}`,
                         label: "Undo",
-                        onClick: () => handleUndo(schedule.id),
+                        onClick: async () => {
+                          await handleUndo(schedule.id);
+                        },
                         className:
                           "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer",
                       },
                       {
                         key: `delete-${schedule.id}`,
                         label: "Delete",
-                        onClick: () => handleDelete(schedule.id),
+                        onClick: async () => {
+                          await handleDelete(schedule.id);
+                        },
                         className:
                           "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
                         requiresConfirmation: true,
@@ -143,14 +152,18 @@ const ScheduleListPage = () => {
                         {
                           key: `undo-${schedule.id}`,
                           label: "Undo",
-                          onClick: () => handleUndo(schedule.id),
+                          onClick: async () => {
+                            await handleUndo(schedule.id);
+                          },
                           className:
                             "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer",
                         },
                         {
                           key: `delete-${schedule.id}`,
                           label: "Delete",
-                          onClick: () => handleDelete(schedule.id),
+                          onClick: async () => {
+                            await handleDelete(schedule.id);
+                          },
                           className:
                             "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
                           requiresConfirmation: true,
@@ -163,14 +176,18 @@ const ScheduleListPage = () => {
                         {
                           key: `approve-${schedule.id}`,
                           label: "Approve",
-                          onClick: () => handleApprove(schedule.id),
+                          onClick: async () => {
+                            await handleApprove(schedule.id);
+                          },
                           className:
                             "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
                         },
                         {
                           key: `reject-${schedule.id}`,
                           label: "Reject",
-                          onClick: () => handleReject(schedule.id),
+                          onClick: async () => {
+                            await handleReject(schedule.id);
+                          },
                           className:
                             "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
                           requiresConfirmation: true,

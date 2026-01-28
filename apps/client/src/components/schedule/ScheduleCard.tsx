@@ -1,9 +1,8 @@
 "use client";
 
-import React, { useState, useTransition } from "react";
+import React, { useState } from "react";
 import ConfirmationModal from "../shared/ui/ConfirmationModal";
 import { scheduleApplicationSchedule } from "@hap/contract";
-import { useRouter } from "next/navigation";
 import { useToast } from "@/context/ToastContext";
 
 const dayNumberToName = (dayNumber: number): string => {
@@ -14,7 +13,7 @@ const dayNumberToName = (dayNumber: number): string => {
 type Action = {
   key: string;
   label: string;
-  onClick?: () => Promise<void> | void;
+  onClick: () => Promise<void> | void;
   className?: string;
   requiresConfirmation?: boolean;
   confirmTitle?: string;
@@ -24,15 +23,13 @@ type Action = {
 
 const ScheduleCard: React.FC<{
   schedule: scheduleApplicationSchedule;
-  actions?: Action[];
+  actions: Action[];
 }> = ({ schedule, actions = [] }) => {
   const [pendingMap, setPendingMap] = useState<Record<string, boolean>>({});
   const [confirmState, setConfirmState] = useState<{
     isOpen: boolean;
     actionKey: string | null;
   }>({ isOpen: false, actionKey: null });
-  const [isPendingTransition, startTransition] = useTransition();
-  const router = useRouter();
 
   const { addToast } = useToast();
 
@@ -40,16 +37,26 @@ const ScheduleCard: React.FC<{
     setPendingMap((s) => ({ ...s, [action.key]: true }));
     try {
       if (action.onClick) {
-        await Promise.resolve(action.onClick());
-        addToast({ type: "success", message: `${action.label} successful!` });
+        const res: any = await Promise.resolve(action.onClick() as any);
+        let apiMessage = `${action.label} successful!`;
+        if (res && typeof res === "object") {
+          apiMessage = res.message ?? res.data?.message ?? apiMessage;
+        }
+        addToast({ type: "success", message: apiMessage });
       }
     } catch (err) {
       console.error(`Action ${action.key} failed`, err);
-      const message = err instanceof Error ? err.message : String(err);
-      addToast({
-        type: "error",
-        message: `${action.label} failed: ${message}`,
-      });
+      let message = "Something went wrong";
+      try {
+        const anyErr = err as any;
+        if (anyErr?.response?.data?.message)
+          message = anyErr.response.data.message;
+        else if (anyErr?.message) message = anyErr.message;
+        else message = String(anyErr);
+      } catch (e) {
+        message = String(err);
+      }
+      addToast({ type: "error", message });
     } finally {
       setPendingMap((s) => ({ ...s, [action.key]: false }));
     }
@@ -66,31 +73,10 @@ const ScheduleCard: React.FC<{
   const handleConfirm = async () => {
     const key = confirmState.actionKey;
     if (!key) return;
-    const action = effectiveActions.find((a) => a.key === key);
+    const action = actions.find((a) => a.key === key);
     if (action) await runAction(action);
     setConfirmState({ isOpen: false, actionKey: null });
   };
-
-  const defaultActions: Action[] = [];
-  if ((!actions || actions.length === 0) && schedule?.id) {
-    defaultActions.push(
-      {
-        key: `approve-${schedule.id}`,
-        label: "Approve",
-        className: "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
-      },
-      {
-        key: `reject-${schedule.id}`,
-        label: "Reject",
-        className: "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
-        requiresConfirmation: true,
-        confirmTitle: "Confirm Reject",
-        confirmMessage: "Are you sure you want to reject this schedule?",
-      },
-    );
-  }
-
-  const effectiveActions = actions.length > 0 ? actions : defaultActions;
 
   return (
     <>
@@ -147,7 +133,7 @@ const ScheduleCard: React.FC<{
           </div>
         )}
         <div className="flex justify-end space-x-2 mt-auto">
-          {effectiveActions.map((action) => (
+          {actions.map((action) => (
             <button
               key={action.key}
               className={`${action.className ?? "bg-secondary hover:bg-blue-950"} transition-all text-white font-bold py-1 px-3 text-sm rounded`}
@@ -165,11 +151,11 @@ const ScheduleCard: React.FC<{
         onClose={() => setConfirmState({ isOpen: false, actionKey: null })}
         onConfirm={handleConfirm}
         title={
-          effectiveActions.find((a) => a.key === confirmState.actionKey)
-            ?.confirmTitle ?? "Please confirm"
+          actions.find((a) => a.key === confirmState.actionKey)?.confirmTitle ??
+          "Please confirm"
         }
         message={
-          effectiveActions.find((a) => a.key === confirmState.actionKey)
+          actions.find((a) => a.key === confirmState.actionKey)
             ?.confirmMessage ?? "Are you sure?"
         }
         isPending={

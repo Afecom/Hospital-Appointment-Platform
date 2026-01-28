@@ -17,7 +17,19 @@ export const getDoctorApplications = async (
     );
     return response.data.data.Applications;
   } catch (error) {
-    throw new Error(`Failed to fetch ${status} doctors`);
+    const anyErr = error as any;
+    const resp = anyErr?.response?.data;
+    let message = `Failed to fetch ${status} doctors`;
+    if (resp) {
+      if (typeof resp === "string") message = resp;
+      else if (Array.isArray(resp?.message)) message = resp.message.join(", ");
+      else if (resp?.message) message = resp.message;
+      else if (resp?.error) message = resp.error;
+      else message = JSON.stringify(resp);
+    } else if (anyErr?.message) {
+      message = anyErr.message;
+    }
+    throw new Error(message);
   }
 };
 
@@ -28,7 +40,19 @@ export const getSchedules = async (
     const response = await api.get(`/schedule?status=${status}`);
     return response.data?.data?.schedules ?? [];
   } catch (error) {
-    throw new Error(`Failed to fetch ${status} schedules`);
+    const anyErr = error as any;
+    const resp = anyErr?.response?.data;
+    let message = `Failed to fetch ${status} schedules`;
+    if (resp) {
+      if (typeof resp === "string") message = resp;
+      else if (Array.isArray(resp?.message)) message = resp.message.join(", ");
+      else if (resp?.message) message = resp.message;
+      else if (resp?.error) message = resp.error;
+      else message = JSON.stringify(resp);
+    } else if (anyErr?.message) {
+      message = anyErr.message;
+    }
+    throw new Error(message);
   }
 };
 
@@ -38,10 +62,10 @@ export const scheduleAction = async (
 ) => {
   try {
     if (action === "approve" || action === "reject") {
-      const { data } = await api.patch<approveRejectScheuleRes>(
+      const res = await api.patch<approveRejectScheuleRes>(
         `/schedule/${action}/${id}`,
       );
-      return data;
+      return res.data;
     } else {
       const { data } = await api.patch<scheduleActionRes>(`/schedule/${id}`, {
         action: action,
@@ -49,6 +73,18 @@ export const scheduleAction = async (
       return data;
     }
   } catch (error) {
-    throw new Error(`Failed to ${action} schedule`);
+    const anyErr = error as any;
+    const resp = anyErr?.response?.data;
+    let message = `Failed to ${action} schedule`;
+    if (resp) {
+      if (typeof resp === "string") message = resp;
+      else if (Array.isArray(resp?.message)) message = resp.message.join(", ");
+      else if (resp?.message) message = resp.message;
+      else if (resp?.error) message = resp.error;
+      else message = JSON.stringify(resp);
+    } else if (anyErr?.message) {
+      message = anyErr.message;
+    }
+    throw new Error(message);
   }
 };

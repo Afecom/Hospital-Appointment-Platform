@@ -1,27 +1,57 @@
+"use client";
+
 import ScheduleCard from "@/components/schedule/ScheduleCard";
 import React from "react";
 import { getScheduleForAdminRes } from "@hap/contract";
-import { headers } from "next/headers";
+import { scheduleAction } from "@/actions/api";
+import api from "@/lib/axios";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import ShimmerCard from "@/components/shared/ui/ShimmerCard";
+import ErrorMessage from "@/components/shared/ui/ErrorMessage";
 
-const schedulesReq = async () => {
-  const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
-  const fetchOptions = {
-    cache: "no-store" as RequestCache,
-    headers: await headers(),
-  };
+const getPendingSchedules = async () => {
   try {
-    const res = await fetch(`${apiBaseUrl}/schedule`, fetchOptions);
-    if (!res.ok) throw new Error("Failed to fetch schedules");
-    const data: getScheduleForAdminRes = await res.json();
-    return data;
+    const res = await api.get<getScheduleForAdminRes>("/schedule");
+    return res.data;
   } catch (error) {
-    console.error("Failed to fetch schedules", error);
+    throw new Error("Failed to fetch schedules.");
   }
 };
 
-export default async function ScheduleApplicationsPage() {
-  const schedules = await schedulesReq();
+export default function ScheduleApplicationsPage() {
+  const queryClient = useQueryClient();
+  const {
+    data: schedules,
+    isLoading,
+    isError,
+    error,
+  } = useQuery<getScheduleForAdminRes>({
+    queryKey: ["schedule-applications"],
+    queryFn: getPendingSchedules,
+  });
   const schedulesData = schedules?.data.schedules || [];
+  const handleApprove = (id: string) =>
+    scheduleAction(id, "approve")
+      .then((res) => {
+        queryClient.invalidateQueries({ queryKey: ["schedule-applications"] });
+        return res;
+      })
+      .catch((err) => {
+        queryClient.invalidateQueries({ queryKey: ["schedule-applications"] });
+        throw err;
+      });
+  const handleReject = (id: string) => {
+    return scheduleAction(id, "reject")
+      .then((res) => {
+        queryClient.invalidateQueries({ queryKey: ["schedule-applications"] });
+        return res;
+      })
+      .catch((err) => {
+        queryClient.invalidateQueries({ queryKey: ["schedule-applications"] });
+        throw err;
+      });
+  };
+
   return (
     <div className="p-8">
       <div className="text-center">
@@ -30,9 +60,43 @@ export default async function ScheduleApplicationsPage() {
         </h1>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {schedulesData.length > 0 ? (
+        {isLoading ? (
+          Array.from({ length: 6 }).map((_, index) => (
+            <ShimmerCard key={index} />
+          ))
+        ) : isError ? (
+          <div className="col-span-full">
+            <ErrorMessage message={error?.message || "An error occurred."} />
+          </div>
+        ) : schedulesData.length > 0 ? (
           schedulesData.map((schedule) => (
-            <ScheduleCard key={schedule.id} schedule={schedule} />
+            <ScheduleCard
+              key={schedule.id}
+              schedule={schedule}
+              actions={[
+                {
+                  key: `approve-${schedule.id}`,
+                  label: "Approve",
+                  onClick: async () => {
+                    await handleApprove(schedule.id);
+                  },
+                  className:
+                    "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
+                },
+                {
+                  key: `reject-${schedule.id}`,
+                  label: "Reject",
+                  onClick: async () => {
+                    await handleReject(schedule.id);
+                  },
+                  className: "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
+                  requiresConfirmation: true,
+                  confirmTitle: "Confirm Reject",
+                  confirmMessage:
+                    "Are you sure you want to reject this schedule?",
+                },
+              ]}
+            />
           ))
         ) : (
           <p className="text-center col-span-full">

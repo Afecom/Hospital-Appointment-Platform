@@ -237,9 +237,11 @@ export class ScheduleService {
       const genResult = await this.generate.generateInitialSlot(schedule.id);
       const createdCount = genResult.createdCount || 0;
       if (createdCount <= 0)
-        throw new BadRequestException(
-          "Couln't create slots due to date ranges",
-        );
+        throw new BadRequestException({
+          message: "Couldn't generate slot due to date ranges",
+          code: 'SLOT_GENERATION_FAILED',
+          data: genResult,
+        });
 
       await this.prisma.schedule.update({
         where: { id },
@@ -371,7 +373,6 @@ export class ScheduleService {
         message: `Schedule ${action === 'undo' ? 'Schedule reverted successffuly' : action.toUpperCase()}D successfuly`,
       };
     } catch (error) {
-      console.log(error);
       throw new Error(`failed to ${action} schedule`);
     }
   }
