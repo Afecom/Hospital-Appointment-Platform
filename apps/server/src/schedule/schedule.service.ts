@@ -235,15 +235,6 @@ export class ScheduleService {
       if (schedule.status === 'approved')
         throw new BadRequestException('Schedule is already approved');
       const genResult = await this.generate.generateInitialSlot(schedule.id);
-      const createdCount = genResult.createdCount || 0;
-      if (createdCount <= 0)
-        throw new BadRequestException({
-          message:
-            "Couldn't generate slots due to date ranges or slots already exist",
-          code: 'SLOT_GENERATION_FAILED',
-          data: genResult,
-        });
-
       await this.prisma.schedule.update({
         where: { id },
         data: { status: 'approved' },

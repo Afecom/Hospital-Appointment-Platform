@@ -6,7 +6,7 @@ import { scheduleApplicationSchedule } from "@hap/contract";
 import { useToast } from "@/context/ToastContext";
 
 const dayNumberToName = (dayNumber: number): string => {
-  const days = ["sun", "mon", "tue", "wed", "thu", "fri", "sat"];
+  const days = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
   return days[dayNumber] || "";
 };
 

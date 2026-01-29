@@ -77,10 +77,13 @@ export class generateInitialSlots {
       : null;
 
     // Generation start must be today or scheduleStartDate, whichever is later
-    let generationStart = DateTime.max(nowLocal, scheduleStartDate);
+    let generationStart = DateTime.max(nowLocal, scheduleStartDate).startOf(
+      'day',
+    );
 
     // Generation end = min(schedule.endDate, 14-day window)
-    let generationEnd = nowLocal.plus({ days: 14 });
+    // Use endOf('day') so the last date is included in the generation window
+    let generationEnd = nowLocal.plus({ days: 14 }).endOf('day');
 
     //ensure one time schedule slots are generated regardless of their start date being more than 14 days
     if (schedule.type === 'one_time') {
@@ -90,12 +93,15 @@ export class generateInitialSlots {
           message: "One time schedule's start date has already passed",
           code: 'SCHEDULE_START_DATE_PASSED',
         });
-      generationStart = scheduleStartDate;
-      generationEnd = scheduleStartDate;
+      generationStart = scheduleStartDate.startOf('day');
+      generationEnd = scheduleStartDate.endOf('day');
     }
 
-    if (scheduleEndDate && scheduleEndDate < generationEnd) {
-      generationEnd = scheduleEndDate;
+    if (scheduleEndDate) {
+      const scheduleEndStart = scheduleEndDate.startOf('day');
+      if (scheduleEndStart < generationEnd.startOf('day')) {
+        generationEnd = scheduleEndStart.endOf('day');
+      }
     }
 
     // If end < start ⇒ nothing to generate
@@ -124,7 +130,15 @@ export class generateInitialSlots {
     while (cursor <= generationEnd) {
       // decide whether this local date should generate slots based on schedule type/dayOfWeek
       const dow = cursor.weekday % 7; // luxon: 1(Mon)-7(Sun) -> convert to 0-6 (Sun=0)
-      const dtoDayOfWeek: number[] = (schedule.dayOfWeek as any) || [];
+      const rawDayOfWeek: number[] = (schedule.dayOfWeek as any) || [];
+      // normalize possible representations (allow 0-6 or 1-7 where 7==Sunday)
+      const dtoDayOfWeek: number[] = rawDayOfWeek
+        .map((d: any) => {
+          const n = Number(d);
+          if (Number.isNaN(n)) return -1;
+          return n === 7 ? 0 : Math.abs(n) % 7;
+        })
+        .filter((n) => n >= 0 && n <= 6);
       let generateForDate = true;
 
       if (schedule.type === 'recurring') {
@@ -247,7 +261,8 @@ export class generateInitialSlots {
     // If no slots were created, throw with diagnostic info
     if (createdCount <= 0) {
       throw new BadRequestException({
-        message: "Couldn't generate slot due to date ranges",
+        message:
+          "Couldn't generate slot due to date ranges or slots already exist",
         code: 'SLOT_GENERATION_FAILED',
         data: {
           attempted: slotsToCreate.length,
