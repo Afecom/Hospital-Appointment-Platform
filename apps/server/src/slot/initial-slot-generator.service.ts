@@ -1,12 +1,20 @@
 import { DateTime } from 'luxon';
 import { DatabaseService } from '../database/database.service.js';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 
 @Injectable()
 export class generateInitialSlots {
   constructor(private prisma: DatabaseService) {}
   async generateInitialSlot(scheduleId: string) {
-    if (!scheduleId) throw new Error('scheduleId missing in job data');
+    if (!scheduleId)
+      throw new BadRequestException({
+        message: 'Schedule ID is required',
+        code: 'SCHEDULE_ID_REQUIRED',
+      });
 
     const schedule = await this.prisma.schedule.findUniqueOrThrow({
       where: { id: scheduleId },
@@ -22,15 +30,33 @@ export class generateInitialSlots {
         include: { Hospital: true, Doctor: true },
       });
     if (!doctorHospitalProfile)
-      throw new Error('doctor to hospital mapping not found in DB');
+      throw new BadRequestException({
+        message: 'doctor to hospital mapping not found in DB',
+        code: 'DOCTOR_HOSPITAL_MAPPING_NOT_FOUND',
+      });
 
     if (doctorHospitalProfile.Doctor?.isDeactivated) {
-      return { message: 'Doctor deactivated, skipping slot generation' };
+      throw new BadRequestException({
+        message: 'Doctor deactivated, skipping slot generation',
+        code: 'DOCTOR_DEACTIVATED',
+      });
+    }
+
+    if (doctorHospitalProfile.Hospital?.isDeactivated) {
+      throw new BadRequestException({
+        message: 'Hospital deactivated, skipping slot generation',
+        code: 'HOSPITAL_DEACTIVATED',
+      });
     }
 
     // Enforce business rules
     if (schedule.isExpired || schedule.isDeactivated) {
-      return { message: 'Schedule inactive, skipping slot generation' };
+      throw new BadRequestException({
+        message: schedule.isExpired
+          ? 'Schedule has expired'
+          : 'Schedule is deactivated',
+        code: schedule.isExpired ? 'SCHEDULE_EXPIRED' : 'SCHEDULE_DEACTIVATED',
+      });
     }
 
     const timezone =
@@ -60,7 +86,10 @@ export class generateInitialSlots {
     if (schedule.type === 'one_time') {
       // making sure if the schedule is still valid where the start date is later or atleast the same day
       if (scheduleStartDate < nowLocal)
-        throw new Error("One time schedule's start date has already passed");
+        throw new BadRequestException({
+          message: "One time schedule's start date has already passed",
+          code: 'SCHEDULE_START_DATE_PASSED',
+        });
       generationStart = scheduleStartDate;
       generationEnd = scheduleStartDate;
     }
@@ -71,7 +100,10 @@ export class generateInitialSlots {
 
     // If end < start ⇒ nothing to generate
     if (generationEnd < generationStart) {
-      return { message: 'No slot window available (start >= end)' };
+      throw new BadRequestException({
+        message: "One time schedule's start date has already passed",
+        code: 'SCHEDULE_START_DATE_PASSED',
+      });
     }
 
     //
@@ -181,6 +213,13 @@ export class generateInitialSlots {
     // Persist in batches - use createMany with skipDuplicates for efficiency
     if (slotsToCreate.length > 0) {
       const chunkSize = 500;
+      // determine which weekdays we attempted to create slots for
+      const attemptedDays = new Set<number>();
+      for (const s of slotsToCreate) {
+        const dt = DateTime.fromJSDate(s.dateUTC).setZone(timezone);
+        const dow = dt.weekday % 7; // 0-6
+        attemptedDays.add(dow);
+      }
       for (let i = 0; i < slotsToCreate.length; i += chunkSize) {
         const batch = slotsToCreate.slice(i, i + chunkSize).map((s) => ({
           scheduleId: s.scheduleId,
@@ -204,6 +243,47 @@ export class generateInitialSlots {
         slotLastGeneratedDate: generationEnd.toISO(),
       },
     });
+
+    // If no slots were created, throw with diagnostic info
+    if (createdCount <= 0) {
+      throw new BadRequestException({
+        message: "Couldn't generate slot due to date ranges",
+        code: 'SLOT_GENERATION_FAILED',
+        data: {
+          attempted: slotsToCreate.length,
+          generationStart: generationStart.toISO(),
+          generationEnd: generationEnd.toISO(),
+          scheduleStartDate: schedule.startDate,
+          scheduleEndDate: schedule.endDate,
+        },
+      });
+    }
+
+    // If some weekdays had no attempted slot generation, remove them from the schedule
+    try {
+      const originalDays: number[] = (schedule.dayOfWeek as any) || [];
+      if (Array.isArray(originalDays) && originalDays.length > 0) {
+        // attemptedDays may be undefined if no slotsToCreate existed; guard
+        const attemptedDaysSet = new Set<number>();
+        for (const s of slotsToCreate) {
+          const dt = DateTime.fromJSDate(s.dateUTC).setZone(timezone);
+          attemptedDaysSet.add(dt.weekday % 7);
+        }
+        const newDays = originalDays.filter((d) => attemptedDaysSet.has(d));
+        if (newDays.length !== originalDays.length) {
+          await this.prisma.schedule.update({
+            where: { id: scheduleId },
+            data: { dayOfWeek: newDays },
+          });
+        }
+      }
+    } catch (e) {
+      // don't fail slot generation because of cleanup; just log
+      console.error(
+        'Failed to prune schedule dayOfWeek after slot generation',
+        e,
+      );
+    }
 
     return {
       message: 'Initial 14-day slot creation completed',

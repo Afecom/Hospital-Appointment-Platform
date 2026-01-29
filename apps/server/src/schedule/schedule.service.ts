@@ -255,7 +255,6 @@ export class ScheduleService {
         message: 'Schedule approved successfuly',
       };
     } catch (error) {
-      console.error('Failed to approve schedule:', error);
       throw error;
     }
   }
