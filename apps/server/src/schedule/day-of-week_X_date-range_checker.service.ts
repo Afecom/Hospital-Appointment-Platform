@@ -23,17 +23,16 @@ export class DayOfWeekToDateRangeChecker {
       }
     }
 
-    // If endDate provided, startDate must also be provided
+    // If endDate provided but no startDate, allow instant-activation schedules (no validation needed)
     if (endDate && !startDate) {
-      throw new BadRequestException(
-        'startDate is required when endDate is provided',
-      );
+      // scenario: schedule should be active immediately until endDate (validated elsewhere if needed)
+      return;
     }
 
     // If both dates are present, ensure startDate <= endDate and that each weekday occurs at least once
     if (startDate && endDate) {
-      const start = DateTime.fromISO(startDate, { zone: 'utc' });
-      const end = DateTime.fromISO(endDate, { zone: 'utc' });
+      const start = DateTime.fromISO(startDate, { zone: tz }).startOf('day');
+      const end = DateTime.fromISO(endDate, { zone: tz }).endOf('day');
       if (!start.isValid) throw new BadRequestException('Invalid startDate');
       if (!end.isValid) throw new BadRequestException('Invalid endDate');
       if (end < start)
@@ -41,14 +40,14 @@ export class DayOfWeekToDateRangeChecker {
           'endDate must be the same as or after startDate',
         );
 
-      // For each dayOfWeek, compute the first occurrence on or after start
+      // For each dayOfWeek, compute the first occurrence on or after start (in tz)
       for (const d of dayOfWeek) {
         const targetWeekday = d === 0 ? 7 : d; // Luxon: Mon=1 .. Sun=7
         const daysUntil = (targetWeekday - start.weekday + 7) % 7;
-        const occurrence = start.plus({ days: daysUntil });
+        const occurrence = start.plus({ days: daysUntil }).startOf('day');
         if (occurrence > end) {
           throw new BadRequestException(
-            `Day of week ${d} does not occur between ${startDate} and ${endDate}`,
+            `Day of week ${d} does not occur between ${startDate} and ${endDate} in timezone ${tz}`,
           );
         }
       }
@@ -58,15 +57,16 @@ export class DayOfWeekToDateRangeChecker {
 
     // If no endDate (temporary/recurring without end), just make sure startDate (if present) allows at least one upcoming weekday
     if (startDate && !endDate) {
-      const start = DateTime.fromISO(startDate, { zone: 'utc' });
+      const start = DateTime.fromISO(startDate, { zone: tz }).startOf('day');
       if (!start.isValid) throw new BadRequestException('Invalid startDate');
 
-      // check that at least one day of week occurs within next 7 days (including start)
+      // check that at least one day of week occurs within next 7 days (including start) in given tz
+      const windowEnd = start.plus({ days: 7 }).endOf('day');
       const hasUpcoming = dayOfWeek.some((d) => {
         const targetWeekday = d === 0 ? 7 : d;
         const daysUntil = (targetWeekday - start.weekday + 7) % 7;
-        const occurrence = start.plus({ days: daysUntil });
-        return occurrence >= start && occurrence <= start.plus({ days: 7 });
+        const occurrence = start.plus({ days: daysUntil }).startOf('day');
+        return occurrence >= start && occurrence <= windowEnd;
       });
 
       if (!hasUpcoming) {
