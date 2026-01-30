@@ -24,7 +24,7 @@ import {
   scheduleActionRes,
   approveRejectScheuleRes,
 } from '@hap/contract';
-import { start } from 'node:repl';
+import { DayOfWeekToDateRangeChecker } from './day-of-week_X_date-range_checker.service.js';
 
 @Injectable()
 export class ScheduleService {
@@ -34,6 +34,7 @@ export class ScheduleService {
     private checkOverlap: ScheduleOverlapService,
     private expire: expireSchedule,
     private generate: generateInitialSlots,
+    private checkDateRange: DayOfWeekToDateRangeChecker,
   ) {}
   async createSchedule(data: CreateScheduleDto, session: UserSession) {
     const doctor = await this.prisma.doctor.findFirstOrThrow({
@@ -46,6 +47,13 @@ export class ScheduleService {
       where: { id: data.hospitalId },
     });
     const tz = hospital.timezone || 'UTC';
+
+    await this.checkDateRange.dayOfWeekDateRangeChecker(
+      dayOfWeek,
+      startDate,
+      endDate,
+      tz,
+    );
 
     // one_time schedules should set `startDate` (we removed `date` from schema)
     await this.checkOverlap.ensureNoOverlap(doctorId, {
