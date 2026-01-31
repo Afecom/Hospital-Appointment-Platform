@@ -60,16 +60,14 @@ export class ScheduleController {
   @Roles([Role.hospital_admin])
   getScheduleForAdmin(
     @Query('status') status: ScheduleStatus,
-    @Query('expired') expired: string,
-    @Query('deactivated') deactivated: string,
+    @Query('expired') expired: boolean,
+    @Query('deactivated') deactivated: boolean,
     @Query('type') type: ScheduleType,
     @Query('doctorId') doctorId: string,
     @Query('page') page: number,
     @Query('limit') limit: number,
     @Session() session: UserSession,
   ) {
-    const expBool = expired.toLowerCase() === 'true';
-    const deBool = deactivated.toLowerCase() === 'true';
     return this.scheduleService.findSchedulesForAdmin(
       session,
       status,
@@ -77,8 +75,8 @@ export class ScheduleController {
       doctorId,
       page,
       limit,
-      expBool,
-      deBool,
+      expired,
+      deactivated,
     );
   }
 

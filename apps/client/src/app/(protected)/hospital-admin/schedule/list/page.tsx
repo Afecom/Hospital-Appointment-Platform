@@ -28,7 +28,7 @@ const ScheduleListPage = () => {
     isError,
   } = useQuery<scheduleApplicationSchedule[]>({
     queryKey: ["schedules", status],
-    queryFn: () => getSchedules(status),
+    queryFn: () => getSchedules(status, expired, deactivated),
   });
 
   const tabs = useMemo(
@@ -43,7 +43,10 @@ const ScheduleListPage = () => {
   );
 
   const handleTabClick = (tab: string) => {
-    router.push(`${pathname}?status=${tab}`);
+    if (tab === "approved" || tab === "pending" || tab === "rejected")
+      router.push(`${pathname}?status=${tab}`);
+    else if (tab === "expired") router.push(`${pathname}?expired=true`);
+    else if (tab === "deactivated") router.push(`${pathname}?deactivated=true`);
   };
 
   const handleDelete = (id: string) =>

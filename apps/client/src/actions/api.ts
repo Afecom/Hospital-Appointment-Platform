@@ -35,10 +35,10 @@ export const getDoctorApplications = async (
 
 export const getSchedules = async (
   status: string | null,
+  expired?: boolean,
+  deactivated?: boolean,
   page?: number,
   limit?: number,
-  expired?: string,
-  deactivated?: string,
 ): Promise<scheduleApplicationSchedule[]> => {
   try {
     const response = await api.get(
