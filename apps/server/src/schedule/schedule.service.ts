@@ -153,13 +153,12 @@ export class ScheduleService {
         "Couldn't find a hospital administered under the provided user",
       );
     const hospitalId = hospital.id;
-    if (!status) status = 'pending';
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
       { page, limit },
     );
     const whereClause = {
       hospitalId,
-      status,
+      ...(status && { status }),
       ...(type && { type }),
       ...(doctorId && { doctorId }),
       ...(expired && { expired }),
