@@ -15,7 +15,7 @@ import { useQueryClient } from "@tanstack/react-query";
 const ScheduleListPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const status = searchParams.get("status") || "approved";
+  const status = searchParams.get("status");
   const expired = searchParams.get("expired") === "false";
   const deactivated = searchParams.get("deactivated") === "false";
   const [searchTerm, setSearchTerm] = useState("");
@@ -36,6 +36,8 @@ const ScheduleListPage = () => {
       { label: "Active", value: "approved" },
       { label: "Pending", value: "pending" },
       { label: "Rejected", value: "rejected" },
+      { label: "Expired", value: "expired" },
+      { label: "Deactivated", value: "deactivated" },
     ],
     [],
   );
