@@ -15,20 +15,16 @@ import { useQueryClient } from "@tanstack/react-query";
 const ScheduleListPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  // status param (explicit). We'll compute `queryStatus` which is what we actually send
-  const statusParam = searchParams.get("status") ?? undefined;
+  const statusParam = searchParams.get("status");
   const expired = searchParams.get("expired") === "true";
   const deactivated = searchParams.get("deactivated") === "true";
   const [searchTerm, setSearchTerm] = useState("");
   const pathname = usePathname();
   const queryClient = useQueryClient();
 
-  // If expired/deactivated filters are used we purposely DO NOT pass a status to the API.
-  // Default to 'approved' when no filters are supplied so "Active" is the default tab.
   const queryStatus =
     expired || deactivated ? undefined : (statusParam ?? "approved");
 
-  // The tab to mark active in the UI
   const activeTab =
     statusParam ??
     (expired ? "expired" : deactivated ? "deactivated" : "approved");
@@ -250,7 +246,8 @@ const ScheduleListPage = () => {
           ) : (
             <div className="col-span-full text-center">
               <p className="text-lg text-gray-600">
-                No {labelMap[activeTab] ?? activeTab} schedules at the moment.
+                No {labelMap[activeTab as keyof typeof labelMap] ?? activeTab}{" "}
+                schedules at the moment.
               </p>
             </div>
           )}

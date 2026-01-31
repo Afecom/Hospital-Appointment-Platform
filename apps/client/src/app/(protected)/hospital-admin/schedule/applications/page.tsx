@@ -11,7 +11,9 @@ import ErrorMessage from "@/components/shared/ui/ErrorMessage";
 
 const getPendingSchedules = async () => {
   try {
-    const res = await api.get<getScheduleForAdminRes>("/schedule");
+    const res = await api.get<getScheduleForAdminRes>(
+      "/schedule?status=pending",
+    );
     return res.data;
   } catch (error) {
     throw new Error("Failed to fetch schedules.");

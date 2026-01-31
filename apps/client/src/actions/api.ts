@@ -41,14 +41,19 @@ export const getSchedules = async (
   limit?: number,
 ): Promise<scheduleApplicationSchedule[]> => {
   try {
-    const response = await api.get(
-      `/schedule?status=${status}&page=${page}&limit=${limit}&expired=${expired}&deactivated=${deactivated}`,
-    );
+    const params = new URLSearchParams();
+    if (typeof status !== "undefined" && status !== null) params.append("status", status);
+    if (typeof page !== "undefined" && page !== null) params.append("page", String(page));
+    if (typeof limit !== "undefined" && limit !== null) params.append("limit", String(limit));
+    if (typeof expired !== "undefined" && expired !== null) params.append("expired", String(expired));
+    if (typeof deactivated !== "undefined" && deactivated !== null) params.append("deactivated", String(deactivated));
+    const query = params.toString();
+    const response = await api.get(`/schedule${query ? `?${query}` : ""}`);
     return response.data?.data?.schedules ?? [];
   } catch (error) {
     const anyErr = error as any;
     const resp = anyErr?.response?.data;
-    let message = `Failed to fetch ${status} schedules`;
+    let message = `Failed to fetch schedules${status ? ` (${status})` : ""}`;
     if (resp) {
       if (typeof resp === "string") message = resp;
       else if (Array.isArray(resp?.message)) message = resp.message.join(", ");

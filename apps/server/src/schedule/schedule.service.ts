@@ -144,6 +144,8 @@ export class ScheduleService {
     expired?: boolean,
     deactivated?: boolean,
   ): Promise<getScheduleForAdminRes> {
+    expired = expired ?? false;
+    deactivated = deactivated ?? false;
     const adminId = session.user.id;
     const hospital = await this.prisma.hospital.findUnique({
       where: { adminId },
@@ -172,8 +174,8 @@ export class ScheduleService {
           ...(status && { status }),
           ...(type && { type }),
           ...(doctorId && { doctorId }),
-          ...(expired && { isExpired: expired }),
-          ...(deactivated && { isDeactivated: deactivated }),
+          isDeactivated: deactivated,
+          isExpired: expired,
         },
         take,
         skip,
@@ -188,6 +190,8 @@ export class ScheduleService {
           status: true,
           name: true,
           period: true,
+          isDeactivated: true,
+          isExpired: true,
           Doctor: {
             select: {
               id: true,
