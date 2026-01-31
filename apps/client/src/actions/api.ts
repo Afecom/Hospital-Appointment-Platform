@@ -35,9 +35,15 @@ export const getDoctorApplications = async (
 
 export const getSchedules = async (
   status: string,
+  page?: number,
+  limit?: number,
+  expired?: string,
+  deactivated?: string,
 ): Promise<scheduleApplicationSchedule[]> => {
   try {
-    const response = await api.get(`/schedule?status=${status}`);
+    const response = await api.get(
+      `/schedule?status=${status}&page=${page}&limit=${limit}&expired=${expired}&deactivated=${deactivated}`,
+    );
     return response.data?.data?.schedules ?? [];
   } catch (error) {
     const anyErr = error as any;
