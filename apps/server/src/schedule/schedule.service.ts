@@ -141,6 +141,8 @@ export class ScheduleService {
     doctorId?: string,
     page?: number,
     limit?: number,
+    expired?: boolean,
+    deactivated?: boolean,
   ): Promise<getScheduleForAdminRes> {
     const adminId = session.user.id;
     const hospital = await this.prisma.hospital.findUnique({
@@ -160,6 +162,8 @@ export class ScheduleService {
       status,
       ...(type && { type }),
       ...(doctorId && { doctorId }),
+      ...(expired && { expired }),
+      ...(deactivated && { deactivated }),
     };
     const [schedules, total] = await this.prisma.$transaction([
       this.prisma.schedule.findMany({

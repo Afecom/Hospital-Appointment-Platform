@@ -60,6 +60,8 @@ export class ScheduleController {
   @Roles([Role.hospital_admin])
   getScheduleForAdmin(
     @Query('status') status: ScheduleStatus,
+    @Query('expired') expired: boolean,
+    @Query('deactivated') deactivated: boolean,
     @Query('type') type: ScheduleType,
     @Query('doctorId') doctorId: string,
     @Query('page') page: number,
@@ -73,6 +75,8 @@ export class ScheduleController {
       doctorId,
       page,
       limit,
+      expired,
+      deactivated,
     );
   }
 
