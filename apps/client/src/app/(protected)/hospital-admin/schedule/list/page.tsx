@@ -16,6 +16,8 @@ const ScheduleListPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const status = searchParams.get("status") || "approved";
+  const expired = searchParams.get("expired") === "false";
+  const deactivated = searchParams.get("deactivated") === "false";
   const [searchTerm, setSearchTerm] = useState("");
   const pathname = usePathname();
   const queryClient = useQueryClient();
