@@ -34,7 +34,7 @@ export const getDoctorApplications = async (
 };
 
 export const getSchedules = async (
-  status: string | null,
+  status?: string,
   expired?: boolean,
   deactivated?: boolean,
   page?: number,

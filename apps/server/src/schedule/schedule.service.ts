@@ -161,12 +161,20 @@ export class ScheduleService {
       ...(status && { status }),
       ...(type && { type }),
       ...(doctorId && { doctorId }),
-      ...(expired && { expired }),
-      ...(deactivated && { deactivated }),
+      ...(expired && { isExpired: expired }),
+      ...(deactivated && { isDeactivated: deactivated }),
     };
+    console.log(expired);
     const [schedules, total] = await this.prisma.$transaction([
       this.prisma.schedule.findMany({
-        where: whereClause,
+        where: {
+          hospitalId,
+          ...(status && { status }),
+          ...(type && { type }),
+          ...(doctorId && { doctorId }),
+          ...(expired && { isExpired: expired }),
+          ...(deactivated && { isDeactivated: deactivated }),
+        },
         take,
         skip,
         select: {

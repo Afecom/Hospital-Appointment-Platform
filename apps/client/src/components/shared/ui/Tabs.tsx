@@ -8,7 +8,7 @@ interface Tab {
 
 interface TabsProps {
   tabs: Tab[];
-  activeTab: string | null;
+  activeTab: string | undefined;
   onTabClick: (tab: string) => void;
 }
 

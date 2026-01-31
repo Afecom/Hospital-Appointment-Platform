@@ -15,20 +15,31 @@ import { useQueryClient } from "@tanstack/react-query";
 const ScheduleListPage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const status = searchParams.get("status");
-  const expired = searchParams.get("expired") === "false";
-  const deactivated = searchParams.get("deactivated") === "false";
+  // status param (explicit). We'll compute `queryStatus` which is what we actually send
+  const statusParam = searchParams.get("status") ?? undefined;
+  const expired = searchParams.get("expired") === "true";
+  const deactivated = searchParams.get("deactivated") === "true";
   const [searchTerm, setSearchTerm] = useState("");
   const pathname = usePathname();
   const queryClient = useQueryClient();
+
+  // If expired/deactivated filters are used we purposely DO NOT pass a status to the API.
+  // Default to 'approved' when no filters are supplied so "Active" is the default tab.
+  const queryStatus =
+    expired || deactivated ? undefined : (statusParam ?? "approved");
+
+  // The tab to mark active in the UI
+  const activeTab =
+    statusParam ??
+    (expired ? "expired" : deactivated ? "deactivated" : "approved");
 
   const {
     data: schedules = [],
     isLoading,
     isError,
   } = useQuery<scheduleApplicationSchedule[]>({
-    queryKey: ["schedules", status],
-    queryFn: () => getSchedules(status, expired, deactivated),
+    queryKey: ["schedules", queryStatus, expired, deactivated],
+    queryFn: () => getSchedules(queryStatus, expired, deactivated),
   });
 
   const tabs = useMemo(
@@ -54,36 +65,52 @@ const ScheduleListPage = () => {
   const handleUndo = (id: string) =>
     scheduleAction(id, "undo")
       .then((res) => {
-        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
         return res;
       })
       .catch((err) => {
-        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
         throw err;
       });
   const handleApprove = (id: string) =>
     scheduleAction(id, "approve")
       .then((res) => {
-        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
         return res;
       })
       .catch((err) => {
-        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
         throw err;
       });
   const handleReject = (id: string) =>
     scheduleAction(id, "reject")
       .then((res) => {
-        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
         return res;
       })
       .catch((err) => {
-        queryClient.invalidateQueries({ queryKey: ["schedules", status] });
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
         throw err;
       });
 
   const filteredSchedules = schedules
-    .filter((s) => s.status === status)
+    .filter((s) => {
+      if (activeTab === "expired") return !!s.isExpired;
+      if (activeTab === "deactivated") return !!s.isDeactivated;
+      return s.status === activeTab;
+    })
     .filter((s) => {
       if (!searchTerm) return true;
       const lower = searchTerm.toLowerCase();
@@ -93,6 +120,14 @@ const ScheduleListPage = () => {
         startTime.toLowerCase().includes(lower)
       );
     });
+
+  const labelMap = {
+    approved: "Active",
+    pending: "Pending",
+    rejected: "Rejected",
+    expired: "Expired",
+    deactivated: "Deactivated",
+  };
 
   return (
     <div className="h-full w-full flex flex-col p-4">
@@ -118,7 +153,7 @@ const ScheduleListPage = () => {
           </div>
         </div>
 
-        <Tabs tabs={tabs} activeTab={status} onTabClick={handleTabClick} />
+        <Tabs tabs={tabs} activeTab={activeTab} onTabClick={handleTabClick} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-6">
           {isLoading ? (
             Array.from({ length: 6 }).map((_, i) => <ShimmerCard key={i} />)
@@ -215,7 +250,7 @@ const ScheduleListPage = () => {
           ) : (
             <div className="col-span-full text-center">
               <p className="text-lg text-gray-600">
-                No {status} schedules at the moment.
+                No {labelMap[activeTab] ?? activeTab} schedules at the moment.
               </p>
             </div>
           )}
