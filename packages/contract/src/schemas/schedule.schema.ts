@@ -18,6 +18,15 @@ export interface getScheduleForAdminRes {
       type: string;
       id: string;
       name: string;
+      status: string;
+      isDeactivated: boolean;
+      isExpired: boolean;
+      startTime: string;
+      endTime: string;
+      endDate: string | null;
+      startDate: string;
+      dayOfWeek: number[];
+      period: string;
       Doctor: {
         id: string;
         User: {
@@ -25,13 +34,6 @@ export interface getScheduleForAdminRes {
           phoneNumber: string | null;
         };
       };
-      dayOfWeek: number[];
-      startDate: string;
-      endDate: string | null;
-      startTime: string;
-      endTime: string;
-      status: string;
-      period: string;
     }[];
     meta: {
       total: number;
@@ -54,6 +56,15 @@ export interface scheduleApplicationSchedule {
   type: string;
   id: string;
   name: string;
+  isDeactivated: boolean;
+  startTime: string;
+  endTime: string;
+  status: string;
+  endDate: string | null;
+  startDate: string;
+  dayOfWeek: number[];
+  period: string;
+  isExpired: boolean;
   Doctor: {
     id: string;
     User: {
@@ -61,13 +72,6 @@ export interface scheduleApplicationSchedule {
       phoneNumber: string | null;
     };
   };
-  dayOfWeek: number[];
-  startDate: string;
-  endDate: string | null;
-  startTime: string;
-  endTime: string;
-  status: string;
-  period: string;
 }
 
 export interface scheduleActionApiError {
