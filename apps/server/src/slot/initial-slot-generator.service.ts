@@ -87,13 +87,22 @@ export class generateInitialSlots {
 
     //ensure one time schedule slots are generated regardless of their start date being more than 14 days
     if (schedule.type === 'one_time') {
-      // making sure if the schedule is still valid where the start date is later or atleast the same day
-      if (scheduleStartDate < nowLocal)
+      const localEndDateTime = DateTime.fromISO(
+        `${schedule.startDate}T${schedule.endTime}`,
+        { zone: timezone },
+      );
+
+      // If the entire scheduled slot (on that date) has already ended in local time, reject
+      if (localEndDateTime <= nowZoned)
         throw new BadRequestException({
           message: "One time schedule's start date has already passed",
           code: 'SCHEDULE_START_DATE_PASSED',
         });
-      generationStart = scheduleStartDate.startOf('day');
+
+      // allow generating slots for the remainder of the scheduled date (if it is today)
+      generationStart = DateTime.max(nowLocal, scheduleStartDate).startOf(
+        'day',
+      );
       generationEnd = scheduleStartDate.endOf('day');
     }
 
@@ -107,7 +116,7 @@ export class generateInitialSlots {
     // If end < start ⇒ nothing to generate
     if (generationEnd < generationStart) {
       throw new BadRequestException({
-        message: "One time schedule's start date has already passed",
+        message: "Schedule's start date and end date have already passed",
         code: 'SCHEDULE_START_DATE_PASSED',
       });
     }
