@@ -37,6 +37,9 @@ export class ScheduleFilterService {
       ...(hospitalId && { hospitalId }),
       ...(status && { status }),
       ...(type && { type }),
+      isDeactivated: false,
+      isExpired: false,
+      isDeleted: false,
     };
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
       { page, limit },
