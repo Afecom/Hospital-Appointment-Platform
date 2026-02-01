@@ -59,50 +59,17 @@ const ScheduleListPage = () => {
 
   const handleDelete = (id: string) =>
     console.log(`Soft deleting schedule ${id}`);
-  const handleUndo = (id: string) =>
-    scheduleAction(id, "undo")
-      .then((res) => {
-        queryClient.invalidateQueries({
-          queryKey: ["schedules", queryStatus, expired, deactivated],
-        });
-        return res;
-      })
-      .catch((err) => {
-        queryClient.invalidateQueries({
-          queryKey: ["schedules", queryStatus, expired, deactivated],
-        });
-        throw err;
-      });
-  const handleApprove = (id: string) =>
-    scheduleAction(id, "approve")
-      .then((res) => {
-        queryClient.invalidateQueries({
-          queryKey: ["schedules", queryStatus, expired, deactivated],
-        });
-        return res;
-      })
-      .catch((err) => {
-        queryClient.invalidateQueries({
-          queryKey: ["schedules", queryStatus, expired, deactivated],
-        });
-        throw err;
-      });
-  const handleActivate = (id: string) =>
-    scheduleAction(id, "activate")
-      .then((res) => {
-        queryClient.invalidateQueries({
-          queryKey: ["schedules", queryStatus, expired, deactivated],
-        });
-        return res;
-      })
-      .catch((err) => {
-        queryClient.invalidateQueries({
-          queryKey: ["schedules", queryStatus, expired, deactivated],
-        });
-        throw err;
-      });
-  const handleReject = (id: string) =>
-    scheduleAction(id, "reject")
+  const actionHandler = (
+    id: string,
+    action:
+      | "approve"
+      | "reject"
+      | "undo"
+      | "delete"
+      | "activate"
+      | "deactivate",
+  ) =>
+    scheduleAction(id, action)
       .then((res) => {
         queryClient.invalidateQueries({
           queryKey: ["schedules", queryStatus, expired, deactivated],
@@ -184,16 +151,29 @@ const ScheduleListPage = () => {
                         key: `undo-${schedule.id}`,
                         label: "Undo",
                         onClick: async () => {
-                          await handleUndo(schedule.id);
+                          await actionHandler(schedule.id, "undo");
                         },
                         className:
                           "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer",
                       },
                       {
+                        key: `deactivate-${schedule.id}`,
+                        label: "Deactivate",
+                        onClick: async () => {
+                          await actionHandler(schedule.id, "deactivate");
+                        },
+                        className:
+                          "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
+                        requiresConfirmation: true,
+                        confirmTitle: "Confirm Deactivate",
+                        confirmMessage:
+                          "Are you sure you want to deactivate this schedule?",
+                      },
+                      {
                         key: `delete-${schedule.id}`,
                         label: "Delete",
                         onClick: async () => {
-                          await handleDelete(schedule.id);
+                          await actionHandler(schedule.id, "delete");
                         },
                         className:
                           "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
@@ -212,7 +192,7 @@ const ScheduleListPage = () => {
                           key: `undo-${schedule.id}`,
                           label: "Undo",
                           onClick: async () => {
-                            await handleUndo(schedule.id);
+                            await actionHandler(schedule.id, "undo");
                           },
                           className:
                             "bg-yellow-500 hover:bg-yellow-600 hover:cursor-pointer",
@@ -221,7 +201,7 @@ const ScheduleListPage = () => {
                           key: `delete-${schedule.id}`,
                           label: "Delete",
                           onClick: async () => {
-                            await handleDelete(schedule.id);
+                            await actionHandler(schedule.id, "delete");
                           },
                           className:
                             "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
@@ -240,7 +220,7 @@ const ScheduleListPage = () => {
                             key: `approve-${schedule.id}`,
                             label: "Approve",
                             onClick: async () => {
-                              await handleApprove(schedule.id);
+                              await actionHandler(schedule.id, "approve");
                             },
                             className:
                               "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
@@ -249,7 +229,7 @@ const ScheduleListPage = () => {
                             key: `reject-${schedule.id}`,
                             label: "Reject",
                             onClick: async () => {
-                              await handleReject(schedule.id);
+                              await actionHandler(schedule.id, "reject");
                             },
                             className:
                               "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
@@ -267,7 +247,7 @@ const ScheduleListPage = () => {
                               key: `activate-${schedule.id}`,
                               label: "Activate",
                               onClick: async () => {
-                                await handleActivate(schedule.id);
+                                await actionHandler(schedule.id, "activate");
                               },
                               className:
                                 "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
