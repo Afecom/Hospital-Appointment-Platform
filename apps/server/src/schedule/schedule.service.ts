@@ -169,7 +169,6 @@ export class ScheduleService {
       isExpired: expired,
       isDeleted: false,
     };
-    console.log(expired);
     const [schedules, total] = await this.prisma.$transaction([
       this.prisma.schedule.findMany({
         where: whereClause,
