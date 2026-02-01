@@ -11,6 +11,7 @@ import { useSearchParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { usePathname } from "next/navigation";
 import { useQueryClient } from "@tanstack/react-query";
+import { on } from "events";
 
 const ScheduleListPage = () => {
   const router = useRouter();
@@ -74,6 +75,20 @@ const ScheduleListPage = () => {
       });
   const handleApprove = (id: string) =>
     scheduleAction(id, "approve")
+      .then((res) => {
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
+        return res;
+      })
+      .catch((err) => {
+        queryClient.invalidateQueries({
+          queryKey: ["schedules", queryStatus, expired, deactivated],
+        });
+        throw err;
+      });
+  const handleActivate = (id: string) =>
+    scheduleAction(id, "activate")
       .then((res) => {
         queryClient.invalidateQueries({
           queryKey: ["schedules", queryStatus, expired, deactivated],
@@ -160,7 +175,10 @@ const ScheduleListPage = () => {
           ) : filteredSchedules.length > 0 ? (
             filteredSchedules.map((schedule) => {
               const actions =
-                schedule.status === "approved"
+                schedule.status === "approved" &&
+                !schedule.isDeactivated &&
+                !schedule.isExpired &&
+                !schedule.isDeleted
                   ? [
                       {
                         key: `undo-${schedule.id}`,
@@ -185,7 +203,10 @@ const ScheduleListPage = () => {
                           "Are you sure you want to delete this schedule?",
                       },
                     ]
-                  : schedule.status === "rejected"
+                  : schedule.status === "rejected" &&
+                      !schedule.isDeactivated &&
+                      !schedule.isExpired &&
+                      !schedule.isDeleted
                     ? [
                         {
                           key: `undo-${schedule.id}`,
@@ -210,31 +231,76 @@ const ScheduleListPage = () => {
                             "Are you sure you want to delete this schedule?",
                         },
                       ]
-                    : [
-                        {
-                          key: `approve-${schedule.id}`,
-                          label: "Approve",
-                          onClick: async () => {
-                            await handleApprove(schedule.id);
+                    : schedule.status === "pending" &&
+                        !schedule.isDeactivated &&
+                        !schedule.isExpired &&
+                        !schedule.isDeleted
+                      ? [
+                          {
+                            key: `approve-${schedule.id}`,
+                            label: "Approve",
+                            onClick: async () => {
+                              await handleApprove(schedule.id);
+                            },
+                            className:
+                              "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
                           },
-                          className:
-                            "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
-                        },
-                        {
-                          key: `reject-${schedule.id}`,
-                          label: "Reject",
-                          onClick: async () => {
-                            await handleReject(schedule.id);
+                          {
+                            key: `reject-${schedule.id}`,
+                            label: "Reject",
+                            onClick: async () => {
+                              await handleReject(schedule.id);
+                            },
+                            className:
+                              "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
+                            requiresConfirmation: true,
+                            confirmTitle: "Confirm Reject",
+                            confirmMessage:
+                              "Are you sure you want to reject this schedule?",
                           },
-                          className:
-                            "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
-                          requiresConfirmation: true,
-                          confirmTitle: "Confirm Reject",
-                          confirmMessage:
-                            "Are you sure you want to reject this schedule?",
-                        },
-                      ];
-
+                        ]
+                      : schedule.isDeactivated &&
+                          !schedule.isExpired &&
+                          !schedule.isDeleted
+                        ? [
+                            {
+                              key: `activate-${schedule.id}`,
+                              label: "Activate",
+                              onClick: async () => {
+                                await handleActivate(schedule.id);
+                              },
+                              className:
+                                "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
+                            },
+                            {
+                              key: `delete-${schedule.id}`,
+                              label: "Delete",
+                              onClick: async () => {
+                                await handleDelete(schedule.id);
+                              },
+                              className:
+                                "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
+                              requiresConfirmation: true,
+                              confirmTitle: "Confirm Delete",
+                              confirmMessage:
+                                "Are you sure you want to delete this schedule?",
+                            },
+                          ]
+                        : [
+                            {
+                              key: `delete-${schedule.id}`,
+                              label: "Delete",
+                              onClick: async () => {
+                                await handleDelete(schedule.id);
+                              },
+                              className:
+                                "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
+                              requiresConfirmation: true,
+                              confirmTitle: "Confirm Delete",
+                              confirmMessage:
+                                "Are you sure you want to delete this schedule?",
+                            },
+                          ];
               return (
                 <ScheduleCard
                   key={schedule.id}

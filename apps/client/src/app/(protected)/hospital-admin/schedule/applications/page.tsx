@@ -71,35 +71,41 @@ export default function ScheduleApplicationsPage() {
             <ErrorMessage message={error?.message || "An error occurred."} />
           </div>
         ) : schedulesData.length > 0 ? (
-          schedulesData.map((schedule) => (
-            <ScheduleCard
-              key={schedule.id}
-              schedule={schedule}
-              actions={[
-                {
-                  key: `approve-${schedule.id}`,
-                  label: "Approve",
-                  onClick: async () => {
-                    await handleApprove(schedule.id);
-                  },
-                  className:
-                    "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
-                },
-                {
-                  key: `reject-${schedule.id}`,
-                  label: "Reject",
-                  onClick: async () => {
-                    await handleReject(schedule.id);
-                  },
-                  className: "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
-                  requiresConfirmation: true,
-                  confirmTitle: "Confirm Reject",
-                  confirmMessage:
-                    "Are you sure you want to reject this schedule?",
-                },
-              ]}
-            />
-          ))
+          schedulesData.map(
+            (schedule) =>
+              !schedule.isExpired &&
+              !schedule.isDeactivated &&
+              !schedule.isDeleted && (
+                <ScheduleCard
+                  key={schedule.id}
+                  schedule={schedule}
+                  actions={[
+                    {
+                      key: `approve-${schedule.id}`,
+                      label: "Approve",
+                      onClick: async () => {
+                        await handleApprove(schedule.id);
+                      },
+                      className:
+                        "bg-secondary hover:bg-blue-950 hover:cursor-pointer",
+                    },
+                    {
+                      key: `reject-${schedule.id}`,
+                      label: "Reject",
+                      onClick: async () => {
+                        await handleReject(schedule.id);
+                      },
+                      className:
+                        "bg-red-600 hover:bg-red-800 hover:cursor-pointer",
+                      requiresConfirmation: true,
+                      confirmTitle: "Confirm Reject",
+                      confirmMessage:
+                        "Are you sure you want to reject this schedule?",
+                    },
+                  ]}
+                />
+              ),
+          )
         ) : (
           <p className="text-center col-span-full">
             There are no pending schedule applications at the moment

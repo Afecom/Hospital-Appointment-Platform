@@ -188,6 +188,7 @@ export class ScheduleService {
           period: true,
           isDeactivated: true,
           isExpired: true,
+          isDeleted: true,
           Doctor: {
             select: {
               id: true,

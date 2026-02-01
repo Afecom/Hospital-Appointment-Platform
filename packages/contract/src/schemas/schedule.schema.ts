@@ -21,6 +21,7 @@ export interface getScheduleForAdminRes {
       status: string;
       isDeactivated: boolean;
       isExpired: boolean;
+      isDeleted: boolean;
       startTime: string;
       endTime: string;
       endDate: string | null;
@@ -65,6 +66,7 @@ export interface scheduleApplicationSchedule {
   dayOfWeek: number[];
   period: string;
   isExpired: boolean;
+  isDeleted: boolean;
   Doctor: {
     id: string;
     User: {
