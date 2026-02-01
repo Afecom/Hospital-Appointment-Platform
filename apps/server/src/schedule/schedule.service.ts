@@ -246,16 +246,35 @@ export class ScheduleService {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
       });
+      if (schedule.isDeactivated)
+        throw new BadRequestException({
+          message: 'Schedule is deactivated',
+          code: 'SCHEDULE_DEACTIVATED',
+        });
+      if (schedule.isExpired)
+        throw new BadRequestException({
+          message: 'Schedule has expired',
+          code: 'SCHEDULE_EXPIRED',
+        });
+      if (schedule.isDeleted)
+        throw new BadRequestException({
+          message: 'Schedule is deleted',
+          code: 'SCHEDULE_DELETED',
+        });
       const hospital = await this.prisma.hospital.findUniqueOrThrow({
         where: { adminId: session.user.id },
       });
       if (schedule.hospitalId !== hospital.id)
-        throw new UnauthorizedException(
-          'Schedule belongs to another hospital so couldnt be updated by the admin of this hospital',
-        );
+        throw new UnauthorizedException({
+          message: "The schedule doesn't belong to this hospital",
+          code: 'SCHEDULE_NOT_HOSPITAL_ADMIN',
+        });
       if (schedule.status === 'approved')
-        throw new BadRequestException('Schedule is already approved');
-      const genResult = await this.generate.generateInitialSlot(schedule.id);
+        throw new BadRequestException({
+          message: 'Schedule is already approved',
+          code: 'SCHEDULE_ALREADY_APPROVED',
+        });
+      await this.generate.generateInitialSlot(schedule.id);
       await this.prisma.schedule.update({
         where: { id },
         data: { status: 'approved' },
