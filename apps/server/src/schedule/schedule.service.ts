@@ -302,6 +302,21 @@ export class ScheduleService {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
       });
+      if (schedule.isExpired)
+        throw new BadRequestException({
+          message: 'Schedule has expired',
+          code: 'SCHEDULE_EXPIRED',
+        });
+      if (schedule.isDeactivated)
+        throw new BadRequestException({
+          message: 'Schedule is deactivated',
+          code: 'SCHEDULE_DEACTIVATED',
+        });
+      if (schedule.isDeleted)
+        throw new BadRequestException({
+          message: 'Schedule is deleted',
+          code: 'SCHEDULE_DELETED',
+        });
       if (schedule.hospitalId !== hospital.id)
         throw new UnauthorizedException(
           "The schedule doesn't belong to this hospital",
