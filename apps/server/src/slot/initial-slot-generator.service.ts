@@ -50,12 +50,10 @@ export class generateInitialSlots {
     }
 
     // Enforce business rules
-    if (schedule.isExpired || schedule.isDeactivated) {
+    if (schedule.isExpired) {
       throw new BadRequestException({
-        message: schedule.isExpired
-          ? 'Schedule has expired'
-          : 'Schedule is deactivated',
-        code: schedule.isExpired ? 'SCHEDULE_EXPIRED' : 'SCHEDULE_DEACTIVATED',
+        message: 'Schedule has expired',
+        code: 'SCHEDULE_EXPIRED',
       });
     }
 

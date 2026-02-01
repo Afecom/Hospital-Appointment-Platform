@@ -356,6 +356,7 @@ export class ScheduleService {
             message: 'The schedule is not deactivated',
             code: 'SCHEDULE_NOT_DEACTIVATED',
           });
+        await this.generate.generateInitialSlot(schedule.id);
         await this.prisma.schedule.update({
           where: { id: schedule.id },
           data: { isDeactivated: false },
