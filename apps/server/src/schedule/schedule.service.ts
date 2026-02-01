@@ -399,14 +399,30 @@ export class ScheduleService {
             message: 'The schedule is already deactivated',
             code: 'SCHEDULE_ALREADY_DEACTIVATED',
           });
-        await this.prisma.schedule.update({
-          where: { id: schedule.id },
-          data: { isDeactivated: true },
+        await this.prisma.$transaction(async (tx) => {
+          await tx.slot.deleteMany({
+            where: {
+              scheduleId: schedule.id,
+              status: { in: ['available', 'expired'] },
+            },
+          });
+          await tx.schedule.update({
+            where: { id: schedule.id },
+            data: { isDeactivated: true },
+          });
         });
       } else if (action === 'delete') {
-        await this.prisma.schedule.update({
-          where: { id: schedule.id },
-          data: { isDeleted: true },
+        await this.prisma.$transaction(async (tx) => {
+          await tx.slot.deleteMany({
+            where: {
+              scheduleId: schedule.id,
+              status: { in: ['available', 'expired'] },
+            },
+          });
+          await tx.schedule.update({
+            where: { id: schedule.id },
+            data: { isDeleted: true },
+          });
         });
       } else if (action === 'undo') {
         if (schedule.isDeactivated)
@@ -419,11 +435,17 @@ export class ScheduleService {
             message: 'The schedule is already pending',
             code: 'SCHEDULE_ALREADY_PENDING',
           });
-        await this.prisma.schedule.update({
-          where: { id },
-          data: {
-            status: 'pending',
-          },
+        await this.prisma.$transaction(async (tx) => {
+          await tx.slot.deleteMany({
+            where: {
+              scheduleId: schedule.id,
+              status: { in: ['available', 'expired'] },
+            },
+          });
+          await tx.schedule.update({
+            where: { id: schedule.id },
+            data: { status: 'pending' },
+          });
         });
       }
       return {
