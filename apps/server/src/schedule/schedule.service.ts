@@ -25,6 +25,7 @@ import {
   approveRejectScheuleRes,
 } from '@hap/contract';
 import { DayOfWeekToDateRangeChecker } from './day-of-week_X_date-range_checker.service.js';
+import { errorMonitor } from 'events';
 
 @Injectable()
 export class ScheduleService {
@@ -343,6 +344,11 @@ export class ScheduleService {
       const schedule = await this.prisma.schedule.findUniqueOrThrow({
         where: { id },
       });
+      if (schedule.isDeleted)
+        throw new BadRequestException({
+          message: 'Schedule is Deleted',
+          code: 'SCHEDULE_DELETED',
+        });
       if (action === 'activate') {
         if (!schedule.isDeactivated)
           throw new BadRequestException({
@@ -401,6 +407,11 @@ export class ScheduleService {
           data: { isDeleted: true },
         });
       } else if (action === 'undo') {
+        if (schedule.isDeactivated)
+          throw new BadRequestException({
+            message: 'The schedule is deactivated',
+            code: 'SCHEDULE_DEACTIVATED',
+          });
         if (schedule.status === 'pending')
           throw new BadRequestException({
             message: 'The schedule is already pending',
@@ -419,7 +430,7 @@ export class ScheduleService {
         message: `Schedule ${action === 'undo' ? 'Schedule reverted successffuly' : action.toUpperCase()}D successfuly`,
       };
     } catch (error) {
-      throw new Error(`failed to ${action} schedule`);
+      throw error;
     }
   }
 
