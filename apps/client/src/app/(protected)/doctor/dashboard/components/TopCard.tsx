@@ -34,19 +34,19 @@ export default function TopCard({
           </div>
           {statusBadge && <div className="self-start">{statusBadge}</div>}
         </div>
-        {cta ? (
-          <div className="flex justify-end">
-            <button
-              onClick={cta.onClick}
-              className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            >
-              {cta.label}
-            </button>
-          </div>
-        ) : (
-          <div className="h-6" />
-        )}
       </div>
+      {cta ? (
+        <div className={`flex justify-end ${subtext ? "-mt-1" : "mt-4"}`}>
+          <button
+            onClick={cta.onClick}
+            className="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {cta.label}
+          </button>
+        </div>
+      ) : (
+        <div className="h-6" />
+      )}
     </div>
   );
 }
