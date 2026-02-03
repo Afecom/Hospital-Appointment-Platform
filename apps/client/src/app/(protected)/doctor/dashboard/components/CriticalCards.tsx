@@ -45,7 +45,7 @@ export default function CriticalCards({
             title="Pending Schedules"
             value={pendingSchedulesCount}
             subtext={`${pendingSchedulesCount} schedule(s) awaiting approval`}
-            cta={{ label: "Review Schedules" }}
+            cta={{ label: "View Schedules" }}
             className="min-h-40 h-40"
           />
         ) : (
