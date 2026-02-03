@@ -68,9 +68,17 @@ export default async function DoctorDashboard() {
 
       {/* Section 2 - Metrics & Analytics */}
       <section aria-labelledby="metrics-and-analytics">
-        <h2 id="metrics-and-analytics" className="sr-only">
-          Metrics & Analytics
-        </h2>
+        <div className="flex items-center justify-between mb-3">
+          <h2
+            id="metrics-and-analytics"
+            className="text-lg font-semibold text-gray-800"
+          >
+            Metrics & Analytics
+          </h2>
+          <p className="text-sm text-gray-500">
+            Overview of key metrics and trends
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 bg-white border border-gray-200 rounded-lg shadow-sm p-4">

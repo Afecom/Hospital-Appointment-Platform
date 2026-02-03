@@ -22,9 +22,15 @@ export default function CriticalCards({
 
   return (
     <section aria-labelledby="critical-actions">
-      <h2 id="critical-actions" className="sr-only">
-        Critical Action Cards
-      </h2>
+      <div className="flex items-center justify-between mb-4">
+        <h2
+          id="critical-actions"
+          className="text-lg font-semibold text-gray-800"
+        >
+          Critical Action Cards
+        </h2>
+        <p className="text-sm text-gray-500">Quick actions and status</p>
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <TopCard
