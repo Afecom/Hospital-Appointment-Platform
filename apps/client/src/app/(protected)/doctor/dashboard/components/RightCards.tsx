@@ -1,10 +1,16 @@
 "use client";
 import React from "react";
 
-export default function RightCards() {
-  const avgPerDay = 4.5;
-  const peak = { day: "Tuesday", count: 7 };
-  const utilization = { percent: 80, booked: 32, total: 40 };
+type RightCardsProps = {
+  patientLoad: { avgPerDay: number; peakDay: string; peakCount: number };
+  utilization: { percent: number; booked: number; total: number };
+};
+
+export default function RightCards({
+  patientLoad,
+  utilization,
+}: RightCardsProps) {
+  const { avgPerDay, peakDay, peakCount } = patientLoad;
 
   return (
     <div className="space-y-4">
@@ -14,7 +20,7 @@ export default function RightCards() {
           Avg {avgPerDay} / day
         </p>
         <p className="mt-1 text-sm text-gray-500">
-          Peak day: {peak.day} – {peak.count} appointments
+          Peak day: {peakDay} – {peakCount} appointments
         </p>
         <div className="mt-3 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
           High

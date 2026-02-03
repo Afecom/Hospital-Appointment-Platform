@@ -2,80 +2,40 @@
 import React from "react";
 
 type Activity = {
-  id: string;
-  type: string;
-  ts: string;
+  action: string;
+  ts: string | Date;
   entity?: string;
-  status?: "pending" | "approved" | "canceled" | "info";
+  status?: string;
 };
 
-const activities: Activity[] = [
+type RecentActivitiesProps = { activities?: Activity[] };
+
+const sample: Activity[] = [
   {
-    id: "1",
-    type: "Appointment booked",
+    action: "Appointment booked",
     ts: "Feb 2, 10:30 AM",
     entity: "Patient: John D.",
     status: "info",
   },
   {
-    id: "2",
-    type: "Schedule submitted",
+    action: "Schedule submitted",
     ts: "Feb 2, 9:50 AM",
     entity: "—",
     status: "pending",
   },
   {
-    id: "3",
-    type: "Schedule approved",
+    action: "Schedule approved",
     ts: "Feb 1, 3:20 PM",
     entity: "—",
     status: "approved",
   },
-  {
-    id: "4",
-    type: "Appointment canceled",
-    ts: "Feb 1, 9:00 AM",
-    entity: "Patient: Anna S.",
-    status: "canceled",
-  },
-  {
-    id: "5",
-    type: "Schedule deactivated",
-    ts: "Jan 30",
-    entity: "—",
-    status: "info",
-  },
-  {
-    id: "6",
-    type: "Appointment booked",
-    ts: "Jan 29, 11:15 AM",
-    entity: "Patient: T. Williams",
-    status: "info",
-  },
-  {
-    id: "7",
-    type: "Appointment booked",
-    ts: "Jan 29, 10:00 AM",
-    entity: "Patient: M. Gomez",
-    status: "info",
-  },
-  {
-    id: "8",
-    type: "Schedule submitted",
-    ts: "Jan 28",
-    entity: "—",
-    status: "pending",
-  },
-  {
-    id: "9",
-    type: "Appointment booked",
-    ts: "Jan 27",
-    entity: "Patient: S. Lee",
-    status: "info",
-  },
 ];
 
-export default function RecentActivities() {
+export default function RecentActivities({
+  activities,
+}: RecentActivitiesProps) {
+  const list = activities && activities.length ? activities : sample;
+
   return (
     <section aria-labelledby="recent-activities">
       <div className="flex items-center justify-between">
@@ -86,19 +46,23 @@ export default function RecentActivities() {
           Recent Activities
         </h3>
         <p className="text-sm text-gray-500">
-          Showing latest {Math.min(activities.length, 10)}
+          Showing latest {Math.min(list.length, 10)}
         </p>
       </div>
 
       <ul className="mt-4 divide-y divide-gray-100 bg-white border border-gray-200 rounded-lg">
-        {activities.slice(0, 10).map((a) => (
-          <li key={a.id} className="flex items-center justify-between p-4">
+        {list.slice(0, 10).map((a, idx) => (
+          <li key={idx} className="flex items-center justify-between p-4">
             <div>
               <div className="flex items-baseline gap-3">
-                <p className="text-sm font-medium text-gray-800">{a.type}</p>
+                <p className="text-sm font-medium text-gray-800">{a.action}</p>
                 <p className="text-xs text-gray-500">{a.entity}</p>
               </div>
-              <p className="mt-1 text-xs text-gray-500">{a.ts}</p>
+              <p className="mt-1 text-xs text-gray-500">
+                {typeof a.ts === "string"
+                  ? a.ts
+                  : new Date(a.ts).toLocaleString()}
+              </p>
             </div>
 
             <div>
@@ -112,7 +76,7 @@ export default function RecentActivities() {
                   Approved
                 </span>
               )}
-              {a.status === "canceled" && (
+              {a.status === "cancelled" && (
                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-red-100 text-red-800">
                   Canceled
                 </span>

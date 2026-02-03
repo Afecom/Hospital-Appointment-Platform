@@ -34,7 +34,9 @@ export class DoctorController {
 
   @Get('/dashboard')
   @Roles([Role.doctor])
-  dashboard(@Session() session: UserSession) {}
+  dashboard(@Session() session: UserSession) {
+    return this.doctorService.doctorDashboard(session);
+  }
 
   @Get('hospital/pending')
   @Roles([Role.hospital_admin])

@@ -6,7 +6,11 @@ import {
 import { DatabaseService } from '../database/database.service.js';
 import { type UserSession } from '@thallesp/nestjs-better-auth';
 import { applyHospitalDoctorDto } from './dto/apply-hospital-doctor.dto.js';
-import { DoctorHospitalApplicationStatus } from '../../generated/prisma/enums.js';
+import {
+  AppointmentStatus,
+  DoctorHospitalApplicationStatus,
+  ScheduleStatus,
+} from '../../generated/prisma/enums.js';
 import {
   buildPaginationMeta,
   normalizePagination,
@@ -613,6 +617,247 @@ export class DoctorService {
     const userId = session.user.id;
     const doctor = await this.databaseService.doctor.findUniqueOrThrow({
       where: { userId },
+    });
+    const doctorId = doctor.id;
+
+    const now = new Date();
+    const startOfToday = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate(),
+    );
+    const endOfToday = new Date(startOfToday);
+    endOfToday.setDate(endOfToday.getDate() + 1);
+
+    // Monday based week
+    const day = now.getDay();
+    const daysSinceMonday = (day + 6) % 7;
+    const startOfWeek = new Date(startOfToday);
+    startOfWeek.setDate(startOfWeek.getDate() - daysSinceMonday);
+    const endOfWeek = new Date(startOfWeek);
+    endOfWeek.setDate(endOfWeek.getDate() + 7);
+
+    return await this.databaseService.$transaction(async (tx) => {
+      // Today's Appointments
+      const todayAppointments = await tx.appointment.findMany({
+        where: {
+          doctorId,
+          approvedSlotStart: { gte: startOfToday, lt: endOfToday },
+        },
+        orderBy: { approvedSlotStart: 'asc' },
+        include: {
+          User_Appointment_customerIdToUser: { select: { fullName: true } },
+        },
+      });
+
+      const todayCount = todayAppointments.length;
+      const nextAppointment =
+        todayAppointments.find((a) => new Date(a.approvedSlotStart) > now) ||
+        null;
+      const nextAppointmentAt = nextAppointment
+        ? new Date(nextAppointment.approvedSlotStart).toISOString()
+        : null;
+
+      // Active Schedules
+      const todayStr = startOfToday.toISOString().slice(0, 10);
+      const activeSchedules = await tx.schedule.findMany({
+        where: {
+          doctorId,
+          isDeactivated: false,
+          isExpired: false,
+          isDeleted: false,
+          status: ScheduleStatus.approved,
+          startDate: { lte: todayStr },
+          OR: [{ endDate: null }, { endDate: { gte: todayStr } }],
+        },
+        orderBy: { startDate: 'asc' },
+      });
+
+      const activeSchedulesCount = activeSchedules.length;
+      const nextActiveDate = activeSchedules.length
+        ? activeSchedules[0].startDate
+        : null;
+
+      // Pending hospital applications for this doctor
+      const pendingHospitalApplications =
+        await tx.doctorHospitalApplication.count({
+          where: { doctorId, status: DoctorHospitalApplicationStatus.pending },
+        });
+
+      // Appointments this week grouped by day
+      const weekAppointments = await tx.appointment.findMany({
+        where: {
+          doctorId,
+          approvedSlotStart: { gte: startOfWeek, lt: endOfWeek },
+        },
+        select: { id: true, status: true, approvedSlotStart: true },
+      });
+
+      const labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const completedSeries = Array(7).fill(0);
+      const canceledSeries = Array(7).fill(0);
+
+      for (const ap of weekAppointments) {
+        const d = new Date(ap.approvedSlotStart);
+        const idx = (d.getDay() + 6) % 7; // Monday = 0
+        if (ap.status === AppointmentStatus.completed) completedSeries[idx]++;
+        else if (
+          ap.status === AppointmentStatus.cancelled ||
+          ap.status === AppointmentStatus.rejected
+        )
+          canceledSeries[idx]++;
+      }
+
+      const completedTotal = completedSeries.reduce((s, v) => s + v, 0);
+      const canceledTotal = canceledSeries.reduce((s, v) => s + v, 0);
+
+      // previous week completed count for trend
+      const prevStart = new Date(startOfWeek);
+      prevStart.setDate(prevStart.getDate() - 7);
+      const prevEnd = new Date(startOfWeek);
+
+      const prevCompleted = await tx.appointment.count({
+        where: {
+          doctorId,
+          status: AppointmentStatus.completed,
+          approvedSlotStart: { gte: prevStart, lt: prevEnd },
+        },
+      });
+
+      const trend = prevCompleted
+        ? Math.round(((completedTotal - prevCompleted) / prevCompleted) * 100)
+        : 0;
+
+      // Slots utilization for the week
+      const totalSlots = await tx.slot.count({
+        where: {
+          date: { gte: startOfWeek, lt: endOfWeek },
+          Schedule: { doctorId },
+        },
+      });
+      const bookedSlots = await tx.slot.count({
+        where: {
+          date: { gte: startOfWeek, lt: endOfWeek },
+          Schedule: { doctorId },
+          appointmentId: { not: null },
+        },
+      });
+      const utilizationPercent = totalSlots
+        ? Math.round((bookedSlots / totalSlots) * 100)
+        : 0;
+
+      // patient load
+      const avgPerDay = +(weekAppointments.length / 7).toFixed(1);
+      const peakIdx = completedSeries.indexOf(Math.max(...completedSeries));
+      const peakDay = labels[peakIdx] || 'N/A';
+      const peakCount = completedSeries[peakIdx] || 0;
+
+      // Recent activities (appointments, schedules, applications)
+      const recentAppointments = await tx.appointment.findMany({
+        where: { doctorId },
+        include: {
+          User_Appointment_customerIdToUser: { select: { fullName: true } },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+      });
+
+      const recentSchedules = await tx.schedule.findMany({
+        where: { doctorId },
+        orderBy: { updatedAt: 'desc' },
+        take: 5,
+      });
+
+      const recentApplications = await tx.doctorHospitalApplication.findMany({
+        where: { doctorId },
+        orderBy: { updatedAt: 'desc' },
+        take: 5,
+      });
+
+      type Activity = {
+        type: string;
+        ts: Date;
+        entity?: string;
+        status?: string;
+      };
+      const activities: Activity[] = [];
+
+      for (const a of recentAppointments) {
+        activities.push({
+          type:
+            a.status === AppointmentStatus.cancelled
+              ? 'Appointment canceled'
+              : 'Appointment booked',
+          ts: a.updatedAt || a.createdAt,
+          entity: a.User_Appointment_customerIdToUser?.fullName
+            ? `Patient: ${a.User_Appointment_customerIdToUser.fullName}`
+            : 'Patient',
+          status: a.status,
+        });
+      }
+
+      for (const s of recentSchedules) {
+        const t = s.isDeactivated
+          ? 'Schedule deactivated'
+          : s.status === ScheduleStatus.approved
+            ? 'Schedule approved'
+            : 'Schedule submitted';
+        activities.push({
+          type: t,
+          ts: s.updatedAt,
+          entity: s.name,
+          status: s.status,
+        });
+      }
+
+      for (const app of recentApplications) {
+        activities.push({
+          type:
+            app.status === 'pending'
+              ? 'Schedule submitted'
+              : 'Application update',
+          ts: app.updatedAt,
+          entity: 'Hospital Application',
+          status: app.status,
+        });
+      }
+
+      activities.sort((a, b) => b.ts.getTime() - a.ts.getTime());
+
+      return {
+        status: 'Success',
+        message: 'Doctor dashboard data fetched successfully',
+        data: {
+          critical: {
+            todaysAppointments: {
+              count: todayCount,
+              nextAt: nextAppointmentAt,
+            },
+            activeSchedules: { count: activeSchedulesCount, nextActiveDate },
+            pendingHospitalApplications: { count: pendingHospitalApplications },
+          },
+          weekly: {
+            labels,
+            completedSeries,
+            canceledSeries,
+            completed: completedTotal,
+            canceled: canceledTotal,
+            trend,
+          },
+          patientLoad: { avgPerDay, peakDay, peakCount },
+          utilization: {
+            percent: utilizationPercent,
+            booked: bookedSlots,
+            total: totalSlots,
+          },
+          recentActivities: activities.slice(0, 10).map((a) => ({
+            action: a.type,
+            ts: a.ts,
+            entity: a.entity,
+            status: a.status,
+          })),
+        },
+      };
     });
   }
 }

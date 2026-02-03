@@ -1,15 +1,25 @@
 "use client";
 import React from "react";
 
-const days = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const completed = [3, 4, 3, 4, 2, 1, 1]; // sum 18
-const canceled = [0, 1, 0, 1, 1, 0, 0]; // sum 3
+type WeeklyChartProps = {
+  labels: string[];
+  completedSeries: number[];
+  canceledSeries: number[];
+};
 
-function getMax() {
-  return Math.max(...completed, ...canceled) || 1;
-}
+export default function WeeklyChart({
+  labels,
+  completedSeries,
+  canceledSeries,
+}: WeeklyChartProps) {
+  const days = labels;
+  const completed = completedSeries;
+  const canceled = canceledSeries;
 
-export default function WeeklyChart() {
+  function getMax() {
+    return Math.max(...completed, ...canceled) || 1;
+  }
+
   const max = getMax();
   const width = 700;
   const height = 220;
