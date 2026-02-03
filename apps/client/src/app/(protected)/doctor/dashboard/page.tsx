@@ -57,13 +57,12 @@ export default async function DoctorDashboard() {
           <h1 className="text-2xl font-semibold text-gray-800">
             Doctor Dashboard
           </h1>
-        </div>
-
-        <div className="text-center">
-          <h2 className="text-lg font-semibold text-gray-800">
+          <h2 className="text-md font-semibold text-gray-500">
             Dr. {doctorName}
           </h2>
         </div>
+
+        <div className="text-center"></div>
 
         <div className="text-right">
           <div className="text-sm text-gray-500">Last updated: Feb 3, 2026</div>
