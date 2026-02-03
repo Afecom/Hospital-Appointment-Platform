@@ -617,8 +617,10 @@ export class DoctorService {
     const userId = session.user.id;
     const doctor = await this.databaseService.doctor.findUniqueOrThrow({
       where: { userId },
+      include: { User: { select: { fullName: true } } },
     });
     const doctorId = doctor.id;
+    const doctorName = doctor.User?.fullName ?? null;
 
     const now = new Date();
     const startOfToday = new Date(
@@ -862,6 +864,7 @@ export class DoctorService {
             booked: bookedSlots,
             total: totalSlots,
           },
+          doctor: { fullName: doctorName },
           recentActivities: activities.slice(0, 10).map((a) => ({
             action: a.type,
             ts: a.ts,

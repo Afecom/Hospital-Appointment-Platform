@@ -31,6 +31,8 @@ export default async function DoctorDashboard() {
     pendingHospitalApplications: { count: 0 },
   };
 
+  const doctorName = data?.doctor?.fullName ?? "Doctor Dashboard";
+
   const weekly = data?.weekly ?? {
     labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
     completedSeries: [0, 0, 0, 0, 0, 0, 0],
@@ -50,11 +52,22 @@ export default async function DoctorDashboard() {
 
   return (
     <div className="p-6 space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Doctor Dashboard
-        </h1>
-        <div className="text-sm text-gray-500">Last updated: Feb 3, 2026</div>
+      <div className="grid grid-cols-3 items-center gap-4">
+        <div className="text-left">
+          <h1 className="text-2xl font-semibold text-gray-800">
+            Doctor Dashboard
+          </h1>
+        </div>
+
+        <div className="text-center">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Dr. {doctorName}
+          </h2>
+        </div>
+
+        <div className="text-right">
+          <div className="text-sm text-gray-500">Last updated: Feb 3, 2026</div>
+        </div>
       </div>
 
       {/* Section 1 - Critical Cards */}
