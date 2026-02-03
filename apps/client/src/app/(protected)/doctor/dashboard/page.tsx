@@ -61,7 +61,9 @@ export default async function DoctorDashboard() {
       <CriticalCards
         today={critical.todaysAppointments}
         activeSchedules={critical.activeSchedules}
+        pendingSchedulesCount={critical.pendingSchedules.count}
         pendingApplicationsCount={critical.pendingHospitalApplications.count}
+        activeHospitalsCount={critical.activeHospitals.count}
       />
 
       {/* Section 2 - Metrics & Analytics */}

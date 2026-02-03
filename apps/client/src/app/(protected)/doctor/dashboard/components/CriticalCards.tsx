@@ -5,15 +5,20 @@ import TopCard from "./TopCard";
 type CriticalCardsProps = {
   today: { count: number; nextAt?: string | null };
   activeSchedules: { count: number; nextActiveDate?: string | null };
+  pendingSchedulesCount: number;
   pendingApplicationsCount: number;
+  activeHospitalsCount: number;
 };
 
 export default function CriticalCards({
   today,
   activeSchedules,
+  pendingSchedulesCount,
   pendingApplicationsCount,
+  activeHospitalsCount,
 }: CriticalCardsProps) {
   const showApplicationsBadge = pendingApplicationsCount > 0;
+  const hasPendingSchedules = pendingSchedulesCount > 0;
 
   return (
     <section aria-labelledby="critical-actions">
@@ -34,31 +39,51 @@ export default function CriticalCards({
           className="min-h-36 h-36"
         />
 
-        <TopCard
-          title="Active Schedules"
-          value={activeSchedules.count}
-          subtext={
-            activeSchedules.nextActiveDate
-              ? `Next active date: ${activeSchedules.nextActiveDate}`
-              : undefined
-          }
-          cta={null}
-          className="min-h-36 h-36"
-        />
+        {/* Schedules card: render Pending Schedules if any pending, otherwise Active Schedules */}
+        {hasPendingSchedules ? (
+          <TopCard
+            title="Pending Schedules"
+            value={pendingSchedulesCount}
+            subtext={`You have ${pendingSchedulesCount} pending schedule(s) awaiting review`}
+            cta={{ label: "Review Schedules" }}
+            className="min-h-36 h-36"
+          />
+        ) : (
+          <TopCard
+            title="Active Schedules"
+            value={activeSchedules.count}
+            subtext={
+              activeSchedules.nextActiveDate
+                ? `Next active date: ${activeSchedules.nextActiveDate}`
+                : undefined
+            }
+            cta={null}
+            className="min-h-36 h-36"
+          />
+        )}
 
-        <TopCard
-          title="Pending Hospital Applications"
-          value={pendingApplicationsCount}
-          cta={{ label: "View Applications" }}
-          className="min-h-36 h-36"
-          statusBadge={
-            showApplicationsBadge ? (
+        {/* Hospitals card: pending hospital applications take precedence */}
+        {showApplicationsBadge ? (
+          <TopCard
+            title="Pending Hospital Applications"
+            value={pendingApplicationsCount}
+            cta={{ label: "View Applications" }}
+            className="min-h-36 h-36"
+            statusBadge={
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
                 Pending
               </span>
-            ) : null
-          }
-        />
+            }
+          />
+        ) : (
+          <TopCard
+            title="Active Hospitals"
+            value={activeHospitalsCount}
+            subtext={`${activeHospitalsCount} connected hospital(s)`}
+            cta={null}
+            className="min-h-36 h-36"
+          />
+        )}
       </div>
     </section>
   );

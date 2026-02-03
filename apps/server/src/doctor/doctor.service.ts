@@ -774,6 +774,16 @@ export class DoctorService {
         take: 5,
       });
 
+      // Pending schedules for the doctor (for conditional card display)
+      const pendingSchedulesCount = await tx.schedule.count({
+        where: { doctorId, status: ScheduleStatus.pending },
+      });
+
+      // Active hospitals the doctor is attached to
+      const activeHospitalCount = await tx.doctorHospitalProfile.count({
+        where: { doctorId },
+      });
+
       type Activity = {
         type: string;
         ts: Date;
@@ -834,7 +844,9 @@ export class DoctorService {
               nextAt: nextAppointmentAt,
             },
             activeSchedules: { count: activeSchedulesCount, nextActiveDate },
+            pendingSchedules: { count: pendingSchedulesCount },
             pendingHospitalApplications: { count: pendingHospitalApplications },
+            activeHospitals: { count: activeHospitalCount },
           },
           weekly: {
             labels,
