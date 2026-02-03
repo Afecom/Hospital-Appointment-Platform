@@ -608,4 +608,11 @@ export class DoctorService {
       total,
     };
   }
+
+  async doctorDashboard(session: UserSession) {
+    const userId = session.user.id;
+    const doctor = await this.databaseService.doctor.findUniqueOrThrow({
+      where: { userId },
+    });
+  }
 }

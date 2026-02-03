@@ -32,6 +32,10 @@ export class DoctorController {
     return this.doctorService.findAll(page, limit);
   }
 
+  @Get('/dashboard')
+  @Roles([Role.doctor])
+  dashboard(@Session() session: UserSession) {}
+
   @Get('hospital/pending')
   @Roles([Role.hospital_admin])
   getPendingHospitalDoctors(
