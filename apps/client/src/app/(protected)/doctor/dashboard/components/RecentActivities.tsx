@@ -31,6 +31,32 @@ const sample: Activity[] = [
   },
 ];
 
+const getUserTimeZone = () =>
+  Intl.DateTimeFormat().resolvedOptions().timeZone || undefined;
+function formatDateTime(ts: string | Date) {
+  try {
+    const date = typeof ts === "string" ? new Date(ts) : ts;
+    if (isNaN(date.getTime())) return null;
+    const tz = getUserTimeZone();
+
+    const dateStr = date.toLocaleDateString(undefined, {
+      timeZone: tz,
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+    const timeStr = date.toLocaleTimeString(undefined, {
+      timeZone: tz,
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: true,
+    });
+    return { dateStr, timeStr };
+  } catch (e) {
+    return null;
+  }
+}
+
 export default function RecentActivities({
   activities,
 }: RecentActivitiesProps) {
@@ -59,9 +85,21 @@ export default function RecentActivities({
                 <p className="text-xs text-gray-500">{a.entity}</p>
               </div>
               <p className="mt-1 text-xs text-gray-500">
-                {typeof a.ts === "string"
-                  ? a.ts
-                  : new Date(a.ts).toLocaleString()}
+                {(() => {
+                  const f = formatDateTime(a.ts);
+                  if (f) {
+                    return (
+                      <>
+                        <span className="block">
+                          {f.dateStr}, {f.timeStr}
+                        </span>
+                      </>
+                    );
+                  }
+                  return typeof a.ts === "string"
+                    ? a.ts
+                    : new Date(a.ts).toLocaleString();
+                })()}
               </p>
             </div>
 
