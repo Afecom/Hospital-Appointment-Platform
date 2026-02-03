@@ -36,7 +36,7 @@ export default function CriticalCards({
               : undefined
           }
           cta={{ label: "View Today" }}
-          className="min-h-36 h-36"
+          className="min-h-40 h-40"
         />
 
         {/* Schedules card: render Pending Schedules if any pending, otherwise Active Schedules */}
@@ -44,9 +44,9 @@ export default function CriticalCards({
           <TopCard
             title="Pending Schedules"
             value={pendingSchedulesCount}
-            subtext={`You have ${pendingSchedulesCount} pending schedule(s) awaiting review`}
+            subtext={`${pendingSchedulesCount} schedule(s) awaiting approval`}
             cta={{ label: "Review Schedules" }}
-            className="min-h-36 h-36"
+            className="min-h-40 h-40"
           />
         ) : (
           <TopCard
@@ -58,7 +58,7 @@ export default function CriticalCards({
                 : undefined
             }
             cta={null}
-            className="min-h-36 h-36"
+            className="min-h-40 h-40"
           />
         )}
 
@@ -80,8 +80,8 @@ export default function CriticalCards({
             title="Active Hospitals"
             value={activeHospitalsCount}
             subtext={`${activeHospitalsCount} connected hospital(s)`}
-            cta={null}
-            className="min-h-36 h-36"
+            cta={{ label: "View Hospitals" }}
+            className="min-h-40 h-40"
           />
         )}
       </div>
