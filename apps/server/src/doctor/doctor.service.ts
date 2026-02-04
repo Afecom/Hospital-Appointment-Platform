@@ -645,6 +645,7 @@ export class DoctorService {
         where: {
           doctorId,
           approvedSlotStart: { gte: startOfToday, lt: endOfToday },
+          status: { notIn: ['cancelled', 'expired', 'rejected'] },
         },
         orderBy: { approvedSlotStart: 'asc' },
         include: {
@@ -691,6 +692,7 @@ export class DoctorService {
         where: {
           doctorId,
           approvedSlotStart: { gte: startOfWeek, lt: endOfWeek },
+          status: { notIn: ['cancelled', 'expired', 'rejected'] },
         },
         select: { id: true, status: true, approvedSlotStart: true },
       });
