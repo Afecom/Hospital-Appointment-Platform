@@ -14,7 +14,7 @@ export default function ScheduleHeader({ onApply }: { onApply: () => void }) {
 
       <div className="flex items-center gap-2">
         <button
-          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 shadow-sm"
+          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 shadow-sm transform transition duration-150 ease-in-out hover:-translate-y-0.5 hover:shadow-md focus-visible:ring-2 focus-visible:ring-blue-200 focus:outline-none"
           onClick={onApply}
         >
           <FontAwesomeIcon icon={faPlus} />

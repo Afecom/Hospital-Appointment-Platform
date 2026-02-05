@@ -62,7 +62,7 @@ export default function FiltersPanel({
           <div>
             <label className="block text-sm text-gray-700">Period</label>
             <select
-              className="mt-1 block w-full rounded-md border px-2 py-1"
+              className="mt-1 block w-full bg-transparent border-0 border-b border-gray-200 px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 focus:outline-none transition"
               value={period}
               onChange={(e) => setPeriod(e.target.value)}
             >
@@ -76,7 +76,7 @@ export default function FiltersPanel({
           <div>
             <label className="block text-sm text-gray-700">Schedule type</label>
             <select
-              className="mt-1 block w-full rounded-md border px-2 py-1"
+              className="mt-1 block w-full bg-transparent border-0 border-b border-gray-200 px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 focus:outline-none transition"
               value={scheduleType}
               onChange={(e) => setScheduleType(e.target.value)}
             >
@@ -90,7 +90,7 @@ export default function FiltersPanel({
           <div>
             <label className="block text-sm text-gray-700">Hospital</label>
             <select
-              className="mt-1 block w-full rounded-md border px-2 py-1"
+              className="mt-1 block w-full bg-transparent border-0 border-b border-gray-200 px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 focus:outline-none transition"
               value={hospital}
               onChange={(e) => setHospital(e.target.value)}
             >
@@ -118,7 +118,7 @@ export default function FiltersPanel({
             <label className="block text-sm text-gray-700">From date</label>
             <input
               type="date"
-              className="mt-1 block w-full rounded-md border px-2 py-1"
+              className="mt-1 block w-full bg-transparent border-0 border-b border-gray-200 px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 focus:outline-none transition"
               value={fromDate}
               onChange={(e) => setFromDate(e.target.value)}
             />
@@ -127,7 +127,7 @@ export default function FiltersPanel({
             <label className="block text-sm text-gray-700">To date</label>
             <input
               type="date"
-              className="mt-1 block w-full rounded-md border px-2 py-1"
+              className="mt-1 block w-full bg-transparent border-0 border-b border-gray-200 px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 focus:outline-none transition"
               value={toDate}
               onChange={(e) => setToDate(e.target.value)}
             />
@@ -136,7 +136,7 @@ export default function FiltersPanel({
             <label className="block text-sm text-gray-700">From time</label>
             <input
               type="time"
-              className="mt-1 block w-full rounded-md border px-2 py-1"
+              className="mt-1 block w-full bg-transparent border-0 border-b border-gray-200 px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 focus:outline-none transition"
               value={fromTime}
               onChange={(e) => setFromTime(e.target.value)}
             />
@@ -145,7 +145,7 @@ export default function FiltersPanel({
             <label className="block text-sm text-gray-700">To time</label>
             <input
               type="time"
-              className="mt-1 block w-full rounded-md border px-2 py-1"
+              className="mt-1 block w-full bg-transparent border-0 border-b border-gray-200 px-2 py-1 focus:border-blue-500 focus:ring-2 focus:ring-blue-50 focus:outline-none transition"
               value={toTime}
               onChange={(e) => setToTime(e.target.value)}
             />

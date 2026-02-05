@@ -35,7 +35,7 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg p-4 bg-white shadow-md hover:shadow-lg transition-shadow">
+    <div className="flex items-center justify-between rounded-lg p-4 bg-white shadow-md hover:shadow-lg transition-transform transition-shadow transform duration-150 ease-in-out hover:-translate-y-1 hover:shadow-xl">
       <div>
         <div className="text-sm text-gray-500">{s.hospital}</div>
         <div className="font-medium text-gray-800">{formatDateRange()}</div>
@@ -59,7 +59,7 @@ export default function ScheduleCard({
           <button
             aria-label={`Edit schedule ${s.id}`}
             title="Edit"
-            className="p-2 rounded text-gray-600 hover:bg-gray-50"
+            className="p-2 rounded text-gray-600 hover:text-blue-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
             onClick={() => onEdit(s)}
           >
             <FontAwesomeIcon icon={faPen} />
@@ -90,7 +90,7 @@ export default function ScheduleCard({
               (s.status === "pending" || s.status === "rejected") && onDelete(s)
             }
             disabled={!(s.status === "pending" || s.status === "rejected")}
-            className={`p-2 rounded ${s.status === "pending" || s.status === "rejected" ? "text-gray-600 hover:bg-gray-50" : "opacity-40 cursor-not-allowed text-gray-400"}`}
+            className={`p-2 rounded ${s.status === "pending" || s.status === "rejected" ? "text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none" : "opacity-40 cursor-not-allowed text-gray-400"}`}
           >
             <FontAwesomeIcon icon={faTrash} />
           </button>

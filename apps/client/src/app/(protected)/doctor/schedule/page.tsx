@@ -201,7 +201,7 @@ export default function DoctorSchedulePage() {
               No schedules found for the selected tab and filters.
             </p>
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:shadow-md transition"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:shadow-md transition transform duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
               onClick={() =>
                 console.log("Apply for Schedule clicked - empty state")
               }
