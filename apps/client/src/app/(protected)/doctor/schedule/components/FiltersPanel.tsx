@@ -50,6 +50,8 @@ export default function FiltersPanel({
             <button
               className="text-blue-600 underline"
               onClick={onToggleMobile}
+              aria-expanded={showMobile}
+              aria-controls="filters-panel"
             >
               {showMobile ? "Hide Filters" : "Show Filters"}
             </button>
@@ -57,8 +59,14 @@ export default function FiltersPanel({
         )}
       </div>
 
-      <div className="rounded-lg p-4 bg-white shadow-md transition-shadow hover:shadow-lg">
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+      <div
+        id="filters-panel"
+        aria-hidden={!showMobile}
+        className={`rounded-lg p-4 bg-white shadow-md transition-shadow hover:shadow-lg ${
+          showMobile ? "block" : "hidden sm:block"
+        }`}
+      >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label className="block text-sm text-gray-700">Period</label>
             <select
@@ -102,15 +110,6 @@ export default function FiltersPanel({
               ))}
             </select>
           </div>
-
-          <div className="flex items-end justify-end">
-            <button
-              className="text-sm text-gray-600 underline"
-              onClick={clearFilters}
-            >
-              Clear Filters
-            </button>
-          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-4">
@@ -150,6 +149,15 @@ export default function FiltersPanel({
               onChange={(e) => setToTime(e.target.value)}
             />
           </div>
+        </div>
+
+        <div className="mt-4 flex justify-center sm:justify-end">
+          <button
+            className="text-sm text-gray-600 underline"
+            onClick={clearFilters}
+          >
+            Clear Filters
+          </button>
         </div>
       </div>
     </div>
