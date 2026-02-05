@@ -7,11 +7,14 @@ import FiltersPanel from "./components/FiltersPanel";
 import ScheduleCard from "./components/ScheduleCard";
 import type { Status } from "./components/StatusBadge";
 
+type ScheduleType = "recurring" | "temporary" | "one_time";
+
 type Period = "morning" | "afternoon" | "evening";
 
 type Schedule = {
   id: string;
   hospital: string;
+  type: ScheduleType;
   startDate: string; // YYYY-MM-DD
   endDate?: string;
   period: Period;
@@ -24,6 +27,7 @@ const MOCK_SCHEDULES: Schedule[] = [
   {
     id: "s1",
     hospital: "St. Mary General Hospital",
+    type: "recurring",
     startDate: "2026-02-10",
     endDate: "2026-02-14",
     period: "morning",
@@ -34,6 +38,7 @@ const MOCK_SCHEDULES: Schedule[] = [
   {
     id: "s2",
     hospital: "Eastside Medical Center",
+    type: "temporary",
     startDate: "2026-03-01",
     period: "afternoon",
     startTime: "13:00",
@@ -43,6 +48,7 @@ const MOCK_SCHEDULES: Schedule[] = [
   {
     id: "s3",
     hospital: "St. Mary General Hospital",
+    type: "one_time",
     startDate: "2026-03-05",
     period: "evening",
     startTime: "17:00",
@@ -52,6 +58,7 @@ const MOCK_SCHEDULES: Schedule[] = [
   {
     id: "s4",
     hospital: "City Diagnostic Clinic",
+    type: "recurring",
     startDate: "2026-04-10",
     period: "morning",
     startTime: "09:00",
@@ -73,6 +80,7 @@ export default function DoctorSchedulePage() {
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
   // Filters
+  const [scheduleType, setScheduleType] = useState<ScheduleType | "">("");
   const [period, setPeriod] = useState<Period | "">("");
   const [hospital, setHospital] = useState<string>("");
   const [fromDate, setFromDate] = useState<string>("");
@@ -85,6 +93,7 @@ export default function DoctorSchedulePage() {
   }, []);
 
   function clearFilters() {
+    setScheduleType("");
     setPeriod("");
     setHospital("");
     setFromDate("");
@@ -94,6 +103,7 @@ export default function DoctorSchedulePage() {
   }
 
   function matchesFilters(s: Schedule) {
+    if (scheduleType && s.type !== scheduleType) return false;
     if (period && s.period !== period) return false;
     if (hospital && s.hospital !== hospital) return false;
 
@@ -125,7 +135,16 @@ export default function DoctorSchedulePage() {
       if (activeTab !== "all" && s.status !== activeTab) return false;
       return matchesFilters(s);
     }).sort((a, b) => a.startDate.localeCompare(b.startDate));
-  }, [activeTab, period, hospital, fromDate, toDate, fromTime, toTime]);
+  }, [
+    activeTab,
+    scheduleType,
+    period,
+    hospital,
+    fromDate,
+    toDate,
+    fromTime,
+    toTime,
+  ]);
 
   function onEdit(s: Schedule) {
     console.log("Edit schedule", s.id);
@@ -166,6 +185,8 @@ export default function DoctorSchedulePage() {
         setFromTime={setFromTime}
         toTime={toTime}
         setToTime={setToTime}
+        scheduleType={scheduleType}
+        setScheduleType={(t) => setScheduleType(t as any)}
         clearFilters={clearFilters}
         showMobileToggle
         showMobile={showFiltersMobile}
@@ -175,12 +196,12 @@ export default function DoctorSchedulePage() {
       {/* Schedules List */}
       <div>
         {filteredSchedules.length === 0 ? (
-          <div className="text-center py-12 border rounded-md">
+          <div className="text-center py-12 rounded-lg bg-gray-50 shadow-sm">
             <p className="text-gray-700 mb-4">
               No schedules found for the selected tab and filters.
             </p>
             <button
-              className="bg-blue-600 text-white px-4 py-2 rounded-md"
+              className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:shadow-md transition"
               onClick={() =>
                 console.log("Apply for Schedule clicked - empty state")
               }
@@ -189,7 +210,7 @@ export default function DoctorSchedulePage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-4">
             {filteredSchedules.map((s) => (
               <ScheduleCard
                 key={s.id}

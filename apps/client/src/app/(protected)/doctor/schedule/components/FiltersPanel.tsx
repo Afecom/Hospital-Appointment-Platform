@@ -14,6 +14,8 @@ export default function FiltersPanel({
   setFromTime,
   toTime,
   setToTime,
+  scheduleType,
+  setScheduleType,
   clearFilters,
   showMobileToggle,
   showMobile,
@@ -32,6 +34,8 @@ export default function FiltersPanel({
   setFromTime: (t: string) => void;
   toTime: string;
   setToTime: (t: string) => void;
+  scheduleType: string;
+  setScheduleType: (t: string) => void;
   clearFilters: () => void;
   showMobileToggle?: boolean;
   showMobile?: boolean;
@@ -53,8 +57,8 @@ export default function FiltersPanel({
         )}
       </div>
 
-      <div className="border rounded-md p-4 bg-white shadow-sm">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="rounded-lg p-4 bg-white shadow-md transition-shadow hover:shadow-lg">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
           <div>
             <label className="block text-sm text-gray-700">Period</label>
             <select
@@ -66,6 +70,20 @@ export default function FiltersPanel({
               <option value="morning">Morning</option>
               <option value="afternoon">Afternoon</option>
               <option value="evening">Evening</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm text-gray-700">Schedule type</label>
+            <select
+              className="mt-1 block w-full rounded-md border px-2 py-1"
+              value={scheduleType}
+              onChange={(e) => setScheduleType(e.target.value)}
+            >
+              <option value="">Any</option>
+              <option value="recurring">Recurring</option>
+              <option value="temporary">Temporary</option>
+              <option value="one_time">One-time</option>
             </select>
           </div>
 

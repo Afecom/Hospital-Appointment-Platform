@@ -12,6 +12,7 @@ export default function ScheduleCard({
   schedule: {
     id: string;
     hospital: string;
+    type: string;
     startDate: string;
     endDate?: string;
     period: string;
@@ -34,11 +35,16 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="flex items-center justify-between border rounded-md p-4 bg-white shadow-sm">
+    <div className="flex items-center justify-between rounded-lg p-4 bg-white shadow-md hover:shadow-lg transition-shadow">
       <div>
         <div className="text-sm text-gray-500">{s.hospital}</div>
         <div className="font-medium text-gray-800">{formatDateRange()}</div>
         <div className="mt-1 flex items-center gap-3">
+          <span className="inline-block mr-2 px-2 py-1 rounded-full bg-indigo-50 text-sm text-indigo-700">
+            {s.type === "one_time"
+              ? "One-time"
+              : s.type.charAt(0).toUpperCase() + s.type.slice(1)}
+          </span>
           <span className="inline-block mr-2 px-2 py-1 rounded-full bg-gray-100 text-sm text-gray-700">
             {s.period.charAt(0).toUpperCase() + s.period.slice(1)}
           </span>
