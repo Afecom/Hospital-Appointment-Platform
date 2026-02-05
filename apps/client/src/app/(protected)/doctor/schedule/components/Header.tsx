@@ -1,0 +1,26 @@
+"use client";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlus } from "@fortawesome/free-solid-svg-icons";
+
+export default function ScheduleHeader({ onApply }: { onApply: () => void }) {
+  return (
+    <div className="flex items-start justify-between gap-4 mb-4">
+      <div>
+        <h1 className="text-2xl font-semibold text-gray-800">My Schedules</h1>
+        <p className="text-sm text-gray-500">
+          Manage your hospital schedules and availability
+        </p>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <button
+          className="inline-flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 shadow-sm"
+          onClick={onApply}
+        >
+          <FontAwesomeIcon icon={faPlus} />
+          <span>Apply for Schedule</span>
+        </button>
+      </div>
+    </div>
+  );
+}
