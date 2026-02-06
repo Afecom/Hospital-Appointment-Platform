@@ -46,3 +46,24 @@ body {
   margin: 0;
   box-sizing: border-box;
 }
+
+/* Prevent the entire page from growing horizontally when children overflow
+   and provide a utility to hide scrollbars on scrollable elements (used by Tabs) */
+html,
+body {
+  overflow-x: hidden;
+}
+
+.hide-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Utility to prevent flex children from shrinking unexpectedly */
+.no-shrink {
+  flex-shrink: 0;
+  min-width: 0;
+}
