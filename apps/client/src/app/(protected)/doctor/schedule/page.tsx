@@ -157,7 +157,7 @@ export default function DoctorSchedulePage() {
   }
 
   return (
-    <div className="p-6 lg:max-w-6xl mx-auto">
+    <div className="p-6 max-w-full lg:max-w-6xl mx-auto overflow-x-hidden">
       {/* Header */}
       <ScheduleHeader
         onApply={() => console.log("Apply for Schedule clicked")}

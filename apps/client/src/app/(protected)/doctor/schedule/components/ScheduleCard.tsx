@@ -35,24 +35,24 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg p-4 bg-white shadow-md hover:shadow-xl transition-shadow transform duration-150 ease-in-out hover:-translate-y-1">
-      <div>
-        <div className="text-sm text-gray-500">{s.hospital}</div>
+    <div className="flex flex-col md:flex-row md:items-center justify-between w-full rounded-lg p-4 bg-white shadow-md hover:shadow-xl transition-shadow transform duration-150 ease-in-out hover:-translate-y-1 gap-3">
+      <div className="w-full md:max-w-[65%]">
+        <div className="text-sm text-gray-500 truncate">{s.hospital}</div>
         <div className="font-medium text-gray-800">{formatDateRange()}</div>
-        <div className="mt-1 flex items-center gap-3">
-          <span className="inline-block mr-2 px-2 py-1 rounded-full bg-indigo-50 text-sm text-indigo-700">
+        <div className="mt-2 flex flex-wrap items-center gap-2">
+          <span className="inline-block px-2 py-1 rounded-full bg-indigo-50 text-sm text-indigo-700">
             {s.type === "one_time"
               ? "One-time"
               : s.type.charAt(0).toUpperCase() + s.type.slice(1)}
           </span>
-          <span className="inline-block mr-2 px-2 py-1 rounded-full bg-gray-100 text-sm text-gray-700">
+          <span className="inline-block px-2 py-1 rounded-full bg-gray-100 text-sm text-gray-700">
             {s.period.charAt(0).toUpperCase() + s.period.slice(1)}
           </span>
           <span className="text-sm text-gray-600">{formatTimeRange()}</span>
         </div>
       </div>
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between gap-3 w-full md:w-auto">
         <StatusBadge status={s.status} />
 
         <div className="flex items-center gap-2">
