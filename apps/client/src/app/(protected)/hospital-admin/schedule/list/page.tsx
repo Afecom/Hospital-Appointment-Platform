@@ -52,7 +52,9 @@ const ScheduleListPage = () => {
 
   const handleTabClick = (tab: string) => {
     if (tab === "approved" || tab === "pending" || tab === "rejected")
-      router.push(`${pathname}?status=${tab}`);
+      router.push(
+        `${pathname}?status=${tab}&expired=false&deactivated=false`,
+      );
     else if (tab === "expired") router.push(`${pathname}?expired=true`);
     else if (tab === "deactivated") router.push(`${pathname}?deactivated=true`);
   };

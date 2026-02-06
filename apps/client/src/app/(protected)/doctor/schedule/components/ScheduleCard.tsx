@@ -35,7 +35,7 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="flex items-center justify-between rounded-lg p-4 bg-white shadow-md hover:shadow-lg transition-transform transition-shadow transform duration-150 ease-in-out hover:-translate-y-1 hover:shadow-xl">
+    <div className="flex items-center justify-between rounded-lg p-4 bg-white shadow-md hover:shadow-xl transition-shadow transform duration-150 ease-in-out hover:-translate-y-1">
       <div>
         <div className="text-sm text-gray-500">{s.hospital}</div>
         <div className="font-medium text-gray-800">{formatDateRange()}</div>
