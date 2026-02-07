@@ -1,6 +1,12 @@
 "use client";
 
-import React, { createContext, useContext, useState } from "react";
+import React, {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { MoreVertical, ChevronLast, ChevronFirst } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useLayout } from "@/context/LayoutContext";
@@ -24,7 +30,36 @@ export default function Sidebar({
 }) {
   const { expanded, setExpanded } = useLayout();
   const [loading, setLoading] = useState(false);
+  const [showChevron, setShowChevron] = useState(true);
+  const lastScrollY = useRef(0);
+  const ticking = useRef(false);
   const router = useRouter();
+
+  useEffect(() => {
+    // initialize last position
+    lastScrollY.current = typeof window !== "undefined" ? window.scrollY : 0;
+    function onScroll() {
+      const currentY = window.scrollY;
+      if (!ticking.current) {
+        window.requestAnimationFrame(() => {
+          const delta = currentY - lastScrollY.current;
+          const threshold = 5; // ignore tiny movements
+          if (delta < -threshold) {
+            // scrolled up
+            setShowChevron(true);
+          } else if (delta > threshold) {
+            // scrolled down
+            setShowChevron(false);
+          }
+          lastScrollY.current = currentY;
+          ticking.current = false;
+        });
+        ticking.current = true;
+      }
+    }
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
   async function LogoutHandler() {
     setLoading(true);
     await authClient.signOut({
@@ -64,9 +99,21 @@ export default function Sidebar({
             />
             <button
               onClick={() => setExpanded()}
-              className={`transition-all p-1.5 rounded-lg bg-green-400 hover:bg-blue-950 hover:cursor-pointer hover:text-white text-blue-950 mt-2 ${
-                expanded ? "absolute top-0 right-2" : "mt-4 ml-2"
-              }`}
+              aria-hidden={!(expanded || showChevron)}
+              className={`p-1.5 rounded-lg bg-green-400 text-blue-950 mt-2
+                transition-all duration-300 ease-in-out transform
+                hover:bg-blue-950 hover:cursor-pointer hover:text-white
+                ${
+                  expanded
+                    ? "absolute md:absolute top-0 right-2"
+                    : "fixed md:static mt-4 ml-2"
+                }
+                ${
+                  expanded || showChevron
+                    ? "opacity-100 translate-y-0 pointer-events-auto"
+                    : "opacity-0 -translate-y-2 pointer-events-none"
+                }
+              `}
             >
               {expanded ? <ChevronFirst /> : <ChevronLast />}
             </button>
