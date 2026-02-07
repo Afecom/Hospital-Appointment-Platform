@@ -62,7 +62,7 @@ export default function FiltersPanel({
       <div
         id="filters-panel"
         aria-hidden={!showMobile}
-        className={`rounded-lg p-4 bg-white shadow-md transition-shadow hover:shadow-lg ${
+        className={`rounded-lg p-3 sm:p-4 bg-white shadow-md transition-shadow hover:shadow-lg max-w-lg mx-auto sm:mx-0 ${
           showMobile ? "block" : "hidden sm:block"
         }`}
       >
@@ -112,7 +112,7 @@ export default function FiltersPanel({
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3 mt-4">
           <div>
             <label className="block text-sm text-gray-700">From date</label>
             <input

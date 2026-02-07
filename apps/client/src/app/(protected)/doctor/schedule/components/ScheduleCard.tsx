@@ -35,8 +35,8 @@ export default function ScheduleCard({
   }
 
   return (
-    <div className="flex flex-col md:flex-row md:items-center justify-between w-full rounded-lg p-4 bg-white shadow-md hover:shadow-xl transition-shadow transform duration-150 ease-in-out hover:-translate-y-1 gap-3">
-      <div className="w-full md:max-w-[65%]">
+    <div className="flex flex-col md:flex-row md:items-center justify-between w-full rounded-lg p-3 md:p-4 bg-white shadow-md hover:shadow-xl transition-shadow transform duration-150 ease-in-out hover:-translate-y-1 gap-2">
+      <div className="w-full md:max-w-[60%]">
         <div className="text-sm text-gray-500 truncate">{s.hospital}</div>
         <div className="font-medium text-gray-800">{formatDateRange()}</div>
         <div className="mt-2 flex flex-wrap items-center gap-2">
@@ -52,48 +52,51 @@ export default function ScheduleCard({
         </div>
       </div>
 
-      <div className="flex items-center justify-between gap-3 w-full md:w-auto">
-        <StatusBadge status={s.status} />
-
+      <div className="flex items-center gap-2 w-full md:w-auto justify-end">
         <div className="flex items-center gap-2">
-          <button
-            aria-label={`Edit schedule ${s.id}`}
-            title="Edit"
-            className="p-2 rounded text-gray-600 hover:text-blue-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
-            onClick={() => onEdit(s)}
-          >
-            <FontAwesomeIcon icon={faPen} />
-          </button>
+          <StatusBadge status={s.status} />
 
-          <button
-            aria-label={`Deactivate schedule ${s.id}`}
-            title={
-              s.status === "approved"
-                ? "Deactivate"
-                : "Only approved schedules can be deactivated"
-            }
-            onClick={() => s.status === "approved" && onDeactivate(s)}
-            disabled={s.status !== "approved"}
-            className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50"}`}
-          >
-            <FontAwesomeIcon icon={faPause} />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              aria-label={`Edit schedule ${s.id}`}
+              title="Edit"
+              className="p-2 rounded text-gray-600 hover:text-blue-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
+              onClick={() => onEdit(s)}
+            >
+              <FontAwesomeIcon icon={faPen} />
+            </button>
 
-          <button
-            aria-label={`Delete schedule ${s.id}`}
-            title={
-              s.status === "pending" || s.status === "rejected"
-                ? "Delete"
-                : "Only pending or rejected schedules can be deleted"
-            }
-            onClick={() =>
-              (s.status === "pending" || s.status === "rejected") && onDelete(s)
-            }
-            disabled={!(s.status === "pending" || s.status === "rejected")}
-            className={`p-2 rounded ${s.status === "pending" || s.status === "rejected" ? "text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none" : "opacity-40 cursor-not-allowed text-gray-400"}`}
-          >
-            <FontAwesomeIcon icon={faTrash} />
-          </button>
+            <button
+              aria-label={`Deactivate schedule ${s.id}`}
+              title={
+                s.status === "approved"
+                  ? "Deactivate"
+                  : "Only approved schedules can be deactivated"
+              }
+              onClick={() => s.status === "approved" && onDeactivate(s)}
+              disabled={s.status !== "approved"}
+              className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50"}`}
+            >
+              <FontAwesomeIcon icon={faPause} />
+            </button>
+
+            <button
+              aria-label={`Delete schedule ${s.id}`}
+              title={
+                s.status === "pending" || s.status === "rejected"
+                  ? "Delete"
+                  : "Only pending or rejected schedules can be deleted"
+              }
+              onClick={() =>
+                (s.status === "pending" || s.status === "rejected") &&
+                onDelete(s)
+              }
+              disabled={!(s.status === "pending" || s.status === "rejected")}
+              className={`p-2 rounded ${s.status === "pending" || s.status === "rejected" ? "text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none" : "opacity-40 cursor-not-allowed text-gray-400"}`}
+            >
+              <FontAwesomeIcon icon={faTrash} />
+            </button>
+          </div>
         </div>
       </div>
     </div>
