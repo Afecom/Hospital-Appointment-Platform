@@ -26,6 +26,7 @@ import {
   getHospitalDoctorsRes,
   inactiveHospitalDoctorsRes,
   removeDoctorFromHospitalRes,
+  doctorsDashboard,
 } from '@hap/contract';
 
 @Injectable()
@@ -613,7 +614,7 @@ export class DoctorService {
     };
   }
 
-  async doctorDashboard(session: UserSession) {
+  async doctorDashboard(session: UserSession): Promise<doctorsDashboard> {
     const userId = session.user.id;
     const doctor = await this.databaseService.doctor.findUniqueOrThrow({
       where: { userId },
