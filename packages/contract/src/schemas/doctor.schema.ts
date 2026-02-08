@@ -154,3 +154,50 @@ export interface removeDoctorFromHospitalRes {
   message: string;
   status: "Success" | "Failed";
 }
+
+export interface doctorsDashboard {
+  status: "Success" | "Failed";
+  message: string;
+  data: {
+    critical: {
+      todaysAppointments: {
+        count: number;
+        nextAt: string | null;
+      };
+      activeSchedules: {
+        count: number;
+        nextActiveDate: string | null;
+      };
+      pendingSchedules: {
+        count: number;
+      };
+      pendingHospitalApplications: { count: number };
+      activeHospitals: { count: number };
+    };
+    weekly: {
+      labels: string[];
+      completedSeries: any[];
+      canceledSeries: any[];
+      completed: any;
+      canceled: any;
+      trend: number;
+    };
+    patientLoad: {
+      avgPerDay: number;
+      peackDat: string;
+      peakCount: any;
+    };
+    utilization: {
+      percent: number;
+      booked: number;
+      total: number;
+    };
+    doctor: { fullName: string };
+    recentActivities: {
+      action: string;
+      ts: Date;
+      entity: string | undefined;
+      status: string | undefined;
+    };
+  };
+}
