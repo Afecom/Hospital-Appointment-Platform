@@ -5,9 +5,9 @@ import TopCard from "./TopCard";
 type CriticalCardsProps = {
   today: { count: number; nextAt?: string | null };
   activeSchedules: { count: number; nextActiveDate?: string | null };
-  pendingSchedulesCount: number;
+  pendingSchedulesCount: number | undefined;
   pendingApplicationsCount: number;
-  activeHospitalsCount: number;
+  activeHospitalsCount: number | undefined;
 };
 
 export default function CriticalCards({
@@ -18,7 +18,7 @@ export default function CriticalCards({
   activeHospitalsCount,
 }: CriticalCardsProps) {
   const showApplicationsBadge = pendingApplicationsCount > 0;
-  const hasPendingSchedules = pendingSchedulesCount > 0;
+  const hasPendingSchedules = pendingSchedulesCount ? true : false;
 
   return (
     <section aria-labelledby="critical-actions">

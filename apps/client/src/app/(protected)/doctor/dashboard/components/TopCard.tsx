@@ -3,7 +3,7 @@ import React from "react";
 
 type TopCardProps = {
   title: string;
-  value: string | number;
+  value: string | number | undefined;
   subtext?: string;
   cta?: {
     label: string;

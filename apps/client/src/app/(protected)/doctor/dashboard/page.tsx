@@ -3,6 +3,7 @@ import CriticalCards from "./components/CriticalCards";
 import WeeklyChart from "./components/WeeklyChart";
 import RightCards from "./components/RightCards";
 import RecentActivities from "./components/RecentActivities";
+import { doctorsDashboard } from "@hap/contract";
 
 async function getData() {
   const apiBaseUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3001";
@@ -15,7 +16,7 @@ async function getData() {
     const res = await fetch(`${apiBaseUrl}/doctor/dashboard`, fetchOptions);
     if (!res.ok) throw new Error("Failed to fetch dashboard data");
 
-    const payload = await res.json();
+    const payload: doctorsDashboard = await res.json();
     return payload.data;
   } catch (error) {
     return null;
@@ -73,9 +74,9 @@ export default async function DoctorDashboard() {
       <CriticalCards
         today={critical.todaysAppointments}
         activeSchedules={critical.activeSchedules}
-        pendingSchedulesCount={critical.pendingSchedules.count}
+        pendingSchedulesCount={data?.critical.pendingSchedules.count}
         pendingApplicationsCount={critical.pendingHospitalApplications.count}
-        activeHospitalsCount={critical.activeHospitals.count}
+        activeHospitalsCount={data?.critical.activeHospitals.count}
       />
 
       {/* Section 2 - Metrics & Analytics */}
