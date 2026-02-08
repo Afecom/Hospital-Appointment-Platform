@@ -184,7 +184,7 @@ export interface doctorsDashboard {
     };
     patientLoad: {
       avgPerDay: number;
-      peackDat: string;
+      peakDay: string;
       peakCount: any;
     };
     utilization: {
@@ -198,6 +198,6 @@ export interface doctorsDashboard {
       ts: Date;
       entity: string | undefined;
       status: string | undefined;
-    };
+    }[];
   };
 }
