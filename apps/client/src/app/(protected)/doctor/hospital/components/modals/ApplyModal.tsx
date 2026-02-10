@@ -79,7 +79,7 @@ export default function ApplyModal({ open, onClose, onSuccess }: Props) {
           <button
             onClick={submit}
             disabled={submitting || !hospital}
-            className="px-4 py-2 bg-slate-800 text-white rounded-md text-sm"
+            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm focus-visible:ring-2 focus-visible:ring-blue-100"
           >
             {submitting ? "Submitting..." : "Submit"}
           </button>

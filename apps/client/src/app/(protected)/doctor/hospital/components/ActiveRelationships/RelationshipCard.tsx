@@ -36,14 +36,14 @@ export default function RelationshipCard({
 
   // read-only card; actions open modals which create requests on the server
   return (
-    <div className="border rounded-md p-4 bg-white">
+    <div className="bg-white shadow-sm border border-slate-100 rounded-lg p-5">
       <div className="flex items-start justify-between">
         <div>
           <div className="flex items-center gap-3">
             <h3 className="text-lg font-medium text-slate-900">
               {hospitalName}
             </h3>
-            <span className="text-xs px-2 py-1 rounded-full bg-green-100 text-green-800">
+            <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 text-emerald-800">
               Active
             </span>
           </div>
@@ -74,13 +74,13 @@ export default function RelationshipCard({
       <div className="mt-4 flex gap-3">
         <button
           onClick={() => onRequestSlotChange(relationship)}
-          className="px-3 py-1 text-sm bg-slate-50 border rounded-md text-slate-700 hover:bg-slate-100"
+          className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-md text-slate-700 hover:bg-slate-50"
         >
           Request Slot Duration Change
         </button>
         <button
           onClick={() => onRequestRemoval(relationship)}
-          className="px-3 py-1 text-sm bg-slate-50 border rounded-md text-slate-700 hover:bg-slate-100"
+          className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-md text-slate-700 hover:bg-slate-50"
         >
           Request Relationship Removal
         </button>

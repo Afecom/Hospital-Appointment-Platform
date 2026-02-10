@@ -25,7 +25,7 @@ export default function ApplicationsSection({ pending, history }: Props) {
       </h2>
 
       <div className="mb-6">
-        <h3 className="text-sm font-medium text-slate-700 mb-2">
+        <h3 className="text-sm font-medium text-slate-700 mb-3">
           Pending Applications
         </h3>
         {pending.length === 0 ? (
@@ -33,35 +33,34 @@ export default function ApplicationsSection({ pending, history }: Props) {
             You have no pending hospital requests.
           </div>
         ) : (
-          <div className="bg-white border rounded-md">
-            <table className="w-full text-sm">
-              <thead className="text-slate-600 text-left">
-                <tr>
-                  <th className="px-4 py-2">Hospital</th>
-                  <th className="px-4 py-2">Type</th>
-                  <th className="px-4 py-2">Summary</th>
-                  <th className="px-4 py-2">Status</th>
-                  <th className="px-4 py-2">Submitted</th>
-                </tr>
-              </thead>
-              <tbody>
-                {pending.map((a) => (
-                  <tr key={a.id} className="border-t">
-                    <td className="px-4 py-2">{a.hospitalName}</td>
-                    <td className="px-4 py-2">{a.type}</td>
-                    <td className="px-4 py-2">{a.summary}</td>
-                    <td className="px-4 py-2">{a.status}</td>
-                    <td className="px-4 py-2">{a.submittedAt}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {pending.map((a) => (
+              <div
+                key={a.id}
+                className="bg-white border border-slate-100 rounded-md p-4 flex items-center justify-between"
+              >
+                <div>
+                  <div className="text-sm font-medium text-slate-900">
+                    {a.hospitalName}
+                  </div>
+                  <div className="text-sm text-slate-600">
+                    {a.type} · {a.summary}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm text-slate-700">{a.status}</div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {a.submittedAt}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
 
       <div>
-        <h3 className="text-sm font-medium text-slate-700 mb-2">
+        <h3 className="text-sm font-medium text-slate-700 mb-3">
           Application History
         </h3>
         {history.length === 0 ? (
@@ -69,27 +68,26 @@ export default function ApplicationsSection({ pending, history }: Props) {
             No past hospital applications found.
           </div>
         ) : (
-          <div className="bg-white border rounded-md">
-            <table className="w-full text-sm">
-              <thead className="text-slate-600 text-left">
-                <tr>
-                  <th className="px-4 py-2">Hospital</th>
-                  <th className="px-4 py-2">Type</th>
-                  <th className="px-4 py-2">Outcome</th>
-                  <th className="px-4 py-2">Decision date</th>
-                </tr>
-              </thead>
-              <tbody>
-                {history.map((a) => (
-                  <tr key={a.id} className="border-t">
-                    <td className="px-4 py-2">{a.hospitalName}</td>
-                    <td className="px-4 py-2">{a.type}</td>
-                    <td className="px-4 py-2">{a.status}</td>
-                    <td className="px-4 py-2">{a.decisionAt ?? "—"}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+          <div className="space-y-3">
+            {history.map((a) => (
+              <div
+                key={a.id}
+                className="bg-white border border-slate-100 rounded-md p-4 flex items-center justify-between"
+              >
+                <div>
+                  <div className="text-sm font-medium text-slate-900">
+                    {a.hospitalName}
+                  </div>
+                  <div className="text-sm text-slate-600">{a.type}</div>
+                </div>
+                <div className="text-right text-sm text-slate-700">
+                  <div>{a.status}</div>
+                  <div className="text-xs text-slate-500 mt-1">
+                    {a.decisionAt ?? "—"}
+                  </div>
+                </div>
+              </div>
+            ))}
           </div>
         )}
       </div>
