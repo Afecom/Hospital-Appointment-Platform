@@ -32,13 +32,16 @@ export default function UpcomingAppointments({
                   key={a.id}
                   className="py-2 border-b last:border-b-0 border-slate-100 text-sm text-slate-700"
                 >
-                  <div className="flex justify-between">
-                    <div>
-                      {a.start} — {a.end} • {a.patientName}
+                  <div className="flex flex-col sm:flex-row sm:justify-between gap-1">
+                    <div className="min-w-0">
+                      {a.start} — {a.end} •{" "}
+                      <span className="font-medium truncate">
+                        {a.patientName}
+                      </span>
                     </div>
-                    <div className="text-slate-600">{a.type}</div>
+                    <div className="text-slate-600 no-shrink">{a.type}</div>
                   </div>
-                  <div className="text-slate-600 mt-1">{a.reason}</div>
+                  <div className="text-slate-600 mt-1 truncate">{a.reason}</div>
                 </div>
               ))}
             </div>

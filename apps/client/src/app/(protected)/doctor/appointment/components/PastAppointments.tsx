@@ -21,7 +21,7 @@ export default function PastAppointments({
         Past / Completed
       </h3>
       <div className="bg-white border border-slate-50 rounded-md overflow-hidden text-sm text-slate-700">
-        <div className="grid grid-cols-4 gap-4 p-3 font-medium text-slate-600 bg-slate-50">
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3 font-medium text-slate-600 bg-slate-50">
           <div>Date</div>
           <div>Patient</div>
           <div>Reason</div>
@@ -31,13 +31,13 @@ export default function PastAppointments({
           {appointments.map((a) => (
             <div
               key={a.id}
-              className="grid grid-cols-4 gap-4 p-3 border-t border-slate-100"
+              className="grid grid-cols-1 sm:grid-cols-4 gap-4 p-3 border-t border-slate-100"
             >
               <div className="text-slate-700">
                 {a.date} {a.start}
               </div>
-              <div className="text-slate-700">{a.patientName}</div>
-              <div className="text-slate-700">{a.reason}</div>
+              <div className="text-slate-700 truncate">{a.patientName}</div>
+              <div className="text-slate-700 truncate">{a.reason}</div>
               <div className="text-slate-700">{a.status}</div>
             </div>
           ))}

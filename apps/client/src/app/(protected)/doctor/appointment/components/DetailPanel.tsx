@@ -9,7 +9,7 @@ export default function DetailPanel({ appt }: { appt?: Appointment }) {
         Appointment Overview
       </h4>
       <div className="bg-white border border-slate-100 rounded-md p-4 text-sm text-slate-700">
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <div className="text-slate-600">Patient</div>
             <div className="font-medium text-slate-900">{appt.patientName}</div>

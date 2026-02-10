@@ -9,9 +9,9 @@ type SnapshotProps = {
 
 function Card({ label, count }: { label: string; count: number }) {
   return (
-    <div className="flex-1 bg-white border border-slate-100 rounded-md p-4 min-w-30">
+    <div className="flex-1 bg-white border border-slate-100 rounded-md p-4 min-w-0">
       <div className="text-sm text-slate-600">{label}</div>
-      <div className="mt-2 text-xl font-medium text-slate-900">{count}</div>
+      <div className="mt-2 text-xl font-medium text-primary">{count}</div>
     </div>
   );
 }
@@ -24,7 +24,7 @@ export default function Snapshot({
 }: SnapshotProps) {
   return (
     <section className="mb-6">
-      <div className="flex gap-4">
+      <div className="flex flex-col sm:flex-row gap-4">
         <Card label="Today" count={today} />
         <Card label="Upcoming" count={upcoming} />
         <Card label="Completed" count={completed} />

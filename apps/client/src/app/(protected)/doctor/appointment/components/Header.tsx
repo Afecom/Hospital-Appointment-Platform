@@ -13,9 +13,9 @@ export default function Header({
 }: Props) {
   return (
     <header className="mb-6">
-      <div className="flex items-baseline justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold text-slate-900">
+          <h1 className="text-2xl font-semibold text-primary">
             My Appointments
           </h1>
           <p className="text-sm text-slate-600 mt-1">
