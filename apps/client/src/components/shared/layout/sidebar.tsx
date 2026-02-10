@@ -106,7 +106,7 @@ export default function Sidebar({
                 ${
                   expanded
                     ? "absolute md:absolute top-0 right-2"
-                    : "fixed md:static mt-4 ml-2"
+                    : "fixed md:static mt-2 md:mt-4 ml-2"
                 }
                 ${
                   expanded || showChevron
