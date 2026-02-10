@@ -50,7 +50,7 @@ export default function CriticalCards({
           <TopCard
             title="Pending Schedules"
             value={pendingSchedulesCount}
-            subtext={`${pendingSchedulesCount} schedule(s) awaiting approval`}
+            subtext={`${pendingSchedulesCount} awaiting approval`}
             cta={{ label: "View Schedules" }}
             className="min-h-40 h-40"
           />

@@ -95,12 +95,12 @@ export default async function DoctorDashboard() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="md:col-span-2 bg-white border border-gray-200 rounded-lg shadow-sm p-4">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center justify-between">
               <h3 className="text-lg font-semibold text-gray-800">
                 Appointments This Week
               </h3>
 
-              <div className="flex items-center gap-6">
+              <div className="flex flex-wrap items-center gap-6">
                 <div className="text-sm text-gray-600">
                   <div className="text-xs text-gray-500">Completed</div>
                   <div className="text-base font-medium text-gray-900">
