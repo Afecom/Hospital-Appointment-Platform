@@ -9,7 +9,7 @@ type Props = {
 export default function PageHeader({ onOpenApply }: Props) {
   return (
     <header className="mb-6">
-      <div className="flex items-start justify-between">
+      <div className="flex flex-wrap gap-4 items-start justify-between">
         <div>
           <h1 className="text-2xl font-semibold text-slate-900">
             My Hospitals
