@@ -48,7 +48,7 @@ export default function FiltersPanel({
         {showMobileToggle && (
           <div className="sm:hidden">
             <button
-              className="text-blue-600 underline"
+              className="text-blue-600 underline mr-4"
               onClick={onToggleMobile}
               aria-expanded={showMobile}
               aria-controls="filters-panel"
@@ -62,11 +62,11 @@ export default function FiltersPanel({
       <div
         id="filters-panel"
         aria-hidden={!showMobile}
-        className={`rounded-lg p-3 sm:p-4 bg-white shadow-md transition-shadow hover:shadow-lg max-w-lg mx-auto sm:mx-0 ${
+        className={`rounded-lg p-3 sm:p-4 bg-white shadow-md transition-shadow hover:shadow-lg w-full mx-auto sm:mx-0 ${
           showMobile ? "block" : "hidden sm:block"
         }`}
       >
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 w-full">
           <div>
             <label className="block text-sm text-gray-700">Period</label>
             <select
