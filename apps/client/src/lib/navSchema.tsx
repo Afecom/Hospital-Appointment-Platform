@@ -123,12 +123,6 @@ export const NavSchema = {
       path: "/doctor/hospital",
       icon: <Hospital />,
     },
-    {
-      id: 5,
-      text: "Settings",
-      path: "/doctor/setting",
-      icon: <Settings />,
-    },
   ],
   admin: [
     {
