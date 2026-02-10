@@ -15,7 +15,7 @@ export default function Header({
     <header className="mb-6">
       <div className="flex flex-col sm:flex-row items-start sm:items-baseline justify-between gap-2">
         <div>
-          <h1 className="text-2xl font-semibold text-primary">
+          <h1 className="text-2xl font-semibold text-gray-800">
             My Appointments
           </h1>
           <p className="text-sm text-slate-600 mt-1">
