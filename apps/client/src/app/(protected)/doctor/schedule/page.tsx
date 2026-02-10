@@ -157,7 +157,7 @@ export default function DoctorSchedulePage() {
   }
 
   return (
-    <div className="p-6 overflow-x-hidden">
+    <div className="p-6">
       {/* Header */}
       <ScheduleHeader
         onApply={() => console.log("Apply for Schedule clicked")}
@@ -210,7 +210,7 @@ export default function DoctorSchedulePage() {
             </button>
           </div>
         ) : (
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
             {filteredSchedules.map((s) => (
               <ScheduleCard
                 key={s.id}

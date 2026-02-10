@@ -75,24 +75,16 @@ export default function ScheduleCard({
               }
               onClick={() => s.status === "approved" && onDeactivate(s)}
               disabled={s.status !== "approved"}
-              className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50"}`}
+              className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none"}`}
             >
               <FontAwesomeIcon icon={faPause} />
             </button>
 
             <button
               aria-label={`Delete schedule ${s.id}`}
-              title={
-                s.status === "pending" || s.status === "rejected"
-                  ? "Delete"
-                  : "Only pending or rejected schedules can be deleted"
-              }
-              onClick={() =>
-                (s.status === "pending" || s.status === "rejected") &&
-                onDelete(s)
-              }
-              disabled={!(s.status === "pending" || s.status === "rejected")}
-              className={`p-2 rounded ${s.status === "pending" || s.status === "rejected" ? "text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none" : "opacity-40 cursor-not-allowed text-gray-400"}`}
+              title="Delete"
+              onClick={() => onDelete(s)}
+              className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none`}
             >
               <FontAwesomeIcon icon={faTrash} />
             </button>
