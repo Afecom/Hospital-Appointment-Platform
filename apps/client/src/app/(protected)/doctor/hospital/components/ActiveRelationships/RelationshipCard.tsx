@@ -59,7 +59,11 @@ export default function RelationshipCard({
       <div className="mt-4 grid grid-cols-3 gap-4 text-sm text-slate-700">
         <div>
           <div className="text-xs text-slate-500">Active schedules</div>
-          <div className="mt-1">{activeSchedulesCount}</div>
+          <div className="mt-1">
+            <span className="inline-flex items-center text-sm font-medium px-2 py-0.5 rounded-full bg-blue-100 text-blue-800">
+              {activeSchedulesCount} active
+            </span>
+          </div>
         </div>
         <div>
           <div className="text-xs text-slate-500">Working time</div>
@@ -67,20 +71,24 @@ export default function RelationshipCard({
         </div>
         <div>
           <div className="text-xs text-slate-500">Slot duration</div>
-          <div className="mt-1">{slotDuration}</div>
+          <div className="mt-1">
+            <span className="inline-flex items-center text-sm font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-800">
+              {slotDuration}
+            </span>
+          </div>
         </div>
       </div>
 
       <div className="mt-4 flex gap-3">
         <button
           onClick={() => onRequestSlotChange(relationship)}
-          className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-md text-slate-700 hover:bg-slate-50"
+          className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
         >
           Request Slot Duration Change
         </button>
         <button
           onClick={() => onRequestRemoval(relationship)}
-          className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-md text-slate-700 hover:bg-slate-50"
+          className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-md text-rose-700 hover:bg-rose-50"
         >
           Request Relationship Removal
         </button>

@@ -18,6 +18,29 @@ type Props = {
 };
 
 export default function ApplicationsSection({ pending, history }: Props) {
+  const renderStatus = (status: string) => {
+    const s = status?.toLowerCase() ?? "";
+    if (s === "approved") {
+      return (
+        <span className="inline-flex items-center text-sm font-medium px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800">
+          {status}
+        </span>
+      );
+    }
+    if (s === "rejected") {
+      return (
+        <span className="inline-flex items-center text-sm font-medium px-2 py-0.5 rounded-full bg-rose-100 text-rose-800">
+          {status}
+        </span>
+      );
+    }
+    // default: pending / other
+    return (
+      <span className="inline-flex items-center text-sm font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-800">
+        {status}
+      </span>
+    );
+  };
   return (
     <section>
       <h2 className="text-lg font-semibold text-slate-800 mb-4">
@@ -48,7 +71,9 @@ export default function ApplicationsSection({ pending, history }: Props) {
                   </div>
                 </div>
                 <div className="text-right">
-                  <div className="text-sm text-slate-700">{a.status}</div>
+                  <div className="text-sm text-slate-700">
+                    {renderStatus(a.status)}
+                  </div>
                   <div className="text-xs text-slate-500 mt-1">
                     {a.submittedAt}
                   </div>
@@ -81,7 +106,7 @@ export default function ApplicationsSection({ pending, history }: Props) {
                   <div className="text-sm text-slate-600">{a.type}</div>
                 </div>
                 <div className="text-right text-sm text-slate-700">
-                  <div>{a.status}</div>
+                  <div>{renderStatus(a.status)}</div>
                   <div className="text-xs text-slate-500 mt-1">
                     {a.decisionAt ?? "—"}
                   </div>
