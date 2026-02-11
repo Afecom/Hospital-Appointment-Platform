@@ -73,7 +73,10 @@ export default function SlotDurationModal({
             <input
               value={newDuration}
               onChange={(e) => setNewDuration(e.target.value)}
-              placeholder="e.g. 20 minutes"
+              type="number"
+              min="5"
+              max="30"
+              placeholder="min: 5, max: 30"
               className="w-full border rounded-md px-3 py-2"
             />
           </div>
