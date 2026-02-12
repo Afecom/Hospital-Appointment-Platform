@@ -34,15 +34,26 @@ export class ScheduleFilterService {
       page,
       limit,
     } = query;
-    const whereClause = {
+    const whereClause: any = {
       doctorId,
       ...(hospitalId && { hospitalId }),
       ...(status && { status }),
       ...(type && { type }),
-      isDeactivated: query.deactivated ?? false,
-      isExpired: query.expired ?? false,
       isDeleted: false,
     };
+
+    // apply deactivated/expired filters only when explicitly provided
+    if (typeof query.deactivated !== 'undefined') {
+      whereClause.isDeactivated = query.deactivated;
+    }
+    if (typeof query.expired !== 'undefined') {
+      whereClause.isExpired = query.expired;
+    }
+    // If caller asked for deactivated schedules but did not specify expired,
+    // exclude expired schedules from the deactivated view.
+    if (query.deactivated && typeof query.expired === 'undefined') {
+      whereClause.isExpired = false;
+    }
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(
       { page, limit },
     );

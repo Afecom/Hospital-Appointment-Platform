@@ -60,7 +60,7 @@ export default function ScheduleCard({
           <div className="flex items-baseline gap-3">
             <div className="text-sm text-gray-500 truncate">{s.hospital}</div>
             {s.name ? (
-              <div className="ml-2 text-indigo-600 font-semibold italic truncate">
+              <div className="ml-2 text-blue-950 font-semibold italic truncate">
                 {s.name}
               </div>
             ) : null}
