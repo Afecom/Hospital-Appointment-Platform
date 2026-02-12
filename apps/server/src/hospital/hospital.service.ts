@@ -135,7 +135,6 @@ export class HospitalService {
 
   async findDoctorHospitals(session: UserSession): Promise<doctorHospital> {
     try {
-      console.log('Session received:', session);
       const doctor = await this.databaseService.doctor.findUnique({
         where: { userId: session.user.id },
         select: {
