@@ -477,6 +477,8 @@ export class ScheduleService {
     endDate?: string,
     page?: number,
     limit?: number,
+    deactivated?: boolean,
+    expired?: boolean,
   ) {
     const doctor = await this.prisma.doctor.findUnique({ where: { userId } });
     if (!doctor)
@@ -494,6 +496,8 @@ export class ScheduleService {
       endDate,
       page,
       limit,
+      deactivated,
+      expired,
     });
   }
 

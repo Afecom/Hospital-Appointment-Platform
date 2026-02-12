@@ -20,6 +20,8 @@ export class ScheduleFilterService {
     endDate?: string;
     page?: number;
     limit?: number;
+    deactivated?: boolean;
+    expired?: boolean;
   }) {
     const {
       hospitalId,
@@ -37,8 +39,8 @@ export class ScheduleFilterService {
       ...(hospitalId && { hospitalId }),
       ...(status && { status }),
       ...(type && { type }),
-      isDeactivated: false,
-      isExpired: false,
+      isDeactivated: query.deactivated ?? false,
+      isExpired: query.expired ?? false,
       isDeleted: false,
     };
     const { normalizedPage, normalizedLimit, skip, take } = normalizePagination(

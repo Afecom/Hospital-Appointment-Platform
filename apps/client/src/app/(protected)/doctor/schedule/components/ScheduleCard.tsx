@@ -11,6 +11,7 @@ export default function ScheduleCard({
   onDelete,
 }: {
   schedule: {
+    name?: string;
     id: string;
     hospital: string;
     type: string;
@@ -42,7 +43,14 @@ export default function ScheduleCard({
     <>
       <div className="flex flex-col md:flex-row md:items-center justify-between w-full rounded-lg p-3 md:p-4 bg-white shadow-md hover:shadow-xl transition-shadow transform duration-150 ease-in-out hover:-translate-y-1 gap-2">
         <div className="w-full md:max-w-[60%]">
-          <div className="text-sm text-gray-500 truncate">{s.hospital}</div>
+          <div className="flex items-baseline gap-3">
+            <div className="text-sm text-gray-500 truncate">{s.hospital}</div>
+            {s.name ? (
+              <div className="ml-2 text-indigo-600 font-semibold italic truncate">
+                {s.name}
+              </div>
+            ) : null}
+          </div>
           <div className="font-medium text-gray-800">{formatDateRange()}</div>
           <div className="mt-2 flex flex-wrap items-center gap-2">
             <span className="inline-block px-2 py-1 rounded-full bg-indigo-50 text-sm text-indigo-700">

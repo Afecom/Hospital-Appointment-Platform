@@ -73,11 +73,13 @@ const MOCK_SCHEDULES: Schedule[] = [
   },
 ];
 
-const STATUS_TABS: { key: "all" | Status; label: string }[] = [
+const STATUS_TABS: { key: string; label: string }[] = [
   { key: "all", label: "All" },
   { key: "approved", label: "Approved" },
   { key: "pending", label: "Pending" },
   { key: "rejected", label: "Rejected" },
+  { key: "deactivated", label: "Deactivated" },
+  { key: "expired", label: "Expired" },
 ];
 
 export default function DoctorSchedulePage() {
@@ -97,9 +99,14 @@ export default function DoctorSchedulePage() {
   const searchParams = useSearchParams();
 
   // Initialize active tab from query param `status`
-  const initialStatus = (searchParams?.get("status") as any) ?? "all";
-  const [activeTab, setActiveTab] = useState<"all" | Status>(
-    (initialStatus as any) || "approved",
+  const initialStatus = (() => {
+    if (searchParams?.get("deactivated") === "true") return "deactivated";
+    if (searchParams?.get("expired") === "true") return "expired";
+    return (searchParams?.get("status") as any) ?? "all";
+  })();
+  type ActiveTab = "all" | Status | "deactivated" | string;
+  const [activeTab, setActiveTab] = useState<ActiveTab>(
+    (initialStatus as any) || "all",
   );
 
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
@@ -123,15 +130,30 @@ export default function DoctorSchedulePage() {
 
   // Sync activeTab when the URL changes (e.g., back/forward)
   useEffect(() => {
-    const status = (searchParams?.get("status") as any) ?? "all";
+    const status = (() => {
+      if (searchParams?.get("deactivated") === "true") return "deactivated";
+      if (searchParams?.get("expired") === "true") return "expired";
+      return (searchParams?.get("status") as any) ?? "all";
+    })();
     if (status !== activeTab) setActiveTab(status as any);
   }, [searchParams]);
 
-  function handleTabChange(k: "all" | Status) {
+  function handleTabChange(k: string) {
     setActiveTab(k as any);
     const sp = new URLSearchParams(searchParams?.toString() ?? "");
-    if (k === "all") sp.delete("status");
-    else sp.set("status", k as string);
+    // clear flags
+    sp.delete("status");
+    sp.delete("deactivated");
+    sp.delete("expired");
+    if (k === "all") {
+      // nothing to set
+    } else if (k === "deactivated") {
+      sp.set("deactivated", "true");
+    } else if (k === "expired") {
+      sp.set("expired", "true");
+    } else {
+      sp.set("status", k as string);
+    }
     const q = sp.toString();
     router.replace(`${pathname}${q ? `?${q}` : ""}`);
   }
@@ -186,7 +208,15 @@ export default function DoctorSchedulePage() {
     ],
     queryFn: async () => {
       const params: any = {};
-      if (activeTab && activeTab !== "all") params.status = activeTab;
+      if (
+        activeTab &&
+        activeTab !== "all" &&
+        activeTab !== "deactivated" &&
+        activeTab !== "expired"
+      )
+        params.status = activeTab;
+      if (activeTab === "deactivated") params.deactivated = true;
+      if (activeTab === "expired") params.expired = true;
       if (scheduleType) params.type = scheduleType;
       // map hospital name (from UI) to hospitalId if possible
       if (hospital) {
@@ -225,14 +255,29 @@ export default function DoctorSchedulePage() {
       period: (s.period as Period) ?? (s.name ? "morning" : "morning"),
       startTime: s.startTime ?? "",
       endTime: s.endTime ?? "",
+      isDeactivated: !!s.isDeactivated,
+      isExpired: !!s.isExpired,
+      isDeleted: !!s.isDeleted,
       status: s.status as Status,
     };
   });
 
   const filteredSchedules = useMemo(() => {
     return mappedSchedules
-      .filter((s) => {
-        if (activeTab !== "all" && s.status !== activeTab) return false;
+      .filter((s: any) => {
+        // Deactivated tab shows only deactivated schedules
+        if (activeTab === "deactivated") return !!s.isDeactivated;
+        // Expired tab shows only expired schedules
+        if (activeTab === "expired") return !!s.isExpired;
+
+        // For other tabs, exclude deleted, expired or deactivated schedules
+        if (s.isDeleted || s.isExpired || s.isDeactivated) return false;
+
+        // Apply status filter if not `all`
+        if (activeTab !== "all" && activeTab !== undefined) {
+          if (s.status !== activeTab) return false;
+        }
+
         return matchesFilters(s);
       })
       .sort((a, b) => a.startDate.localeCompare(b.startDate));

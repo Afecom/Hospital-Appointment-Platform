@@ -129,6 +129,8 @@ export class ScheduleController {
     @Query('hospitalId') hospitalId: string,
     @Query('type') type: ScheduleType,
     @Query('status') status: ScheduleStatus,
+    @Query('deactivated') deactivated: boolean,
+    @Query('expired') expired: boolean,
     @Query('date') date: string,
     @Query('startDate') startDate: string,
     @Query('endDate') endDate: string,
@@ -147,6 +149,8 @@ export class ScheduleController {
       endDate,
       page,
       limit,
+      deactivated,
+      expired,
     );
   }
 }
