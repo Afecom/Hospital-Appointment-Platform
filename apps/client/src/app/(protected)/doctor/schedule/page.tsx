@@ -318,7 +318,7 @@ export default function DoctorSchedulePage() {
       } else {
         await api.patch(`/schedule/${id}`, { action });
       }
-      await queryClient.invalidateQueries(["doctorSchedules"]);
+      await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
     } catch (err) {
       console.error("Schedule action failed", err);
       throw err;
@@ -330,7 +330,7 @@ export default function DoctorSchedulePage() {
       // ensure hospitalId is not sent
       const { hospitalId, ...rest } = payload;
       await api.patch(`/schedule/update/${id}`, rest);
-      await queryClient.invalidateQueries(["doctorSchedules"]);
+      await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
     } catch (err) {
       console.error("Failed to update schedule", err);
       throw err;
@@ -430,9 +430,28 @@ export default function DoctorSchedulePage() {
               <ScheduleCard
                 key={s.id}
                 schedule={s}
-                onEdit={(sch) => onEdit(sch)}
-                onDeactivate={(sch) => onDeactivate(sch)}
-                onDelete={(sch) => onDelete(sch)}
+                onEdit={async (updated) => {
+                  // updated contains full schedule object; send normalized payload
+                  const payload: any = {
+                    type: updated.type,
+                    name: updated.name,
+                    period: updated.period,
+                    dayOfWeek: updated.dayOfWeek,
+                    startDate: updated.startDate,
+                    endDate: updated.endDate,
+                    startTime: updated.startTime,
+                    endTime: updated.endTime,
+                  };
+                  await handleUpdateSchedule(s.id, payload);
+                }}
+                onDeactivate={async (sch) => {
+                  // if deactivated -> activate, else deactivate
+                  const action = sch.isDeactivated ? "activate" : "deactivate";
+                  await handleScheduleAction(s.id, action);
+                }}
+                onDelete={async (sch) => {
+                  await handleScheduleAction(s.id, "delete");
+                }}
               />
             ))}
           </div>

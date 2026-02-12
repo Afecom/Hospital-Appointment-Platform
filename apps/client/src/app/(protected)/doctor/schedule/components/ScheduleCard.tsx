@@ -1,7 +1,12 @@
 "use client";
 import StatusBadge, { Status } from "./StatusBadge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faPause, faTrash, faPlay } from "@fortawesome/free-solid-svg-icons";
+import {
+  faPen,
+  faPause,
+  faTrash,
+  faPlay,
+} from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
 
 export default function ScheduleCard({
@@ -149,7 +154,11 @@ export default function ScheduleCard({
       ) : showDeactivateConfirm ? (
         <ConfirmModal
           title="Deactivate schedule"
-          message="Are you sure you want to deactivate this schedule?"
+          message={
+            s.isDeactivated
+              ? "Are you sure you want to activate this schedule?"
+              : "Are you sure you want to deactivate this schedule?"
+          }
           onClose={() => setShowDeactivateConfirm(false)}
           onConfirm={() => {
             setShowDeactivateConfirm(false);
@@ -216,7 +225,9 @@ function EditScheduleModal({
   const [toTime, setToTime] = useState(schedule.endTime ?? "");
   const [name, setName] = useState(schedule.name ?? "");
   const [period, setPeriod] = useState(schedule.period ?? "morning");
-  const [dayOfWeek, setDayOfWeek] = useState<number[]>(schedule.dayOfWeek ?? []);
+  const [dayOfWeek, setDayOfWeek] = useState<number[]>(
+    schedule.dayOfWeek ?? [],
+  );
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -249,6 +260,48 @@ function EditScheduleModal({
       >
         <h3 className="text-lg font-semibold">Edit Schedule</h3>
         <form onSubmit={handleSubmit} className="mt-3 space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Period
+            </label>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
+            >
+              <option value="morning">Morning</option>
+              <option value="afternoon">Afternoon</option>
+              <option value="evening">Evening</option>
+            </select>
+          </div>
+
+          <div>
+            <p className="text-sm text-gray-500 mb-1">Days of Week</p>
+            <div className="flex gap-2">
+              {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDay(d)}
+                  className={`px-2 py-1 rounded text-sm ${dayOfWeek.includes(d) ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                >
+                  {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][d]}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Schedule Type
