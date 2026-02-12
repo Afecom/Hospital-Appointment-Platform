@@ -19,6 +19,7 @@ type Period = "morning" | "afternoon" | "evening";
 type Schedule = {
   id: string;
   hospital: string;
+  name?: string;
   type: ScheduleType;
   startDate: string; // YYYY-MM-DD
   endDate?: string;
@@ -96,7 +97,7 @@ export default function DoctorSchedulePage() {
   const searchParams = useSearchParams();
 
   // Initialize active tab from query param `status`
-  const initialStatus = (searchParams?.get("status") as any) ?? "approved";
+  const initialStatus = (searchParams?.get("status") as any) ?? "all";
   const [activeTab, setActiveTab] = useState<"all" | Status>(
     (initialStatus as any) || "approved",
   );
@@ -122,7 +123,7 @@ export default function DoctorSchedulePage() {
 
   // Sync activeTab when the URL changes (e.g., back/forward)
   useEffect(() => {
-    const status = (searchParams?.get("status") as any) ?? "approved";
+    const status = (searchParams?.get("status") as any) ?? "all";
     if (status !== activeTab) setActiveTab(status as any);
   }, [searchParams]);
 
@@ -216,6 +217,7 @@ export default function DoctorSchedulePage() {
       "";
     return {
       id: s.id,
+      name: s.name ?? s.title ?? "",
       hospital: hospitalName,
       type: s.type as ScheduleType,
       startDate: s.startDate,
@@ -298,7 +300,23 @@ export default function DoctorSchedulePage() {
 
       {/* Schedules List */}
       <div>
-        {filteredSchedules.length === 0 ? (
+        {schedulesLoading ? (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div
+                key={i}
+                className="rounded-lg bg-white shadow-sm p-4 animate-pulse"
+              >
+                <div className="h-4 bg-gray-200 rounded w-3/4 mb-4" />
+                <div className="h-3 bg-gray-200 rounded w-1/2 mb-2" />
+                <div className="flex items-center gap-2 mt-3">
+                  <div className="h-8 w-24 bg-gray-200 rounded" />
+                  <div className="h-8 w-16 bg-gray-200 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : filteredSchedules.length === 0 ? (
           <div className="text-center py-12 rounded-lg bg-gray-50 shadow-sm">
             <p className="text-gray-700 mb-4">
               No schedules found for the selected tab and filters.
