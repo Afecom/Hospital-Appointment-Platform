@@ -1,7 +1,7 @@
 "use client";
 import StatusBadge, { Status } from "./StatusBadge";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPen, faPause, faTrash } from "@fortawesome/free-solid-svg-icons";
+import { faPen, faPause, faTrash, faPlay } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
 
 export default function ScheduleCard({
@@ -20,6 +20,8 @@ export default function ScheduleCard({
     period: string;
     startTime: string;
     endTime: string;
+    isDeactivated?: boolean;
+    dayOfWeek?: number[];
     status: Status;
   };
   onEdit: (s: any) => void;
@@ -70,30 +72,43 @@ export default function ScheduleCard({
             <StatusBadge status={s.status} />
 
             <div className="flex items-center gap-2">
-              <button
-                aria-label={`Edit schedule ${s.id}`}
-                title="Edit"
-                className="p-2 rounded text-gray-600 hover:text-blue-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
-                onClick={() => setShowEdit(true)}
-              >
-                <FontAwesomeIcon icon={faPen} />
-              </button>
+              {s.status !== "approved" && !s.isDeactivated ? (
+                <button
+                  aria-label={`Edit schedule ${s.id}`}
+                  title="Edit"
+                  className="p-2 rounded text-gray-600 hover:text-blue-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
+                  onClick={() => setShowEdit(true)}
+                >
+                  <FontAwesomeIcon icon={faPen} />
+                </button>
+              ) : null}
 
-              <button
-                aria-label={`Deactivate schedule ${s.id}`}
-                title={
-                  s.status === "approved"
-                    ? "Deactivate"
-                    : "Only approved schedules can be deactivated"
-                }
-                onClick={() =>
-                  s.status === "approved" && setShowDeactivateConfirm(true)
-                }
-                disabled={s.status !== "approved"}
-                className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none"}`}
-              >
-                <FontAwesomeIcon icon={faPause} />
-              </button>
+              {s.isDeactivated ? (
+                <button
+                  aria-label={`Activate schedule ${s.id}`}
+                  title="Activate"
+                  onClick={() => setShowDeactivateConfirm(true)}
+                  className={`p-2 rounded text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none`}
+                >
+                  <FontAwesomeIcon icon={faPlay} />
+                </button>
+              ) : (
+                <button
+                  aria-label={`Deactivate schedule ${s.id}`}
+                  title={
+                    s.status === "approved"
+                      ? "Deactivate"
+                      : "Only approved schedules can be deactivated"
+                  }
+                  onClick={() =>
+                    s.status === "approved" && setShowDeactivateConfirm(true)
+                  }
+                  disabled={s.status !== "approved"}
+                  className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none"}`}
+                >
+                  <FontAwesomeIcon icon={faPause} />
+                </button>
+              )}
 
               <button
                 aria-label={`Delete schedule ${s.id}`}
@@ -112,9 +127,13 @@ export default function ScheduleCard({
         <EditScheduleModal
           schedule={s}
           onClose={() => setShowEdit(false)}
-          onSave={(updated) => {
+          onSave={async (updated) => {
             setShowEdit(false);
-            onEdit(updated);
+            try {
+              await onEdit(updated);
+            } catch (err) {
+              console.error("Update failed", err);
+            }
           }}
         />
       ) : showDeleteConfirm ? (
@@ -195,18 +214,30 @@ function EditScheduleModal({
   const [toDate, setToDate] = useState(schedule.endDate ?? "");
   const [fromTime, setFromTime] = useState(schedule.startTime ?? "");
   const [toTime, setToTime] = useState(schedule.endTime ?? "");
+  const [name, setName] = useState(schedule.name ?? "");
+  const [period, setPeriod] = useState(schedule.period ?? "morning");
+  const [dayOfWeek, setDayOfWeek] = useState<number[]>(schedule.dayOfWeek ?? []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const updated = {
       ...schedule,
       type,
+      name,
+      period,
+      dayOfWeek,
       startDate: fromDate,
       endDate: type === "one_time" ? undefined : toDate,
       startTime: fromTime,
       endTime: toTime,
     };
     onSave(updated);
+  };
+
+  const toggleDay = (d: number) => {
+    setDayOfWeek((prev) =>
+      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
+    );
   };
 
   return (

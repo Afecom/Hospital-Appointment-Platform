@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState, useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import ScheduleHeader from "./components/Header";
 import ScheduleModal from "./components/ScheduleModal";
@@ -20,6 +20,10 @@ type Schedule = {
   id: string;
   hospital: string;
   name?: string;
+  dayOfWeek?: number[];
+  isDeactivated?: boolean;
+  isExpired?: boolean;
+  isDeleted?: boolean;
   type: ScheduleType;
   startDate: string; // YYYY-MM-DD
   endDate?: string;
@@ -258,9 +262,11 @@ export default function DoctorSchedulePage() {
       isDeactivated: !!s.isDeactivated,
       isExpired: !!s.isExpired,
       isDeleted: !!s.isDeleted,
+      dayOfWeek: s.dayOfWeek ?? s.DayOfWeek ?? [],
       status: s.status as Status,
     };
   });
+  const queryClient = useQueryClient();
 
   const filteredSchedules = useMemo(() => {
     return mappedSchedules
@@ -294,13 +300,41 @@ export default function DoctorSchedulePage() {
   ]);
 
   function onEdit(s: Schedule) {
+    // No-op here; edit handled by EditScheduleModal -> page onSave handler
     console.log("Edit schedule", s.id);
   }
   function onDeactivate(s: Schedule) {
+    // toggle deactivate -> handled in action handler below
     console.log("Deactivate schedule", s.id);
   }
   function onDelete(s: Schedule) {
     console.log("Delete schedule", s.id);
+  }
+
+  async function handleScheduleAction(id: string, action: string) {
+    try {
+      if (action === "approve" || action === "reject") {
+        await api.patch(`/schedule/${action}/${id}`);
+      } else {
+        await api.patch(`/schedule/${id}`, { action });
+      }
+      await queryClient.invalidateQueries(["doctorSchedules"]);
+    } catch (err) {
+      console.error("Schedule action failed", err);
+      throw err;
+    }
+  }
+
+  async function handleUpdateSchedule(id: string, payload: any) {
+    try {
+      // ensure hospitalId is not sent
+      const { hospitalId, ...rest } = payload;
+      await api.patch(`/schedule/update/${id}`, rest);
+      await queryClient.invalidateQueries(["doctorSchedules"]);
+    } catch (err) {
+      console.error("Failed to update schedule", err);
+      throw err;
+    }
   }
 
   const [showEmptyModal, setShowEmptyModal] = useState(false);
