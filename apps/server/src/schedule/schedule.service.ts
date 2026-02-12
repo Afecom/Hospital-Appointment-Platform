@@ -90,9 +90,19 @@ export class ScheduleService {
         throw new BadRequestException('The schedule has already expired');
       }
       await this.expire.scheduleExpire(schedule.id, delayMs);
-      return schedule;
+      return {
+        status: 'Success',
+        code: 'SCHEDULE_CREATED',
+        message: 'Schedule created successfuly',
+        data: schedule,
+      };
     }
-    return schedule;
+    return {
+      status: 'Success',
+      code: 'SCHEDULE_CREATED',
+      message: 'Schedule created successfuly',
+      data: schedule,
+    };
   }
 
   async countActiveSchedules(session: UserSession) {
@@ -474,7 +484,6 @@ export class ScheduleService {
         "Couldn't find a doctor with the provided ID",
       );
     const doctorId = doctor.id;
-    if (!status) status = 'approved';
     return this.filterService.filterSchedule({
       hospitalId,
       doctorId,

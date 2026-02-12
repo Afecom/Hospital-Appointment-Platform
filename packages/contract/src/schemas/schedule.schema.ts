@@ -95,3 +95,33 @@ export interface scheduleActionRes {
   code: string;
   message: string;
 }
+
+export interface createScheduleRes {
+  status: "Success" | "Failed";
+  code: string;
+  message: string;
+  data: {
+    Hospital: {
+      timezone: string;
+    };
+  } & {
+    type: string;
+    id: string;
+    createdAt: Date;
+    updatedAt: Date;
+    name: string;
+    isDeactivated: boolean;
+    dayOfWeek: number[];
+    startDate: string;
+    endDate: string | null;
+    startTime: string;
+    endTime: string;
+    status: string;
+    period: string;
+    isExpired: boolean;
+    isDeleted: boolean;
+    slotLastGeneratedDate: string | null;
+    doctorId: string;
+    hospitalId: string;
+  };
+}

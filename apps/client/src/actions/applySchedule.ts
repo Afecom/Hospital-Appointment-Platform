@@ -1,9 +1,11 @@
-"use server";
-
+import { createScheduleRes } from "@hap/contract";
 import api from "@/lib/axios";
-export const applyScehdule = async (data: any) => {
+
+export async function applySchedule(data: any) {
   try {
-    const response = await api.post("/schedule/apply", data);
+    const response = await api.post<createScheduleRes>("/schedule/apply", data);
     return response.data;
-  } catch (error) {}
-};
+  } catch (error) {
+    throw error;
+  }
+}

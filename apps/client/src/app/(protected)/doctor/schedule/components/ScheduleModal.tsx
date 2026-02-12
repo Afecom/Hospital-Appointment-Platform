@@ -1,5 +1,7 @@
 "use client";
 import { useState, useEffect } from "react";
+import { applySchedule } from "@/actions/applySchedule";
+import { useToast } from "@/context/ToastContext";
 
 type HospitalItem = { Hospital: { id: string; name: string } };
 
@@ -22,6 +24,11 @@ export default function ScheduleModal({
   const [toDate, setToDate] = useState("");
   const [fromTime, setFromTime] = useState("");
   const [toTime, setToTime] = useState("");
+  const [name, setName] = useState("");
+  const [period, setPeriod] = useState("morning");
+  const [dayOfWeek, setDayOfWeek] = useState<number[]>([]);
+  const [loading, setLoading] = useState(false);
+  const { addToast } = useToast();
 
   useEffect(() => {
     if (initialHospitalId) setHospitalId(initialHospitalId);
@@ -29,16 +36,55 @@ export default function ScheduleModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    let finalDayOfWeek = dayOfWeek.slice();
+    if (finalDayOfWeek.length === 0) {
+      if (type === "one_time" && fromDate) {
+        try {
+          finalDayOfWeek = [new Date(fromDate).getDay()];
+        } catch (e) {
+          finalDayOfWeek = [];
+        }
+      }
+    }
+
+    if (finalDayOfWeek.length === 0) {
+      alert(
+        "Please select at least one day of the week or provide a valid start date for one-time schedules.",
+      );
+      return;
+    }
 
     const payload = {
-      type,
       hospitalId,
-      fromDate: fromDate || null,
-      toDate: (type === "one_time" ? null : toDate) || null,
-      period: fromTime && toTime ? `${fromTime} - ${toTime}` : null,
+      type,
+      dayOfWeek: finalDayOfWeek,
+      startDate: fromDate || undefined,
+      endDate: type === "one_time" ? undefined : toDate || undefined,
+      startTime: fromTime || undefined,
+      endTime: toTime || undefined,
+      name,
+      period,
     };
 
-    onApply(payload);
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await applySchedule(payload);
+        const message = res?.message || "Schedule application submitted";
+        addToast({ message, type: "success" });
+        onApply(res ?? payload);
+      } catch (err: any) {
+        console.error("Failed to apply schedule", err);
+        const msg =
+          err?.response?.data?.message ||
+          err?.message ||
+          "Failed to submit application";
+        addToast({ message: msg, type: "error" });
+        onApply({ error: err });
+      } finally {
+        setLoading(false);
+      }
+    })();
   };
 
   return (
@@ -57,6 +103,69 @@ export default function ScheduleModal({
         <p className="text-sm text-gray-500 mb-4">Fill the details below</p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Name
+            </label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500 p-1"
+              placeholder="Schedule name, e.g. Dr. Smith — Clinic Hours"
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Period
+            </label>
+            <select
+              value={period}
+              onChange={(e) => setPeriod(e.target.value)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="morning">Morning</option>
+              <option value="afternoon">Afternoon</option>
+              <option value="evening">Evening</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700">
+              Days of Week
+            </label>
+            <div className="mt-2 grid grid-cols-7 gap-2 text-xs">
+              {[
+                { label: "Sun", value: 0 },
+                { label: "Mon", value: 1 },
+                { label: "Tue", value: 2 },
+                { label: "Wed", value: 3 },
+                { label: "Thu", value: 4 },
+                { label: "Fri", value: 5 },
+                { label: "Sat", value: 6 },
+              ].map((d) => (
+                <label key={d.value} className="inline-flex items-center gap-1">
+                  <input
+                    type="checkbox"
+                    value={d.value}
+                    checked={dayOfWeek.includes(d.value)}
+                    onChange={(e) => {
+                      const v = Number(e.target.value);
+                      setDayOfWeek((prev) =>
+                        prev.includes(v)
+                          ? prev.filter((x) => x !== v)
+                          : [...prev, v],
+                      );
+                    }}
+                    className="h-4 w-4"
+                  />
+                  <span>{d.label}</span>
+                </label>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="block text-sm font-medium text-gray-700">
               Schedule Type
@@ -162,8 +271,9 @@ export default function ScheduleModal({
             <button
               type="submit"
               className="px-4 py-2 rounded-md bg-blue-600 text-white hover:bg-blue-700"
+              disabled={loading}
             >
-              Apply
+              {loading ? "Applying..." : "Apply"}
             </button>
           </div>
         </form>

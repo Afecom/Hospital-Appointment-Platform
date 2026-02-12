@@ -231,7 +231,13 @@ export default function DoctorSchedulePage() {
             {showEmptyModal && (
               <ScheduleModal
                 hospitals={hospitals}
-                initialHospitalId={hospital}
+                initialHospitalId={
+                  // If the current `hospital` filter is a name, try to find the matching id
+                  (hospitals.find((h: any) => h.Hospital.name === hospital)
+                    ?.Hospital.id as string) ??
+                  hospitals[0]?.Hospital.id ??
+                  ""
+                }
                 onClose={() => setShowEmptyModal(false)}
                 onApply={(payload) => {
                   console.log("Apply payload (empty state):", payload);

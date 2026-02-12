@@ -123,7 +123,7 @@ export class ScheduleController {
     console.log(action);
     return this.scheduleService.handleAction(id, action);
   }
-  @Get('doctor/my')
+  @Get('doctor')
   @Roles([Role.doctor])
   findDoctorSchedule(
     @Query('hospitalId') hospitalId: string,
