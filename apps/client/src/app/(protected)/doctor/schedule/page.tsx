@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import ScheduleHeader from "./components/Header";
+import ScheduleModal from "./components/ScheduleModal";
 import StatusTabs from "./components/StatusTabs";
 import FiltersPanel from "./components/FiltersPanel";
 import ScheduleCard from "./components/ScheduleCard";
@@ -174,6 +175,8 @@ export default function DoctorSchedulePage() {
     console.log("Delete schedule", s.id);
   }
 
+  const [showEmptyModal, setShowEmptyModal] = useState(false);
+
   return (
     <div className="p-6">
       {/* Header */}
@@ -221,12 +224,21 @@ export default function DoctorSchedulePage() {
             </p>
             <button
               className="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:shadow-md transition transform duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
-              onClick={() =>
-                console.log("Apply for Schedule clicked - empty state")
-              }
+              onClick={() => setShowEmptyModal(true)}
             >
               Apply for Schedule
             </button>
+            {showEmptyModal && (
+              <ScheduleModal
+                hospitals={hospitals}
+                initialHospitalId={hospital}
+                onClose={() => setShowEmptyModal(false)}
+                onApply={(payload) => {
+                  console.log("Apply payload (empty state):", payload);
+                  setShowEmptyModal(false);
+                }}
+              />
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 lg:gap-6">
