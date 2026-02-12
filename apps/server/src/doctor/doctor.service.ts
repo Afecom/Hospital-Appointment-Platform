@@ -781,7 +781,13 @@ export class DoctorService {
 
       // Pending schedules for the doctor (for conditional card display)
       const pendingSchedulesCount = await tx.schedule.count({
-        where: { doctorId, status: ScheduleStatus.pending },
+        where: {
+          doctorId,
+          status: ScheduleStatus.pending,
+          isDeactivated: false,
+          isDeleted: false,
+          isExpired: false,
+        },
       });
 
       // Active hospitals the doctor is attached to
