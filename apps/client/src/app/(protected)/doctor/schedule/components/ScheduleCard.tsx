@@ -8,6 +8,7 @@ import {
   faPlay,
 } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
+import { useToast } from "@/context/ToastContext";
 
 export default function ScheduleCard({
   schedule,
@@ -37,6 +38,12 @@ export default function ScheduleCard({
   const [showEdit, setShowEdit] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [showDeactivateConfirm, setShowDeactivateConfirm] = useState(false);
+  const [pendingMap, setPendingMap] = useState<{
+    save?: boolean;
+    delete?: boolean;
+    toggle?: boolean;
+  }>({});
+  const { addToast } = useToast();
   function formatDateRange() {
     if (s.endDate && s.endDate !== s.startDate)
       return `${s.startDate} — ${s.endDate}`;
@@ -93,7 +100,8 @@ export default function ScheduleCard({
                   aria-label={`Activate schedule ${s.id}`}
                   title="Activate"
                   onClick={() => setShowDeactivateConfirm(true)}
-                  className={`p-2 rounded text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none`}
+                  disabled={!!pendingMap.toggle}
+                  className={`p-2 rounded text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.toggle ? "opacity-60 cursor-wait" : ""}`}
                 >
                   <FontAwesomeIcon icon={faPlay} />
                 </button>
@@ -108,8 +116,8 @@ export default function ScheduleCard({
                   onClick={() =>
                     s.status === "approved" && setShowDeactivateConfirm(true)
                   }
-                  disabled={s.status !== "approved"}
-                  className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none"}`}
+                  disabled={s.status !== "approved" || !!pendingMap.toggle}
+                  className={`p-2 rounded ${s.status !== "approved" ? "opacity-40 cursor-not-allowed text-gray-400" : "text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none"} ${pendingMap.toggle ? "opacity-60 cursor-wait" : ""}`}
                 >
                   <FontAwesomeIcon icon={faPause} />
                 </button>
@@ -119,7 +127,8 @@ export default function ScheduleCard({
                 aria-label={`Delete schedule ${s.id}`}
                 title="Delete"
                 onClick={() => setShowDeleteConfirm(true)}
-                className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none`}
+                disabled={!!pendingMap.delete}
+                className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.delete ? "opacity-60 cursor-wait" : ""}`}
               >
                 <FontAwesomeIcon icon={faTrash} />
               </button>
@@ -131,13 +140,23 @@ export default function ScheduleCard({
       {showEdit ? (
         <EditScheduleModal
           schedule={s}
+          isSaving={!!pendingMap.save}
           onClose={() => setShowEdit(false)}
           onSave={async (updated) => {
-            setShowEdit(false);
+            // show saving
+            setPendingMap((p) => ({ ...p, save: true }));
             try {
               await onEdit(updated);
-            } catch (err) {
+              addToast({ type: "success", message: "Schedule updated" });
+              setShowEdit(false);
+            } catch (err: any) {
               console.error("Update failed", err);
+              addToast({
+                type: "error",
+                message: err?.message ?? "Update failed",
+              });
+            } finally {
+              setPendingMap((p) => ({ ...p, save: false }));
             }
           }}
         />
@@ -146,9 +165,22 @@ export default function ScheduleCard({
           title="Delete schedule"
           message="Are you sure you want to delete this schedule? This action cannot be undone."
           onClose={() => setShowDeleteConfirm(false)}
-          onConfirm={() => {
-            setShowDeleteConfirm(false);
-            onDelete(s);
+          isPending={!!pendingMap.delete}
+          onConfirm={async () => {
+            setPendingMap((p) => ({ ...p, delete: true }));
+            try {
+              await onDelete(s);
+              addToast({ type: "success", message: "Schedule deleted" });
+            } catch (err: any) {
+              console.error("Delete failed", err);
+              addToast({
+                type: "error",
+                message: err?.message ?? "Delete failed",
+              });
+            } finally {
+              setPendingMap((p) => ({ ...p, delete: false }));
+              setShowDeleteConfirm(false);
+            }
           }}
         />
       ) : showDeactivateConfirm ? (
@@ -159,10 +191,28 @@ export default function ScheduleCard({
               ? "Are you sure you want to activate this schedule?"
               : "Are you sure you want to deactivate this schedule?"
           }
+          isPending={!!pendingMap.toggle}
           onClose={() => setShowDeactivateConfirm(false)}
-          onConfirm={() => {
-            setShowDeactivateConfirm(false);
-            onDeactivate(s);
+          onConfirm={async () => {
+            setPendingMap((p) => ({ ...p, toggle: true }));
+            try {
+              await onDeactivate(s);
+              addToast({
+                type: "success",
+                message: s.isDeactivated
+                  ? "Schedule activated"
+                  : "Schedule deactivated",
+              });
+            } catch (err: any) {
+              console.error("Toggle failed", err);
+              addToast({
+                type: "error",
+                message: err?.message ?? "Action failed",
+              });
+            } finally {
+              setPendingMap((p) => ({ ...p, toggle: false }));
+              setShowDeactivateConfirm(false);
+            }
           }}
         />
       ) : null}
@@ -175,11 +225,13 @@ function ConfirmModal({
   message,
   onClose,
   onConfirm,
+  isPending,
 }: {
   title: string;
   message: string;
   onClose: () => void;
   onConfirm: () => void;
+  isPending?: boolean;
 }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center">
@@ -199,9 +251,10 @@ function ConfirmModal({
           </button>
           <button
             onClick={onConfirm}
-            className="px-4 py-2 rounded bg-red-600 text-white"
+            disabled={!!isPending}
+            className={`px-4 py-2 rounded ${isPending ? "bg-gray-400 text-white cursor-wait" : "bg-red-600 text-white"}`}
           >
-            Confirm
+            {isPending ? "Confirming..." : "Confirm"}
           </button>
         </div>
       </div>
@@ -213,10 +266,12 @@ function EditScheduleModal({
   schedule,
   onClose,
   onSave,
+  isSaving,
 }: {
   schedule: any;
   onClose: () => void;
   onSave: (s: any) => void;
+  isSaving?: boolean;
 }) {
   const [type, setType] = useState(schedule.type ?? "one_time");
   const [fromDate, setFromDate] = useState(schedule.startDate ?? "");
@@ -380,9 +435,10 @@ function EditScheduleModal({
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded bg-blue-600 text-white"
+              disabled={!!isSaving}
+              className={`px-4 py-2 rounded bg-blue-600 text-white ${isSaving ? "opacity-60 cursor-wait" : ""}`}
             >
-              Save
+              {isSaving ? "Saving..." : "Save"}
             </button>
           </div>
         </form>
