@@ -7,3 +7,14 @@ export interface uniqueHospital {
     logoUrl: string;
   };
 }
+
+export interface doctorHospital {
+  message: string;
+  status: string;
+  data: {
+    Hospital: {
+      id: string;
+      name: string;
+    };
+  }[];
+}

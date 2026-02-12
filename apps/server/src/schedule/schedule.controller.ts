@@ -23,7 +23,7 @@ import { UpdateScheduleDto } from './dto/update-schedule.dto.js';
 export class ScheduleController {
   constructor(private readonly scheduleService: ScheduleService) {}
 
-  @Post()
+  @Post('apply')
   @Roles([Role.doctor, Role.admin])
   create(
     @Body() createScheduleDto: CreateScheduleDto,

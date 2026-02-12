@@ -3,17 +3,21 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlus } from "@fortawesome/free-solid-svg-icons";
 import { useState } from "react";
 
-type Hospital = { id: string; name: string };
+type Hospital = { Hospital: { id: string; name: string } }[];
 
 export default function ScheduleHeader({
   onApply,
-  hospitals = [
-    { id: "1", name: "General Hospital" },
-    { id: "2", name: "City Clinic" },
-  ],
+  hospitals,
 }: {
   onApply?: (payload: any) => void;
-  hospitals?: Hospital[];
+  hospitals?:
+    | {
+        Hospital: {
+          id: string;
+          name: string;
+        };
+      }[]
+    | undefined;
 }) {
   const [showModal, setShowModal] = useState(false);
 
@@ -58,12 +62,21 @@ function ScheduleModal({
   onClose,
   onApply,
 }: {
-  hospitals: Hospital[];
+  hospitals:
+    | {
+        Hospital: {
+          id: string;
+          name: string;
+        };
+      }[]
+    | undefined;
   onClose: () => void;
   onApply: (payload: any) => void;
 }) {
   const [type, setType] = useState("one-time");
-  const [hospitalId, setHospitalId] = useState(hospitals[0]?.id ?? "");
+  const [hospitalId, setHospitalId] = useState(
+    (hospitals && hospitals[0]?.Hospital.id) ?? "",
+  );
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [fromTime, setFromTime] = useState("");
@@ -108,7 +121,7 @@ function ScheduleModal({
               onChange={(e) => setType(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
             >
-              <option value="one-time">One-time</option>
+              <option value="one_time">One-time</option>
               <option value="temporary">Temporary</option>
               <option value="recurring">Recurring</option>
             </select>
@@ -122,12 +135,19 @@ function ScheduleModal({
               value={hospitalId}
               onChange={(e) => setHospitalId(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              disabled={!hospitals || hospitals.length === 0}
             >
-              {hospitals.map((h) => (
-                <option key={h.id} value={h.id}>
-                  {h.name}
+              {hospitals && hospitals.length > 0 ? (
+                hospitals.map((h) => (
+                  <option key={h.Hospital.id} value={h.Hospital.id}>
+                    {h.Hospital.name}
+                  </option>
+                ))
+              ) : (
+                <option value="" disabled>
+                  No hospitals found for your account
                 </option>
-              ))}
+              )}
             </select>
           </div>
 

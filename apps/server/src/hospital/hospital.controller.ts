@@ -79,4 +79,10 @@ export class HospitalController {
   findAllBySpecialization(@Param('id') id: string) {
     return this.hospitalService.findAllBySpecialization(id);
   }
+
+  @Get('doctor')
+  @Roles([Role.doctor, Role.admin])
+  findDoctorHospitals(@Session() session: UserSession) {
+    return this.hospitalService.findDoctorHospitals(session);
+  }
 }

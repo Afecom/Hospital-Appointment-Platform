@@ -8,7 +8,7 @@ import { CreateHospitalDto } from './dto/create-hospital.dto.js';
 import { UpdateHospitalDto } from './dto/update-hospital.dto.js';
 import { chapaAxios } from '../lib/chapaaxios.js';
 import { UserSession } from '@thallesp/nestjs-better-auth';
-import { uniqueHospital } from '@hap/contract/main.js';
+import { doctorHospital, uniqueHospital } from '@hap/contract/main.js';
 
 @Injectable()
 export class HospitalService {
@@ -131,5 +131,37 @@ export class HospitalService {
         "Couldn't find hospitals with the provided specialization id",
       );
     return hospitals;
+  }
+
+  async findDoctorHospitals(session: UserSession): Promise<doctorHospital> {
+    try {
+      console.log('Session received:', session);
+      const doctor = await this.databaseService.doctor.findUnique({
+        where: { userId: session.user.id },
+        select: {
+          id: true,
+          DoctorHospitalProfile: {
+            select: {
+              Hospital: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+            },
+          },
+        },
+      });
+      if (!doctor) {
+        throw new NotFoundException('Doctor not found for this user');
+      }
+      return {
+        message: 'Hospitals found successfully',
+        status: 'Success',
+        data: doctor.DoctorHospitalProfile,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }

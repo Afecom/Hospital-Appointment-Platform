@@ -1,11 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import ScheduleHeader from "./components/Header";
 import StatusTabs from "./components/StatusTabs";
 import FiltersPanel from "./components/FiltersPanel";
 import ScheduleCard from "./components/ScheduleCard";
 import type { Status } from "./components/StatusBadge";
+import api from "@/lib/axios";
+import { doctorHospital } from "@hap/contract";
 
 type ScheduleType = "recurring" | "temporary" | "one_time";
 
@@ -75,6 +78,17 @@ const STATUS_TABS: { key: "all" | Status; label: string }[] = [
 ];
 
 export default function DoctorSchedulePage() {
+  const { data: doctorHospitalData } = useQuery({
+    queryKey: ["doctorhospital"],
+    queryFn: async () => {
+      try {
+        const res = await api.get<doctorHospital>("/hospital/doctor");
+        return res.data ?? { data: [] };
+      } catch (error) {
+        return { data: [] };
+      }
+    },
+  });
   const [activeTab, setActiveTab] = useState<"all" | Status>("approved");
 
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
@@ -88,9 +102,13 @@ export default function DoctorSchedulePage() {
   const [fromTime, setFromTime] = useState<string>("");
   const [toTime, setToTime] = useState<string>("");
 
+  // Extract hospitals array from API response
   const hospitals = useMemo(() => {
-    return Array.from(new Set(MOCK_SCHEDULES.map((s) => s.hospital)));
-  }, []);
+    if (doctorHospitalData && Array.isArray(doctorHospitalData.data)) {
+      return doctorHospitalData.data;
+    }
+    return [];
+  }, [doctorHospitalData]);
 
   function clearFilters() {
     setScheduleType("");
@@ -161,6 +179,7 @@ export default function DoctorSchedulePage() {
       {/* Header */}
       <ScheduleHeader
         onApply={() => console.log("Apply for Schedule clicked")}
+        hospitals={hospitals}
       />
 
       {/* Tabs */}
@@ -176,7 +195,7 @@ export default function DoctorSchedulePage() {
         setPeriod={(p) => setPeriod(p as any)}
         hospital={hospital}
         setHospital={setHospital}
-        hospitals={hospitals}
+        hospitals={hospitals.map((h: any) => h.Hospital.name)}
         fromDate={fromDate}
         setFromDate={setFromDate}
         toDate={toDate}
