@@ -1,7 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import ScheduleHeader from "./components/Header";
 import ScheduleModal from "./components/ScheduleModal";
 import StatusTabs from "./components/StatusTabs";
@@ -90,7 +91,15 @@ export default function DoctorSchedulePage() {
       }
     },
   });
-  const [activeTab, setActiveTab] = useState<"all" | Status>("approved");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+
+  // Initialize active tab from query param `status`
+  const initialStatus = (searchParams?.get("status") as any) ?? "approved";
+  const [activeTab, setActiveTab] = useState<"all" | Status>(
+    (initialStatus as any) || "approved",
+  );
 
   const [showFiltersMobile, setShowFiltersMobile] = useState(false);
 
@@ -110,6 +119,21 @@ export default function DoctorSchedulePage() {
     }
     return [];
   }, [doctorHospitalData]);
+
+  // Sync activeTab when the URL changes (e.g., back/forward)
+  useEffect(() => {
+    const status = (searchParams?.get("status") as any) ?? "approved";
+    if (status !== activeTab) setActiveTab(status as any);
+  }, [searchParams]);
+
+  function handleTabChange(k: "all" | Status) {
+    setActiveTab(k as any);
+    const sp = new URLSearchParams(searchParams?.toString() ?? "");
+    if (k === "all") sp.delete("status");
+    else sp.set("status", k as string);
+    const q = sp.toString();
+    router.replace(`${pathname}${q ? `?${q}` : ""}`);
+  }
 
   function clearFilters() {
     setScheduleType("");
@@ -149,12 +173,69 @@ export default function DoctorSchedulePage() {
     return true;
   }
 
+  // Fetch schedules from API using current filters (server-side filtering when possible)
+  const { data: schedulesRes, isLoading: schedulesLoading } = useQuery({
+    queryKey: [
+      "doctorSchedules",
+      activeTab,
+      scheduleType,
+      hospital,
+      fromDate,
+      toDate,
+    ],
+    queryFn: async () => {
+      const params: any = {};
+      if (activeTab && activeTab !== "all") params.status = activeTab;
+      if (scheduleType) params.type = scheduleType;
+      // map hospital name (from UI) to hospitalId if possible
+      if (hospital) {
+        const h = hospitals.find((x: any) => x.Hospital?.name === hospital);
+        if (h) params.hospitalId = h.Hospital.id;
+      }
+      if (fromDate) params.startDate = fromDate;
+      if (toDate) params.endDate = toDate;
+      const res = await api.get("/schedule/doctor", { params });
+      return res.data;
+    },
+  });
+
+  // Normalize API response to local Schedule[] shape and apply remaining client-side filters
+  const apiSchedules: any[] =
+    schedulesRes?.data?.schedules ??
+    schedulesRes?.schedules ??
+    schedulesRes?.data ??
+    schedulesRes ??
+    [];
+
+  const mappedSchedules: Schedule[] = (apiSchedules || []).map((s: any) => {
+    const hospitalName =
+      s.Hospital?.name ||
+      hospitals.find((h: any) => h.Hospital?.id === s.hospitalId)?.Hospital
+        ?.name ||
+      s.hospitalName ||
+      "";
+    return {
+      id: s.id,
+      hospital: hospitalName,
+      type: s.type as ScheduleType,
+      startDate: s.startDate,
+      endDate: s.endDate,
+      period: (s.period as Period) ?? (s.name ? "morning" : "morning"),
+      startTime: s.startTime ?? "",
+      endTime: s.endTime ?? "",
+      status: s.status as Status,
+    };
+  });
+
   const filteredSchedules = useMemo(() => {
-    return MOCK_SCHEDULES.filter((s) => {
-      if (activeTab !== "all" && s.status !== activeTab) return false;
-      return matchesFilters(s);
-    }).sort((a, b) => a.startDate.localeCompare(b.startDate));
+    return mappedSchedules
+      .filter((s) => {
+        if (activeTab !== "all" && s.status !== activeTab) return false;
+        return matchesFilters(s);
+      })
+      .sort((a, b) => a.startDate.localeCompare(b.startDate));
   }, [
+    mappedSchedules,
     activeTab,
     scheduleType,
     period,
@@ -189,7 +270,7 @@ export default function DoctorSchedulePage() {
       <StatusTabs
         tabs={STATUS_TABS}
         active={activeTab}
-        onChange={(k) => setActiveTab(k as any)}
+        onChange={(k) => handleTabChange(k as any)}
       />
 
       {/* Filters */}
