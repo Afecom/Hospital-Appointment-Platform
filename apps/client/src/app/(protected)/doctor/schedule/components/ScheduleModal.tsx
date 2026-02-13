@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { applySchedule } from "@/actions/applySchedule";
 import { useToast } from "@/context/ToastContext";
+import { useQueryClient } from "@tanstack/react-query";
 
 type HospitalItem = { Hospital: { id: string; name: string } };
 
@@ -16,6 +17,7 @@ export default function ScheduleModal({
   onApply: (payload: any) => void;
   initialHospitalId?: string;
 }) {
+  const queryClient = useQueryClient();
   const [type, setType] = useState("one_time");
   const [hospitalId, setHospitalId] = useState(
     initialHospitalId ?? (hospitals && hospitals[0]?.Hospital.id) ?? "",
@@ -34,7 +36,7 @@ export default function ScheduleModal({
     if (initialHospitalId) setHospitalId(initialHospitalId);
   }, [initialHospitalId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let finalDayOfWeek = dayOfWeek.slice();
     if (finalDayOfWeek.length === 0) {
@@ -82,9 +84,17 @@ export default function ScheduleModal({
         addToast({ message: msg, type: "error" });
         onApply({ error: err });
       } finally {
+        await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
         setLoading(false);
       }
     })();
+  };
+
+  const toggleDay = (d: number) => {
+    setDayOfWeek((prev) => {
+      if (prev.includes(d)) return prev.filter((x) => x !== d);
+      return [...prev, d].sort((a, b) => a - b);
+    });
   };
 
   return (
@@ -94,7 +104,6 @@ export default function ScheduleModal({
       role="dialog"
     >
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-
       <div
         className="relative z-10 w-full max-w-lg mx-4 bg-white rounded-lg shadow-lg p-6"
         onClick={(e) => e.stopPropagation()}
@@ -133,36 +142,19 @@ export default function ScheduleModal({
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700">
-              Days of Week
-            </label>
-            <div className="mt-2 grid grid-cols-7 gap-2 text-xs">
-              {[
-                { label: "Sun", value: 0 },
-                { label: "Mon", value: 1 },
-                { label: "Tue", value: 2 },
-                { label: "Wed", value: 3 },
-                { label: "Thu", value: 4 },
-                { label: "Fri", value: 5 },
-                { label: "Sat", value: 6 },
-              ].map((d) => (
-                <label key={d.value} className="inline-flex items-center gap-1">
-                  <input
-                    type="checkbox"
-                    value={d.value}
-                    checked={dayOfWeek.includes(d.value)}
-                    onChange={(e) => {
-                      const v = Number(e.target.value);
-                      setDayOfWeek((prev) =>
-                        prev.includes(v)
-                          ? prev.filter((x) => x !== v)
-                          : [...prev, v],
-                      );
-                    }}
-                    className="h-4 w-4"
-                  />
-                  <span>{d.label}</span>
-                </label>
+            <p className="text-sm text-gray-500 mb-1">Days of Week</p>
+            <div className="flex gap-2">
+              {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+                <button
+                  key={d}
+                  type="button"
+                  onClick={() => toggleDay(d)}
+                  aria-pressed={dayOfWeek.includes(d)}
+                  aria-label={`Toggle ${["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][d]}`}
+                  className={`px-2 py-1 rounded text-sm ${dayOfWeek.includes(d) ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-700"}`}
+                >
+                  {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][d]}
+                </button>
               ))}
             </div>
           </div>

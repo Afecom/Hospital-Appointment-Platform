@@ -164,6 +164,8 @@ export class ScheduleOverlapService {
     const baseWhere: any = {
       doctorId,
       status: { in: ['approved', 'pending'] as StatusType[] },
+      isDeleted: false,
+      isExpired: false,
     };
 
     const or: any[] = [];
