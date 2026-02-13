@@ -11,6 +11,7 @@ import type { Appointment } from "./components/types";
 export default function DoctorsAppointmentPage() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<{
+    doctor?: { fullName?: string | null; specializations?: string[] };
     today: Appointment[];
     upcomingByDate: Record<string, Appointment[]>;
     past: Appointment[];

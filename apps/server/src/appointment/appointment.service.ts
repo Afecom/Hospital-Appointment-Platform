@@ -201,9 +201,9 @@ export class appointmentService {
     };
 
     const doctorInfo = {
-      fullName: doctor.User?.fullName ?? null,
-      specializations: (doctor.DoctorSpecialization || [])
-        .map((d) => d.Specialization?.name)
+      fullName: doctor?.User?.fullName ?? null,
+      specializations: (doctor?.DoctorSpecialization || [])
+        .map((d) => d?.Specialization?.name ?? d?.Specialization?.name ?? null)
         .filter(Boolean),
     };
 
