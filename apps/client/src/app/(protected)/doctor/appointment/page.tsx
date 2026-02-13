@@ -42,31 +42,21 @@ export default function DoctorsAppointmentPage() {
     };
   }, []);
 
-  const doctorName = "Dr. Ayub Mussa";
-  const specialization = "Cardiology";
-  const dateContext = "Today";
-
   if (loading) return <div className="p-6">Loading appointments…</div>;
+  const counts = data?.counts ?? {
+    today: 0,
+    upcoming: 0,
+    completed: 0,
+    cancelled: 0,
+  };
+  const today = data?.today ?? [];
+  const upcomingByDate = data?.upcomingByDate ?? {};
+  const past = data?.past ?? [];
 
-  if (
-    !data ||
-    (data.counts.today === 0 &&
-      data.counts.upcoming === 0 &&
-      data.counts.completed === 0)
-  ) {
-    return (
-      <div className="p-6">
-        <Header
-          doctorName={doctorName}
-          specialization={specialization}
-          dateContext={dateContext}
-        />
-        <div className="mt-6 text-center text-gray-500">
-          No appointments found.
-        </div>
-      </div>
-    );
-  }
+  const doctorName = data?.doctor?.fullName ?? "Your Name";
+  const specialization = data?.doctor?.specializations?.[0] ?? "General";
+  const todayDate = new Date();
+  const dateContext = `Today • ${todayDate.toLocaleDateString(undefined, { weekday: "long", month: "short", day: "numeric" })}`;
 
   return (
     <div className="p-6">
@@ -76,17 +66,53 @@ export default function DoctorsAppointmentPage() {
         dateContext={dateContext}
       />
       <Snapshot
-        today={data.counts.today}
-        upcoming={data.counts.upcoming}
-        completed={data.counts.completed}
-        cancelled={data.counts.cancelled}
+        today={counts.today}
+        upcoming={counts.upcoming}
+        completed={counts.completed}
+        cancelled={counts.cancelled}
       />
 
       <main>
-        <TodayAppointments appointments={data.today} />
-        {data.today.length > 0 && <DetailPanel appt={data.today[0]} />}
-        <UpcomingAppointments appointmentsByDate={data.upcomingByDate} />
-        <PastAppointments appointments={data.past} />
+        <section className="mb-6">
+          <h2 className="text-lg font-medium mb-2">Today's Appointments</h2>
+          <TodayAppointments appointments={today} />
+          {today.length === 0 && (
+            <div className="mt-3 p-4 border rounded bg-white text-gray-600">
+              You have no appointments today.
+            </div>
+          )}
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-lg font-medium mb-2">Details</h2>
+          {today.length > 0 ? (
+            <DetailPanel appt={today[0]} />
+          ) : (
+            <div className="mt-3 p-4 border rounded bg-white text-gray-600">
+              No appointment selected.
+            </div>
+          )}
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-lg font-medium mb-2">Upcoming</h2>
+          <UpcomingAppointments appointmentsByDate={upcomingByDate} />
+          {Object.keys(upcomingByDate).length === 0 && (
+            <div className="mt-3 p-4 border rounded bg-white text-gray-600">
+              No upcoming appointments.
+            </div>
+          )}
+        </section>
+
+        <section className="mb-6">
+          <h2 className="text-lg font-medium mb-2">Past</h2>
+          <PastAppointments appointments={past} />
+          {past.length === 0 && (
+            <div className="mt-3 p-4 border rounded bg-white text-gray-600">
+              No past appointments.
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );

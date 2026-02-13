@@ -122,6 +122,12 @@ export class appointmentService {
   async doctorOverview(session: UserSession) {
     const doctor = await this.prisma.doctor.findUnique({
       where: { userId: session.user.id },
+      include: {
+        User: { select: { fullName: true } },
+        DoctorSpecialization: {
+          include: { Specialization: { select: { name: true } } },
+        },
+      },
     });
     if (!doctor) throw new NotFoundException("Couldn't find a doctor");
 
@@ -194,7 +200,20 @@ export class appointmentService {
       cancelled: past.filter((p) => p.status === 'Cancelled').length,
     };
 
-    return { today, upcomingByDate: upcomingMap, past, counts };
+    const doctorInfo = {
+      fullName: doctor.User?.fullName ?? null,
+      specializations: (doctor.DoctorSpecialization || [])
+        .map((d) => d.Specialization?.name)
+        .filter(Boolean),
+    };
+
+    return {
+      doctor: doctorInfo,
+      today,
+      upcomingByDate: upcomingMap,
+      past,
+      counts,
+    };
   }
 
   async countPendingHospitalAppointments(
