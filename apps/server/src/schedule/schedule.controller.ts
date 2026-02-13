@@ -119,7 +119,6 @@ export class ScheduleController {
     if (!action) {
       throw new BadRequestException('No action provided');
     }
-    console.log(action);
     return this.scheduleService.handleAction(id, action);
   }
   @Get('doctor')
