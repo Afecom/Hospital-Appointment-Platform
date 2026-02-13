@@ -506,6 +506,20 @@ export class ScheduleService {
     session: UserSession,
     scheduleId: string,
   ) {
+    const appointment = await this.prisma.appointment.findFirst({
+      where: {
+        scheduleId,
+        status: {
+          in: ['approved', 'pending'],
+        },
+      },
+    });
+    if (appointment)
+      throw new BadRequestException({
+        message: 'An active appointment exists for this schedule',
+        code: 'SCHEDULE_HAS_ACTIVE_APPOINTMENTS',
+        data: appointment,
+      });
     const doctor = await this.prisma.doctor.findUnique({
       where: { userId: session.user.id },
     });

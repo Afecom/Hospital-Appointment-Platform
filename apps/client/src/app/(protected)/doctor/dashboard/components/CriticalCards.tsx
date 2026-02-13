@@ -1,6 +1,7 @@
 "use client";
 import React from "react";
 import TopCard from "./TopCard";
+import { useRouter } from "next/navigation";
 
 type CriticalCardsProps = {
   today: { count: number; nextAt?: string | null };
@@ -19,6 +20,7 @@ export default function CriticalCards({
 }: CriticalCardsProps) {
   const showApplicationsBadge = pendingApplicationsCount > 0;
   const hasPendingSchedules = pendingSchedulesCount ? true : false;
+  const router = useRouter();
 
   return (
     <section aria-labelledby="critical-actions">
@@ -41,7 +43,10 @@ export default function CriticalCards({
               ? `Next appointment at ${new Date(today.nextAt).toLocaleTimeString(undefined, { hour: "2-digit", minute: "2-digit" })}`
               : undefined
           }
-          cta={{ label: "View Today" }}
+          cta={{
+            label: "View Today",
+            onClick: () => router.push("/doctor/appointment"),
+          }}
           className="min-h-40 h-40"
         />
 
@@ -51,7 +56,10 @@ export default function CriticalCards({
             title="Pending Schedules"
             value={pendingSchedulesCount}
             subtext={`${pendingSchedulesCount} awaiting approval`}
-            cta={{ label: "View Schedules" }}
+            cta={{
+              label: "View Schedules",
+              onClick: () => router.push("/doctor/schedule?status=pending"),
+            }}
             className="min-h-40 h-40"
           />
         ) : (
@@ -63,7 +71,10 @@ export default function CriticalCards({
                 ? `Next active date: ${activeSchedules.nextActiveDate}`
                 : undefined
             }
-            cta={null}
+            cta={{
+              label: "View Schedules",
+              onClick: () => router.push("/doctor/schedule?status=approved"),
+            }}
             className="min-h-40 h-40"
           />
         )}
@@ -73,7 +84,10 @@ export default function CriticalCards({
           <TopCard
             title="Pending Hospital Applications"
             value={pendingApplicationsCount}
-            cta={{ label: "View Applications" }}
+            cta={{
+              label: "View Applications",
+              onClick: () => router.push("/doctor/hospital"),
+            }}
             className="min-h-36 h-36"
             statusBadge={
               <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -86,7 +100,10 @@ export default function CriticalCards({
             title="Active Hospitals"
             value={activeHospitalsCount}
             subtext={`${activeHospitalsCount} connected hospital(s)`}
-            cta={{ label: "View Hospitals" }}
+            cta={{
+              label: "View Hospitals",
+              onClick: () => router.push("/doctor/hospital"),
+            }}
             className="min-h-40 h-40"
           />
         )}
