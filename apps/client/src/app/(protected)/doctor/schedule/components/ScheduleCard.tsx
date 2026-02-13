@@ -77,6 +77,21 @@ export default function ScheduleCard({
               {s.period.charAt(0).toUpperCase() + s.period.slice(1)}
             </span>
             <span className="text-sm text-gray-600">{formatTimeRange()}</span>
+            {Array.isArray(s.dayOfWeek) && s.dayOfWeek.length > 0 && (
+              <div className="mt-3">
+                <div className="flex flex-wrap gap-1">
+                  {s.dayOfWeek.map((d) => (
+                    <span
+                      key={d}
+                      className="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-0.5 rounded-full"
+                    >
+                      {["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"][d] ??
+                        d}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
