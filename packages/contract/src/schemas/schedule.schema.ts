@@ -25,7 +25,7 @@ export interface getScheduleForAdminRes {
       startTime: string;
       endTime: string;
       endDate: string | null;
-      startDate: string;
+      startDate: string | null;
       dayOfWeek: number[];
       period: string;
       Doctor: {

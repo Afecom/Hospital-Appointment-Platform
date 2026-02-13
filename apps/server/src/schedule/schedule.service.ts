@@ -25,7 +25,6 @@ import {
   approveRejectScheuleRes,
 } from '@hap/contract';
 import { DayOfWeekToDateRangeChecker } from './day-of-week_X_date-range_checker.service.js';
-import { errorMonitor } from 'events';
 
 @Injectable()
 export class ScheduleService {
@@ -42,8 +41,8 @@ export class ScheduleService {
       where: { userId: session.user.id },
     });
     const doctorId = doctor.id;
-    const { dayOfWeek, startDate, endDate, startTime, endTime, type, date } =
-      data;
+    let { dayOfWeek, startDate, endDate, startTime, endTime, type } = data;
+    const { date, ...rest } = data;
     // Get hospital timezone (timezone moved to hospital)
     const hospital = await this.prisma.hospital.findUniqueOrThrow({
       where: { id: data.hospitalId },
@@ -58,9 +57,9 @@ export class ScheduleService {
       tz,
     );
 
-    // one_time schedules should set `startDate` (we removed `date` from schema)
     await this.checkOverlap.ensureNoOverlap(doctorId, {
       type,
+      date,
       startDate,
       endDate,
       dayOfWeek,
@@ -68,11 +67,22 @@ export class ScheduleService {
       endTime,
       timezone: tz,
     });
+    // Build an explicit create payload to avoid forwarding unexpected fields
+    const createPayload: any = {
+      doctorId: doctor.id,
+      hospitalId: (rest as any).hospitalId ?? (data as any).hospitalId,
+      type,
+      dayOfWeek,
+      startDate: date ?? startDate,
+      endDate,
+      startTime,
+      endTime,
+      name: (rest as any).name,
+      period: (rest as any).period,
+    };
+
     const schedule = await this.prisma.schedule.create({
-      data: {
-        doctorId: doctor.id,
-        ...(data as any),
-      },
+      data: createPayload,
       include: { Hospital: { select: { timezone: true } } },
     });
     if (schedule.endDate) {

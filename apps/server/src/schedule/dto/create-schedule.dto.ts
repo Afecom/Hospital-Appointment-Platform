@@ -3,13 +3,14 @@ import {
   IsString,
   IsIn,
   IsDateString,
-  IsOptional,
   IsArray,
   IsInt,
   Min,
   Max,
   Matches,
   ArrayNotEmpty,
+  ValidateIf,
+  IsNotEmpty,
 } from 'class-validator';
 
 export class CreateScheduleDto {
@@ -19,6 +20,7 @@ export class CreateScheduleDto {
   @IsIn(['recurring', 'temporary', 'one_time'])
   type!: 'recurring' | 'temporary' | 'one_time';
 
+  @ValidateIf((o) => o.type === 'recurring')
   @IsArray()
   @ArrayNotEmpty()
   @IsInt({ each: true })
@@ -26,22 +28,25 @@ export class CreateScheduleDto {
   @Max(6, { each: true })
   dayOfWeek!: number[];
 
-  @IsOptional()
+  @ValidateIf((o) => o.type === 'temporary')
   @IsDateString()
+  @IsNotEmpty()
   @Transform(({ value }) =>
     value ? new Date(value).toISOString().slice(0, 10) : value,
   )
   startDate?: string;
 
-  @IsOptional()
+  @ValidateIf((o) => o.type === 'temporary')
   @IsDateString()
+  @IsNotEmpty()
   @Transform(({ value }) =>
     value ? new Date(value).toISOString().slice(0, 10) : value,
   )
   endDate?: string;
 
-  @IsOptional()
+  @ValidateIf((o) => o.type === 'one_time')
   @IsDateString()
+  @IsNotEmpty()
   @Transform(({ value }) =>
     value ? new Date(value).toISOString().slice(0, 10) : value,
   )

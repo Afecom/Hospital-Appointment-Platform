@@ -12,6 +12,7 @@ interface IncomingSchedule {
   // TEMPORARY or bounded RECURRING
   startDate?: string; // "YYYY-MM-DD"
   endDate?: string; // "YYYY-MM-DD"
+  date?: string; // "YYYY-MM-DD" // for one time
   // RECURRING
   dayOfWeek?: number[]; // 0 (Sun) - 6 (Sat)
   // times (local wall-clock)
@@ -89,11 +90,14 @@ export class ScheduleOverlapService {
       d ? DateTime.fromISO(d, { zone: timezone }) : null;
 
     if (incoming.type === 'one_time') {
-      if (!incoming.startDate)
-        throw new BadRequestException('ONE_TIME schedule requires startDate');
-      const dt = parseDate(incoming.startDate);
-      if (!dt || !dt.isValid)
-        throw new BadRequestException('Invalid startDate');
+      // Accept either `date` (preferred) or `startDate` for one-time schedules.
+      const dateVal = incoming.date ?? incoming.startDate;
+      if (!dateVal)
+        throw new BadRequestException('ONE_TIME schedule requires date');
+      const dt = parseDate(dateVal);
+      if (!dt || !dt.isValid) throw new BadRequestException('Invalid date');
+      // normalize to startDate for downstream logic which expects a calendar date field
+      incoming.startDate = dateVal;
     } else if (incoming.type === 'temporary') {
       if (!incoming.startDate || !incoming.endDate)
         throw new BadRequestException(

@@ -234,7 +234,7 @@ model Schedule {
   doctorId              String
   endDate               String?
   hospitalId            String
-  startDate             String
+  startDate             String?
   dayOfWeek             Int[]
   name                  String
   period                SchedulePeriod
