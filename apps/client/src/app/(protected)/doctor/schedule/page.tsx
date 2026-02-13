@@ -20,10 +20,10 @@ type Schedule = {
   id: string;
   hospital: string;
   name?: string;
-  dayOfWeek?: number[];
-  isDeactivated?: boolean;
-  isExpired?: boolean;
-  isDeleted?: boolean;
+  dayOfWeek: number[];
+  isDeactivated: boolean;
+  isExpired: boolean;
+  isDeleted: boolean;
   type: ScheduleType;
   startDate: string; // YYYY-MM-DD
   endDate?: string;
@@ -32,50 +32,6 @@ type Schedule = {
   endTime: string; // HH:MM
   status: Status;
 };
-
-const MOCK_SCHEDULES: Schedule[] = [
-  {
-    id: "s1",
-    hospital: "St. Mary General Hospital",
-    type: "recurring",
-    startDate: "2026-02-10",
-    endDate: "2026-02-14",
-    period: "morning",
-    startTime: "08:00",
-    endTime: "11:00",
-    status: "approved",
-  },
-  {
-    id: "s2",
-    hospital: "Eastside Medical Center",
-    type: "temporary",
-    startDate: "2026-03-01",
-    period: "afternoon",
-    startTime: "13:00",
-    endTime: "16:00",
-    status: "approved",
-  },
-  {
-    id: "s3",
-    hospital: "St. Mary General Hospital",
-    type: "one_time",
-    startDate: "2026-03-05",
-    period: "evening",
-    startTime: "17:00",
-    endTime: "20:00",
-    status: "pending",
-  },
-  {
-    id: "s4",
-    hospital: "City Diagnostic Clinic",
-    type: "recurring",
-    startDate: "2026-04-10",
-    period: "morning",
-    startTime: "09:00",
-    endTime: "11:30",
-    status: "rejected",
-  },
-];
 
 const STATUS_TABS: { key: string; label: string }[] = [
   { key: "all", label: "All" },
@@ -299,25 +255,9 @@ export default function DoctorSchedulePage() {
     toTime,
   ]);
 
-  function onEdit(s: Schedule) {
-    // No-op here; edit handled by EditScheduleModal -> page onSave handler
-    console.log("Edit schedule", s.id);
-  }
-  function onDeactivate(s: Schedule) {
-    // toggle deactivate -> handled in action handler below
-    console.log("Deactivate schedule", s.id);
-  }
-  function onDelete(s: Schedule) {
-    console.log("Delete schedule", s.id);
-  }
-
   async function handleScheduleAction(id: string, action: string) {
     try {
-      if (action === "approve" || action === "reject") {
-        await api.patch(`/schedule/${action}/${id}`);
-      } else {
-        await api.patch(`/schedule/${id}`, { action });
-      }
+      await api.patch(`/schedule/${id}`, { action });
       await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
     } catch (err) {
       console.error("Schedule action failed", err);

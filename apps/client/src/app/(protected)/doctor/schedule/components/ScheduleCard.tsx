@@ -26,7 +26,8 @@ export default function ScheduleCard({
     period: string;
     startTime: string;
     endTime: string;
-    isDeactivated?: boolean;
+    isDeactivated: boolean;
+    isExpired: boolean;
     dayOfWeek?: number[];
     status: Status;
   };
@@ -84,7 +85,7 @@ export default function ScheduleCard({
             <StatusBadge status={s.status} />
 
             <div className="flex items-center gap-2">
-              {s.status !== "approved" && !s.isDeactivated ? (
+              {s.status === "approved" && !s.isExpired && !s.isDeactivated && (
                 <button
                   aria-label={`Edit schedule ${s.id}`}
                   title="Edit"
@@ -93,19 +94,8 @@ export default function ScheduleCard({
                 >
                   <FontAwesomeIcon icon={faPen} />
                 </button>
-              ) : null}
-
-              {s.isDeactivated ? (
-                <button
-                  aria-label={`Activate schedule ${s.id}`}
-                  title="Activate"
-                  onClick={() => setShowDeactivateConfirm(true)}
-                  disabled={!!pendingMap.toggle}
-                  className={`p-2 rounded text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.toggle ? "opacity-60 cursor-wait" : ""}`}
-                >
-                  <FontAwesomeIcon icon={faPlay} />
-                </button>
-              ) : (
+              )}
+              {s.status === "approved" && !s.isExpired && !s.isDeactivated && (
                 <button
                   aria-label={`Deactivate schedule ${s.id}`}
                   title={
@@ -122,16 +112,85 @@ export default function ScheduleCard({
                   <FontAwesomeIcon icon={faPause} />
                 </button>
               )}
-
-              <button
-                aria-label={`Delete schedule ${s.id}`}
-                title="Delete"
-                onClick={() => setShowDeleteConfirm(true)}
-                disabled={!!pendingMap.delete}
-                className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.delete ? "opacity-60 cursor-wait" : ""}`}
-              >
-                <FontAwesomeIcon icon={faTrash} />
-              </button>
+              {s.status === "approved" && !s.isExpired && !s.isDeactivated && (
+                <button
+                  aria-label={`Delete schedule ${s.id}`}
+                  title="Delete"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={!!pendingMap.delete}
+                  className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.delete ? "opacity-60 cursor-wait" : ""}`}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+              )}
+              {(s.status === "pending" || s.status === "rejected") &&
+                !s.isExpired &&
+                !s.isDeactivated && (
+                  <button
+                    aria-label={`Edit schedule ${s.id}`}
+                    title="Edit"
+                    className="p-2 rounded text-gray-600 hover:text-blue-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
+                    onClick={() => setShowEdit(true)}
+                  >
+                    <FontAwesomeIcon icon={faPen} />
+                  </button>
+                )}
+              {(s.status === "pending" || s.status === "rejected") &&
+                !s.isExpired &&
+                !s.isDeactivated && (
+                  <button
+                    aria-label={`Delete schedule ${s.id}`}
+                    title="Delete"
+                    onClick={() => setShowDeleteConfirm(true)}
+                    disabled={!!pendingMap.delete}
+                    className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.delete ? "opacity-60 cursor-wait" : ""}`}
+                  >
+                    <FontAwesomeIcon icon={faTrash} />
+                  </button>
+                )}
+              {s.isDeactivated && !s.isExpired && (
+                <button
+                  aria-label={`Activate schedule ${s.id}`}
+                  title="Activate"
+                  onClick={() => setShowDeactivateConfirm(true)}
+                  disabled={!!pendingMap.toggle}
+                  className={`p-2 rounded text-gray-600 hover:bg-gray-50 hover:text-green-400 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.toggle ? "opacity-60 cursor-wait" : ""}`}
+                >
+                  <FontAwesomeIcon icon={faPlay} />
+                </button>
+              )}
+              {s.isDeactivated && !s.isExpired && (
+                <button
+                  aria-label={`Edit schedule ${s.id}`}
+                  title="Edit"
+                  className="p-2 rounded text-gray-600 hover:text-blue-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-blue-100 focus:outline-none"
+                  onClick={() => setShowEdit(true)}
+                >
+                  <FontAwesomeIcon icon={faPen} />
+                </button>
+              )}
+              {s.isDeactivated && !s.isExpired && (
+                <button
+                  aria-label={`Delete schedule ${s.id}`}
+                  title="Delete"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={!!pendingMap.delete}
+                  className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.delete ? "opacity-60 cursor-wait" : ""}`}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+              )}
+              {s.isExpired && (
+                <button
+                  aria-label={`Delete schedule ${s.id}`}
+                  title="Delete"
+                  onClick={() => setShowDeleteConfirm(true)}
+                  disabled={!!pendingMap.delete}
+                  className={`p-2 rounded text-gray-600 hover:text-red-600 hover:bg-gray-50 transform transition duration-150 ease-in-out hover:-translate-y-0.5 focus-visible:ring-2 focus-visible:ring-red-100 focus:outline-none ${pendingMap.delete ? "opacity-60 cursor-wait" : ""}`}
+                >
+                  <FontAwesomeIcon icon={faTrash} />
+                </button>
+              )}
             </div>
           </div>
         </div>
