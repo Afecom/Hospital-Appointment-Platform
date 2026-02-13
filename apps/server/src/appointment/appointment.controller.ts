@@ -47,6 +47,12 @@ export class appointmentController {
     return this.appointment.findOne(id, session);
   }
 
+  @Get('overview')
+  @Roles([Role.doctor])
+  async overview(@Session() session: UserSession) {
+    return this.appointment.doctorOverview(session);
+  }
+
   @Patch(':id')
   @Roles([Role.user, Role.admin, Role.hospital_operator])
   updateOne(

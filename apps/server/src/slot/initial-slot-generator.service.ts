@@ -66,9 +66,9 @@ export class generateInitialSlots {
     const nowLocal = DateTime.now().setZone(timezone).startOf('day');
     const nowZoned = DateTime.now().setZone(timezone);
 
-    const scheduleStartDate = DateTime.fromISO(schedule.startDate, {
-      zone: timezone,
-    }).startOf('day');
+    const scheduleStartDate = schedule.startDate
+      ? DateTime.fromISO(schedule.startDate, { zone: timezone }).startOf('day')
+      : nowLocal;
 
     const scheduleEndDate = schedule.endDate
       ? DateTime.fromISO(schedule.endDate, { zone: timezone }).startOf('day')
@@ -154,7 +154,7 @@ export class generateInitialSlots {
             ? dtoDayOfWeek.includes(dow)
             : false;
       } else if (schedule.type === 'one_time') {
-        const scheduleStart = DateTime.fromISO(schedule.startDate, {
+        const scheduleStart = DateTime.fromISO(schedule.startDate!, {
           zone: timezone,
         }).startOf('day');
         generateForDate = cursor.hasSame(scheduleStart, 'day');

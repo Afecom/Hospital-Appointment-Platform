@@ -12,7 +12,7 @@ import {
   normalizePagination,
   buildPaginationMeta,
 } from '../common/pagination/pagination.js';
-import { createHmac } from 'node:crypto';
+import { DateTime } from 'luxon';
 import { countPendingAppointmentsRes } from '@hap/contract/main.js';
 
 //TODO: Connect payment gatway via axios call
@@ -117,6 +117,84 @@ export class appointmentService {
       appointments,
       meta: buildPaginationMeta(total, normalizedPage, normalizedLimit),
     };
+  }
+
+  async doctorOverview(session: UserSession) {
+    const doctor = await this.prisma.doctor.findUnique({
+      where: { userId: session.user.id },
+    });
+    if (!doctor) throw new NotFoundException("Couldn't find a doctor");
+
+    const doctorId = doctor.id;
+    const appts = await this.prisma.appointment.findMany({
+      where: { doctorId },
+      include: {
+        Slot: { select: { date: true, slotStart: true, slotEnd: true } },
+        User_Appointment_customerIdToUser: {
+          select: { fullName: true, gender: true, dateOfBirth: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const todayIso = DateTime.local().toISODate();
+    const today: any[] = [];
+    const upcomingMap: Record<string, any[]> = {};
+    const past: any[] = [];
+
+    for (const a of appts) {
+      const slotDateObj: Date | null = (a.Slot && (a.Slot as any).date) ?? null;
+      const date = slotDateObj
+        ? DateTime.fromJSDate(slotDateObj).toISODate()
+        : null;
+      if (!date) continue;
+      const start = a.Slot?.slotStart ?? a.approvedSlotStart ?? '';
+      const end = a.Slot?.slotEnd ?? a.approvedSlotEnd ?? '';
+      const customer = (a as any).User_Appointment_customerIdToUser;
+      // compute age if dateOfBirth provided
+      let age: number | null = null;
+      if (customer?.dateOfBirth) {
+        try {
+          const dob = DateTime.fromISO(customer.dateOfBirth);
+          if (dob.isValid)
+            age = Math.floor(DateTime.local().diff(dob, 'years').years);
+        } catch (e) {
+          age = null;
+        }
+      }
+      const item = {
+        id: a.id,
+        date,
+        start,
+        end,
+        patientName: customer?.fullName ?? 'Unknown',
+        patientAge: age,
+        patientGender: customer?.gender ?? null,
+        reason: a.notes ?? '',
+        type: 'In-person',
+        status: a.status,
+        isNew: false,
+      };
+
+      if (date === todayIso) {
+        today.push(item);
+      } else if (date > todayIso) {
+        const label = DateTime.fromISO(date).toFormat('EEEE – LLL dd');
+        upcomingMap[label] = upcomingMap[label] || [];
+        upcomingMap[label].push(item);
+      } else {
+        past.push(item);
+      }
+    }
+
+    const counts = {
+      today: today.length,
+      upcoming: Object.values(upcomingMap).flat().length,
+      completed: past.filter((p) => p.status === 'Completed').length,
+      cancelled: past.filter((p) => p.status === 'Cancelled').length,
+    };
+
+    return { today, upcomingByDate: upcomingMap, past, counts };
   }
 
   async countPendingHospitalAppointments(

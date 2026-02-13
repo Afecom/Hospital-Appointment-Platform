@@ -1,3 +1,5 @@
+"use client";
+import { useEffect, useState } from "react";
 import Header from "./components/Header";
 import Snapshot from "./components/Snapshot";
 import TodayAppointments from "./components/TodayAppointments";
@@ -6,92 +8,65 @@ import PastAppointments from "./components/PastAppointments";
 import DetailPanel from "./components/DetailPanel";
 import type { Appointment } from "./components/types";
 
-const mockToday: Appointment[] = [
-  {
-    id: "a1",
-    date: "2026-02-10",
-    start: "09:00",
-    end: "09:20",
-    patientName: "John Doe",
-    patientAge: 36,
-    patientGender: "M",
-    reason: "Follow-up: blood pressure management",
-    type: "In-person",
-    status: "Approved",
-    isNew: false,
-  },
-  {
-    id: "a2",
-    date: "2026-02-10",
-    start: "09:30",
-    end: "09:50",
-    patientName: "Jane Smith",
-    patientAge: 28,
-    patientGender: "F",
-    reason: "New patient consultation",
-    type: "In-person",
-    status: "Approved",
-    isNew: true,
-  },
-];
-
-const mockUpcomingByDate: Record<string, Appointment[]> = {
-  "Monday – Feb 12": [
-    {
-      id: "u1",
-      date: "2026-02-12",
-      start: "10:00",
-      end: "10:20",
-      patientName: "Alice Green",
-      patientAge: 45,
-      patientGender: "F",
-      reason: "Chest pain review",
-      type: "In-person",
-      status: "Approved",
-    },
-  ],
-  "Tuesday – Feb 13": [
-    {
-      id: "u2",
-      date: "2026-02-13",
-      start: "14:00",
-      end: "14:20",
-      patientName: "Robert Brown",
-      patientAge: 52,
-      patientGender: "M",
-      reason: "Medication review",
-      type: "In-person",
-      status: "Approved",
-    },
-  ],
-};
-
-const mockPast: Appointment[] = [
-  {
-    id: "p1",
-    date: "2026-02-05",
-    start: "11:00",
-    end: "11:20",
-    patientName: "Sam Wilson",
-    patientAge: 60,
-    patientGender: "M",
-    reason: "Routine follow-up",
-    type: "In-person",
-    status: "Completed",
-  },
-];
-
 export default function DoctorsAppointmentPage() {
+  const [loading, setLoading] = useState(true);
+  const [data, setData] = useState<{
+    today: Appointment[];
+    upcomingByDate: Record<string, Appointment[]>;
+    past: Appointment[];
+    counts: {
+      today: number;
+      upcoming: number;
+      completed: number;
+      cancelled: number;
+    };
+  } | null>(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await fetch("/api/appointment/overview");
+        if (!res.ok) throw new Error("Failed to load");
+        const json = await res.json();
+        if (mounted) setData(json);
+      } catch (e) {
+        console.error(e);
+        if (mounted) setData(null);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
   const doctorName = "Dr. Ayub Mussa";
   const specialization = "Cardiology";
   const dateContext = "Today";
 
-  const counts = {
-    today: mockToday.length,
-    upcoming: Object.values(mockUpcomingByDate).flat().length,
-    completed: mockPast.filter((p) => p.status === "Completed").length,
-    cancelled: mockPast.filter((p) => p.status === "Cancelled").length,
-  };
+  if (loading) return <div className="p-6">Loading appointments…</div>;
+
+  if (
+    !data ||
+    (data.counts.today === 0 &&
+      data.counts.upcoming === 0 &&
+      data.counts.completed === 0)
+  ) {
+    return (
+      <div className="p-6">
+        <Header
+          doctorName={doctorName}
+          specialization={specialization}
+          dateContext={dateContext}
+        />
+        <div className="mt-6 text-center text-gray-500">
+          No appointments found.
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6">
@@ -101,17 +76,17 @@ export default function DoctorsAppointmentPage() {
         dateContext={dateContext}
       />
       <Snapshot
-        today={counts.today}
-        upcoming={counts.upcoming}
-        completed={counts.completed}
-        cancelled={counts.cancelled}
+        today={data.counts.today}
+        upcoming={data.counts.upcoming}
+        completed={data.counts.completed}
+        cancelled={data.counts.cancelled}
       />
 
       <main>
-        <TodayAppointments appointments={mockToday} />
-        <DetailPanel appt={mockToday[0]} />
-        <UpcomingAppointments appointmentsByDate={mockUpcomingByDate} />
-        <PastAppointments appointments={mockPast} />
+        <TodayAppointments appointments={data.today} />
+        {data.today.length > 0 && <DetailPanel appt={data.today[0]} />}
+        <UpcomingAppointments appointmentsByDate={data.upcomingByDate} />
+        <PastAppointments appointments={data.past} />
       </main>
     </div>
   );

@@ -34,6 +34,11 @@ export async function fillMissingSlotsWorker(scheduleId: string) {
   const now = DateTime.now().setZone(tz).startOf('day');
 
   // Convert schedule start date into TZ
+  if (!schedule.startDate) {
+    // nothing to backfill when schedule has no explicit start date
+    return;
+  }
+
   const startDate = DateTime.fromISO(schedule.startDate, {
     zone: tz,
   }).startOf('day');
