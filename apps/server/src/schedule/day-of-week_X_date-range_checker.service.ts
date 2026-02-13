@@ -7,6 +7,7 @@ export class DayOfWeekToDateRangeChecker {
 
   async dayOfWeekDateRangeChecker(
     dayOfWeek: number[],
+    date: string | undefined,
     startDate: string | undefined,
     endDate: string | undefined,
     tz: string,
@@ -26,6 +27,23 @@ export class DayOfWeekToDateRangeChecker {
     // If endDate provided but no startDate, allow instant-activation schedules (no validation needed)
     if (endDate && !startDate) {
       // scenario: schedule should be active immediately until endDate (validated elsewhere if needed)
+      return;
+    }
+
+    // If a one-time `date` was provided, ensure the provided dayOfWeek includes that date's weekday
+    if (date) {
+      const dt = DateTime.fromISO(date, { zone: tz }).startOf('day');
+      if (!dt.isValid) throw new BadRequestException('Invalid date');
+      // convert Luxon's weekday (1=Mon..7=Sun) to our 0=Sun..6=Sat
+      const weekday = dt.weekday === 7 ? 0 : dt.weekday;
+      const normalizedWeekday = weekday === 0 ? 0 : weekday; // keep 0 for Sunday
+      // normalize incoming dayOfWeek values to 0..6
+      const normalizedDayOfWeek = dayOfWeek.map((d) => (d === 0 ? 0 : d));
+      if (!normalizedDayOfWeek.includes(normalizedWeekday)) {
+        throw new BadRequestException(
+          `Provided dayOfWeek values do not match the provided date ${date} in timezone ${tz}`,
+        );
+      }
       return;
     }
 

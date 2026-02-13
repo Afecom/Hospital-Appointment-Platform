@@ -36,6 +36,25 @@ export default function ScheduleModal({
     if (initialHospitalId) setHospitalId(initialHospitalId);
   }, [initialHospitalId]);
 
+  useEffect(() => {
+    if (type === "one_time") {
+      setToDate("");
+      // if a fromDate exists, ensure dayOfWeek matches that single date
+      if (fromDate) {
+        try {
+          const d = new Date(fromDate).getDay();
+          setDayOfWeek([d]);
+        } catch (e) {
+          // ignore
+        }
+      }
+      // if more than one day selected, trim to the first
+      if (dayOfWeek.length > 1) {
+        setDayOfWeek([dayOfWeek[0]]);
+      }
+    }
+  }, [type]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     let finalDayOfWeek = dayOfWeek.slice();
@@ -60,7 +79,9 @@ export default function ScheduleModal({
       hospitalId,
       type,
       dayOfWeek: finalDayOfWeek,
-      startDate: fromDate || undefined,
+      // one-time schedules use `date`, recurring/temporary use startDate/endDate
+      date: type === "one_time" ? fromDate || undefined : undefined,
+      startDate: type === "one_time" ? undefined : fromDate || undefined,
       endDate: type === "one_time" ? undefined : toDate || undefined,
       startTime: fromTime || undefined,
       endTime: toTime || undefined,
@@ -92,6 +113,12 @@ export default function ScheduleModal({
 
   const toggleDay = (d: number) => {
     setDayOfWeek((prev) => {
+      // For one-time schedules only allow selecting one day
+      if (type === "one_time") {
+        if (prev.includes(d)) return [];
+        return [d];
+      }
+
       if (prev.includes(d)) return prev.filter((x) => x !== d);
       return [...prev, d].sort((a, b) => a - b);
     });
@@ -200,12 +227,22 @@ export default function ScheduleModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                From Date
+                {type === "one_time" ? "Date" : "From Date"}
               </label>
               <input
                 type="date"
                 value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  if (type === "one_time") {
+                    try {
+                      const d = new Date(e.target.value).getDay();
+                      setDayOfWeek([d]);
+                    } catch (err) {
+                      // ignore
+                    }
+                  }
+                }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
               />
             </div>

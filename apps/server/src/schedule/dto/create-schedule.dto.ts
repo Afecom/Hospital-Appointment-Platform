@@ -14,17 +14,17 @@ import {
 
 export class CreateScheduleDto {
   @IsString()
-  hospitalId: string;
+  hospitalId!: string;
 
   @IsIn(['recurring', 'temporary', 'one_time'])
-  type: 'recurring' | 'temporary' | 'one_time';
+  type!: 'recurring' | 'temporary' | 'one_time';
 
   @IsArray()
   @ArrayNotEmpty()
   @IsInt({ each: true })
   @Min(0, { each: true })
   @Max(6, { each: true })
-  dayOfWeek: number[];
+  dayOfWeek!: number[];
 
   @IsOptional()
   @IsDateString()
@@ -39,6 +39,13 @@ export class CreateScheduleDto {
     value ? new Date(value).toISOString().slice(0, 10) : value,
   )
   endDate?: string;
+
+  @IsOptional()
+  @IsDateString()
+  @Transform(({ value }) =>
+    value ? new Date(value).toISOString().slice(0, 10) : value,
+  )
+  date?: string;
 
   // Accept either 24-hour HH:mm or 12-hour with AM/PM and normalize to 24-hour HH:mm
   private static normalizeTime(val: any) {
@@ -65,16 +72,16 @@ export class CreateScheduleDto {
   @IsString()
   @Transform(({ value }) => CreateScheduleDto.normalizeTime(value))
   @Matches(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
-  startTime: string;
+  startTime!: string;
 
   @IsString()
   @Transform(({ value }) => CreateScheduleDto.normalizeTime(value))
   @Matches(/^(?:[01]\d|2[0-3]):[0-5]\d$/)
-  endTime: string;
+  endTime!: string;
 
   @IsString()
-  name: string;
+  name!: string;
 
   @IsIn(['morning', 'afternoon', 'evening'])
-  period: 'morning' | 'afternoon' | 'evening';
+  period!: 'morning' | 'afternoon' | 'evening';
 }

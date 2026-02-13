@@ -42,7 +42,8 @@ export class ScheduleService {
       where: { userId: session.user.id },
     });
     const doctorId = doctor.id;
-    const { dayOfWeek, startDate, endDate, startTime, endTime, type } = data;
+    const { dayOfWeek, startDate, endDate, startTime, endTime, type, date } =
+      data;
     // Get hospital timezone (timezone moved to hospital)
     const hospital = await this.prisma.hospital.findUniqueOrThrow({
       where: { id: data.hospitalId },
@@ -51,6 +52,7 @@ export class ScheduleService {
 
     await this.checkDateRange.dayOfWeekDateRangeChecker(
       dayOfWeek,
+      date,
       startDate,
       endDate,
       tz,
