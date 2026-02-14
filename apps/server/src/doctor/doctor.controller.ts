@@ -97,7 +97,11 @@ export class DoctorController {
 
   @Post('apply/hospital')
   @Roles([Role.doctor])
-  apply(@Body() body: applyHospitalDoctorDto, @Session() session: UserSession) {
+  apply(
+    @Body() body: applyHospitalDoctorDto,
+    @Session() session: UserSession,
+    @Query('action') action: 'slot_change' | 'remove_doctor',
+  ) {
     return this.doctorService.applyHospitalDoctor(body, session);
   }
 

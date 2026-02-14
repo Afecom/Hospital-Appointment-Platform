@@ -68,7 +68,7 @@ export default function SlotDurationModal({
           </div>
           <div>
             <label className="block text-sm text-slate-700">
-              New slot duration
+              New slot duration (minutes)
             </label>
             <input
               value={newDuration}
