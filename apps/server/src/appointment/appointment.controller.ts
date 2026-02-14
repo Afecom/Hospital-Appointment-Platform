@@ -47,9 +47,9 @@ export class appointmentController {
     return this.appointment.findOne(id, session);
   }
 
-  @Get('overview')
+  @Get('doctor/overview')
   @Roles([Role.doctor])
-  async overview(@Session() session: UserSession) {
+  doctorOverview(@Session() session: UserSession) {
     return this.appointment.doctorOverview(session);
   }
 

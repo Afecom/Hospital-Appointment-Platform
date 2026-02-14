@@ -22,7 +22,7 @@ api.interceptors.response.use(
       console.warn("Unauthorized! Redirecting to login...");
     }
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;

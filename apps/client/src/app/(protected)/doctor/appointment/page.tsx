@@ -6,44 +6,31 @@ import TodayAppointments from "./components/TodayAppointments";
 import UpcomingAppointments from "./components/UpcomingAppointments";
 import PastAppointments from "./components/PastAppointments";
 import DetailPanel from "./components/DetailPanel";
-import type { Appointment } from "./components/types";
+import api from "@/lib/axios";
+import { useQuery } from "@tanstack/react-query";
+import { doctorOverviewRes } from "@hap/contract";
 
 export default function DoctorsAppointmentPage() {
-  const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<{
-    doctor?: { fullName?: string | null; specializations?: string[] };
-    today: Appointment[];
-    upcomingByDate: Record<string, Appointment[]>;
-    past: Appointment[];
-    counts: {
-      today: number;
-      upcoming: number;
-      completed: number;
-      cancelled: number;
-    };
-  } | null>(null);
-
-  useEffect(() => {
-    let mounted = true;
-    (async () => {
+  const {
+    data: doctorData,
+    isLoading: doctorLoading,
+    error,
+  } = useQuery({
+    queryKey: ["doctorAppointment"],
+    queryFn: async () => {
       try {
-        const res = await fetch("/api/appointment/overview");
-        if (!res.ok) throw new Error("Failed to load");
-        const json = await res.json();
-        if (mounted) setData(json);
-      } catch (e) {
-        console.error(e);
-        if (mounted) setData(null);
-      } finally {
-        if (mounted) setLoading(false);
+        const res = await api.get<doctorOverviewRes>(
+          "/appointment/doctor/overview",
+        );
+        return res.data.data;
+      } catch (error) {
+        throw error;
       }
-    })();
-    return () => {
-      mounted = false;
-    };
-  }, []);
+    },
+  });
 
-  if (loading) return <div className="p-6">Loading appointments…</div>;
+  if (doctorLoading) return <div className="p-6">Loading appointments…</div>;
+  const data = doctorData ?? null;
   const counts = data?.counts ?? {
     today: 0,
     upcoming: 0,

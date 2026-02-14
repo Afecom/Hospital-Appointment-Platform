@@ -13,7 +13,7 @@ import {
   buildPaginationMeta,
 } from '../common/pagination/pagination.js';
 import { DateTime } from 'luxon';
-import { countPendingAppointmentsRes } from '@hap/contract/main.js';
+import { countPendingAppointmentsRes, doctorOverviewRes } from '@hap/contract';
 
 //TODO: Connect payment gatway via axios call
 
@@ -119,7 +119,7 @@ export class appointmentService {
     };
   }
 
-  async doctorOverview(session: UserSession) {
+  async doctorOverview(session: UserSession): Promise<doctorOverviewRes> {
     const doctor = await this.prisma.doctor.findUnique({
       where: { userId: session.user.id },
       include: {
@@ -133,7 +133,12 @@ export class appointmentService {
 
     const doctorId = doctor.id;
     const appts = await this.prisma.appointment.findMany({
-      where: { doctorId },
+      where: {
+        doctorId,
+        status: {
+          not: 'pending',
+        },
+      },
       include: {
         Slot: { select: { date: true, slotStart: true, slotEnd: true } },
         User_Appointment_customerIdToUser: {
@@ -208,11 +213,15 @@ export class appointmentService {
     };
 
     return {
-      doctor: doctorInfo,
-      today,
-      upcomingByDate: upcomingMap,
-      past,
-      counts,
+      message: 'Doctor overview fetched successfully',
+      status: 'Success',
+      data: {
+        doctor: doctorInfo,
+        today,
+        upcomingByDate: upcomingMap,
+        past,
+        counts,
+      },
     };
   }
 
