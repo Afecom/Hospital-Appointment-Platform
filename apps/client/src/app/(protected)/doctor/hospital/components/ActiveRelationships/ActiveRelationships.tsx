@@ -38,9 +38,9 @@ export default function ActiveRelationships({
         </div>
       ) : (
         <div className="space-y-4">
-          {relationships.map((r) => (
+          {relationships.map((r, i) => (
             <RelationshipCard
-              key={r.id}
+              key={r.id ?? `${r.hospitalName}-${i}`}
               relationship={r}
               onRequestSlotChange={onRequestSlotChange}
               onRequestRemoval={onRequestRemoval}

@@ -12,9 +12,12 @@ export interface doctorHospital {
   message: string;
   status: string;
   data: {
-    Hospital: {
-      id: string;
-      name: string;
-    };
+    id: any;
+    hospitalName: any;
+    location: any;
+    slotDuration: string;
+    workingTime: string;
+    activeSchedulesCount: number;
+    startDate: string;
   }[];
 }

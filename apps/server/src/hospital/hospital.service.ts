@@ -145,10 +145,12 @@ export class HospitalService {
           id: true,
           DoctorHospitalProfile: {
             select: {
+              slotDuration: true,
               Hospital: {
                 select: {
                   id: true,
                   name: true,
+                  address: true,
                 },
               },
             },
@@ -158,10 +160,62 @@ export class HospitalService {
       if (!doctor) {
         throw new NotFoundException('Doctor not found for this user');
       }
+      // Map profiles to a shape the client expects for ActiveRelationships
+      const mapped = await Promise.all(
+        (doctor.DoctorHospitalProfile || []).map(async (p: any) => {
+          const hospitalId = p.Hospital?.id;
+          const hospitalName = p.Hospital?.name ?? '';
+          const location = p.Hospital?.address ?? '';
+          const slotDuration = p.slotDuration
+            ? `${p.slotDuration} minutes`
+            : '—';
+
+          // Count active schedules for this doctor/hospital
+          const activeSchedulesCount =
+            await this.databaseService.schedule.count({
+              where: {
+                doctorId: doctor.id,
+                hospitalId,
+                isDeactivated: false,
+                isDeleted: false,
+                isExpired: false,
+                status: 'approved',
+              },
+            });
+
+          // Derive a simple working time string from one schedule if available
+          const sampleSchedule = await this.databaseService.schedule.findFirst({
+            where: {
+              doctorId: doctor.id,
+              hospitalId,
+              isDeactivated: false,
+            },
+            orderBy: { createdAt: 'desc' },
+          });
+          const workingTime = sampleSchedule
+            ? `${sampleSchedule.startTime}–${sampleSchedule.endTime}`
+            : '—';
+
+          const startDate = p.createdAt
+            ? new Date(p.createdAt).toLocaleDateString()
+            : new Date().toLocaleDateString();
+
+          return {
+            id: p.id,
+            hospitalName,
+            location,
+            slotDuration,
+            workingTime,
+            activeSchedulesCount,
+            startDate,
+          };
+        }),
+      );
+
       return {
         message: 'Hospitals found successfully',
         status: 'Success',
-        data: doctor.DoctorHospitalProfile,
+        data: mapped,
       };
     } catch (error) {
       throw error;
