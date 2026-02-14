@@ -9,6 +9,7 @@ import DetailPanel from "./components/DetailPanel";
 import api from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
 import { doctorOverviewRes } from "@hap/contract";
+import LoadingSkeleton from "./components/LoadingSkeleton";
 
 export default function DoctorsAppointmentPage() {
   const {
@@ -29,7 +30,7 @@ export default function DoctorsAppointmentPage() {
     },
   });
 
-  if (doctorLoading) return <div className="p-6">Loading appointments…</div>;
+  if (doctorLoading) return <LoadingSkeleton />;
   const data = doctorData ?? null;
   const counts = data?.counts ?? {
     today: 0,
