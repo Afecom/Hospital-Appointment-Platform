@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   approveDoctor,
   rejectDoctor,
@@ -168,7 +172,7 @@ export class DoctorService {
       where: { id: { in: hospitalIds } },
     });
     if (hospitals.length !== hospitalIds.length)
-      throw new Error('Invalid hospital ids');
+      throw new BadGatewayException('Invalid hospitals provided');
     return await this.databaseService.$transaction(async (tx) => {
       return Promise.all(
         hospitalIds.map(async (hospitalId) => {

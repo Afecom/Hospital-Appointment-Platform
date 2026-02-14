@@ -76,7 +76,11 @@ export class HospitalService {
     const hospitals = await this.databaseService.hospital.findMany();
     if (hospitals.length === 0)
       throw new NotFoundException("Couldn't find any hospitals");
-    return hospitals;
+    return {
+      message: 'Hospitals found successfully',
+      status: 'success',
+      data: hospitals,
+    };
   }
 
   async findOne(session: UserSession): Promise<uniqueHospital> {
