@@ -387,6 +387,7 @@ export default function DoctorSchedulePage() {
                     period: updated.period,
                     dayOfWeek: updated.dayOfWeek,
                     startDate: updated.startDate,
+                    date: updated.date,
                     endDate: updated.endDate,
                     startTime: updated.startTime,
                     endTime: updated.endTime,
