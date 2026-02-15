@@ -9,14 +9,16 @@ export default function ScheduleHeader({
   hospitals,
 }: {
   onApply?: (payload: any) => void;
-  hospitals?:
-    | {
-        Hospital: {
-          id: string;
-          name: string;
-        };
-      }[]
-    | undefined;
+  hospitals?: {
+    id: any;
+    hospitalId: any;
+    hospitalName: any;
+    location: any;
+    slotDuration: string;
+    workingTime: string;
+    activeSchedulesCount: number;
+    startDate: string;
+  }[];
 }) {
   const [showModal, setShowModal] = useState(false);
 
@@ -43,7 +45,7 @@ export default function ScheduleHeader({
 
       {showModal && (
         <ScheduleModal
-          hospitals={hospitals}
+          hospitals={hospitals!}
           onClose={() => setShowModal(false)}
           onApply={(payload) => {
             setShowModal(false);

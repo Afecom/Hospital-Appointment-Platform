@@ -202,6 +202,7 @@ export class HospitalService {
 
           return {
             id: p.id,
+            hospitalId,
             hospitalName,
             location,
             slotDuration,

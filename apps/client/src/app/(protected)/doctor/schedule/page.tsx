@@ -181,7 +181,7 @@ export default function DoctorSchedulePage() {
       // map hospital name (from UI) to hospitalId if possible
       if (hospital) {
         const h = hospitals.find((x: any) => x.Hospital?.name === hospital);
-        if (h) params.hospitalId = h.Hospital.id;
+        if (h) params.hospitalId = h.id;
       }
       if (fromDate) params.startDate = fromDate;
       if (toDate) params.endDate = toDate;
@@ -201,8 +201,8 @@ export default function DoctorSchedulePage() {
   const mappedSchedules: Schedule[] = (apiSchedules || []).map((s: any) => {
     const hospitalName =
       s.Hospital?.name ||
-      hospitals.find((h: any) => h.Hospital?.id === s.hospitalId)?.Hospital
-        ?.name ||
+      hospitals.find((h: any) => h.Hospital?.id === s.hospitalId)
+        ?.hospitalName ||
       s.hospitalName ||
       "";
     return {
@@ -300,7 +300,9 @@ export default function DoctorSchedulePage() {
         setPeriod={(p) => setPeriod(p as any)}
         hospital={hospital}
         setHospital={setHospital}
-        hospitals={hospitals.map((h: any) => h.Hospital.name)}
+        hospitals={hospitals.map(
+          (h: any) => h.Hospital?.name ?? h.hospitalName,
+        )}
         fromDate={fromDate}
         setFromDate={setFromDate}
         toDate={toDate}
@@ -349,13 +351,19 @@ export default function DoctorSchedulePage() {
             {showEmptyModal && (
               <ScheduleModal
                 hospitals={hospitals}
-                initialHospitalId={
-                  // If the current `hospital` filter is a name, try to find the matching id
-                  (hospitals.find((h: any) => h.Hospital.name === hospital)
-                    ?.Hospital.id as string) ??
-                  hospitals[0]?.Hospital.id ??
-                  ""
-                }
+                initialHospitalId={(() => {
+                  // Find hospital by matching known shapes (nested `Hospital` or flat `hospitalName`)
+                  const found = hospitals.find((h: any) => {
+                    const name =
+                      h.Hospital?.name ?? h.hospitalName ?? h.name ?? "";
+                    return name === hospital;
+                  });
+                  if (found?.id) return String(found.id);
+                  if (found?.id) return String(found.id);
+                  if (hospitals[0]?.id) return String(hospitals[0].id);
+                  if (hospitals[0]?.id) return String(hospitals[0].id);
+                  return "";
+                })()}
                 onClose={() => setShowEmptyModal(false)}
                 onApply={(payload) => {
                   console.log("Apply payload (empty state):", payload);

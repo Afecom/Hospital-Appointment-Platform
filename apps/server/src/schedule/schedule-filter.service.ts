@@ -81,6 +81,14 @@ export class ScheduleFilterService {
               },
             ],
           },
+          include: {
+            Hospital: {
+              select: {
+                name: true,
+                timezone: true,
+              },
+            },
+          },
           skip,
           take,
         }),
@@ -108,6 +116,14 @@ export class ScheduleFilterService {
               { type: 'recurring' },
             ],
           },
+          include: {
+            Hospital: {
+              select: {
+                name: true,
+                timezone: true,
+              },
+            },
+          },
           skip,
           take,
         }),
@@ -133,6 +149,14 @@ export class ScheduleFilterService {
               },
               { type: 'recurring' },
             ],
+          },
+          include: {
+            Hospital: {
+              select: {
+                name: true,
+                timezone: true,
+              },
+            },
           },
           skip,
           take,
@@ -160,6 +184,14 @@ export class ScheduleFilterService {
               { type: 'recurring' },
             ],
           },
+          include: {
+            Hospital: {
+              select: {
+                name: true,
+                timezone: true,
+              },
+            },
+          },
           skip,
           take,
         }),
@@ -172,6 +204,14 @@ export class ScheduleFilterService {
     }
     return await this.prisma.schedule.findMany({
       where: whereClause,
+      include: {
+        Hospital: {
+          select: {
+            name: true,
+            timezone: true,
+          },
+        },
+      },
       skip,
       take,
     });

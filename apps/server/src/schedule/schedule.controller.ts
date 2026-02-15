@@ -28,6 +28,7 @@ export class ScheduleController {
     @Body() createScheduleDto: CreateScheduleDto,
     @Session() session: UserSession,
   ) {
+    console.log(createScheduleDto.hospitalId);
     return this.scheduleService.createSchedule(createScheduleDto, session);
   }
 

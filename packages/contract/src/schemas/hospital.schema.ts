@@ -13,6 +13,7 @@ export interface doctorHospital {
   status: string;
   data: {
     id: any;
+    hospitalId: any;
     hospitalName: any;
     location: any;
     slotDuration: string;

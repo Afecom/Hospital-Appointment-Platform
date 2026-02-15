@@ -4,24 +4,42 @@ import { applySchedule } from "@/actions/applySchedule";
 import { useToast } from "@/context/ToastContext";
 import { useQueryClient } from "@tanstack/react-query";
 
-type HospitalItem = { Hospital: { id: string; name: string } };
-
 export default function ScheduleModal({
   hospitals,
   onClose,
   onApply,
   initialHospitalId,
 }: {
-  hospitals?: HospitalItem[];
+  hospitals: {
+    id: any;
+    hospitalId: any;
+    hospitalName: any;
+    location: any;
+    slotDuration: string;
+    workingTime: string;
+    activeSchedulesCount: number;
+    startDate: string;
+  }[];
   onClose: () => void;
   onApply: (payload: any) => void;
   initialHospitalId?: string;
 }) {
   const queryClient = useQueryClient();
   const [type, setType] = useState("one_time");
-  const [hospitalId, setHospitalId] = useState(
-    initialHospitalId ?? (hospitals && hospitals[0]?.Hospital.id) ?? "",
-  );
+  // Always set a valid hospitalId on mount and when hospitals change
+  const [hospitalId, setHospitalId] = useState<string>("");
+  useEffect(() => {
+    if (
+      initialHospitalId &&
+      hospitals.some((h) => h.hospitalId === initialHospitalId)
+    ) {
+      setHospitalId(initialHospitalId);
+    } else if (hospitals.length > 0) {
+      setHospitalId(hospitals[0].hospitalId ?? "");
+    } else {
+      setHospitalId("");
+    }
+  }, [initialHospitalId, hospitals.length]);
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [fromTime, setFromTime] = useState("");
@@ -88,27 +106,24 @@ export default function ScheduleModal({
       name,
       period,
     };
-
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await applySchedule(payload);
-        const message = res?.message || "Schedule application submitted";
-        addToast({ message, type: "success" });
-        onApply(res ?? payload);
-      } catch (err: any) {
-        console.error("Failed to apply schedule", err);
-        const msg =
-          err?.response?.data?.message ||
-          err?.message ||
-          "Failed to submit application";
-        addToast({ message: msg, type: "error" });
-        onApply({ error: err });
-      } finally {
-        await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
-        setLoading(false);
-      }
-    })();
+    try {
+      setLoading(true);
+      const res = await applySchedule(payload);
+      const message = res?.message || "Schedule application submitted";
+      addToast({ message, type: "success" });
+      onApply(res ?? payload);
+    } catch (err: any) {
+      console.error("Failed to apply schedule", err);
+      const msg =
+        err?.response?.data?.message ||
+        err?.message ||
+        "Failed to submit application";
+      addToast({ message: msg, type: "error" });
+      onApply({ error: err });
+    } finally {
+      await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
+      setLoading(false);
+    }
   };
 
   const toggleDay = (d: number) => {
@@ -208,12 +223,12 @@ export default function ScheduleModal({
               value={hospitalId}
               onChange={(e) => setHospitalId(e.target.value)}
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              disabled={!hospitals || hospitals.length === 0}
+              disabled={hospitals.length === 0}
             >
-              {hospitals && hospitals.length > 0 ? (
+              {hospitals.length > 0 ? (
                 hospitals.map((h) => (
-                  <option key={h.Hospital.id} value={h.Hospital.id}>
-                    {h.Hospital.name}
+                  <option key={h.hospitalId} value={h.hospitalId}>
+                    {h.hospitalName || "Unknown Hospital"}
                   </option>
                 ))
               ) : (
