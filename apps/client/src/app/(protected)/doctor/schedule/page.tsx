@@ -269,6 +269,7 @@ export default function DoctorSchedulePage() {
     try {
       // ensure hospitalId is not sent
       const { hospitalId, ...rest } = payload;
+      console.log("Updating schedule", id, rest);
       await api.patch(`/schedule/update/${id}`, rest);
       await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
     } catch (err) {
