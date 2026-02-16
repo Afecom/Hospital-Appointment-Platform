@@ -6,6 +6,7 @@ import { useToast } from "@/context/ToastContext";
 type Relationship = {
   id: string;
   hospitalName: string;
+  createdAt: string;
   location?: string;
   slotDuration: string;
   workingTime: string;
@@ -15,26 +16,19 @@ type Relationship = {
 
 type Props = {
   relationship: Relationship;
-  onRequestSlotChange: (rel: Relationship) => void;
-  onRequestRemoval: (rel: Relationship) => void;
 };
 
-export default function RelationshipCard({
-  relationship,
-  onRequestSlotChange,
-  onRequestRemoval,
-}: Props) {
+export default function RelationshipCard({ relationship }: Props) {
   const {
     hospitalName,
     location,
     slotDuration,
     workingTime,
     activeSchedulesCount,
-    startDate,
+    createdAt,
   } = relationship;
   const toast = useToast();
 
-  // read-only card; actions open modals which create requests on the server
   return (
     <div className="bg-white shadow-sm border border-slate-100 rounded-lg p-5">
       <div className="flex items-start justify-between">
@@ -52,7 +46,7 @@ export default function RelationshipCard({
           )}
         </div>
         <div className="text-right text-sm text-slate-500">
-          Since {startDate}
+          Since {createdAt}
         </div>
       </div>
 
@@ -73,25 +67,10 @@ export default function RelationshipCard({
           <div className="text-xs text-slate-500">Slot duration</div>
           <div className="mt-1">
             <span className="inline-flex items-center text-sm font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-800">
-              {slotDuration}
+              {slotDuration} minutes
             </span>
           </div>
         </div>
-      </div>
-
-      <div className="mt-4 flex gap-3">
-        <button
-          onClick={() => onRequestSlotChange(relationship)}
-          className="px-3 py-1 text-sm bg-indigo-600 text-white rounded-md hover:bg-indigo-700"
-        >
-          Request Slot Duration Change
-        </button>
-        <button
-          onClick={() => onRequestRemoval(relationship)}
-          className="px-3 py-1 text-sm bg-white border border-slate-200 rounded-md text-rose-700 hover:bg-rose-50"
-        >
-          Request Relationship Removal
-        </button>
       </div>
     </div>
   );

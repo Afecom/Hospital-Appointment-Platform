@@ -146,6 +146,7 @@ export class HospitalService {
           DoctorHospitalProfile: {
             select: {
               slotDuration: true,
+              createdAt: true,
               Hospital: {
                 select: {
                   id: true,
@@ -166,9 +167,10 @@ export class HospitalService {
           const hospitalId = p.Hospital?.id;
           const hospitalName = p.Hospital?.name ?? '';
           const location = p.Hospital?.address ?? '';
-          const slotDuration = p.slotDuration
-            ? `${p.slotDuration} minutes`
-            : '—';
+          const slotDuration = p.slotDuration;
+          const createdAt = p.createdAt
+            ? new Date(p.createdAt).toLocaleDateString()
+            : new Date().toLocaleDateString();
 
           // Count active schedules for this doctor/hospital
           const activeSchedulesCount =
@@ -202,6 +204,7 @@ export class HospitalService {
 
           return {
             id: p.id,
+            createdAt,
             hospitalId,
             hospitalName,
             location,

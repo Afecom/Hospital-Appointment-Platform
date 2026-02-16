@@ -17,6 +17,7 @@ import { Roles, Session, type UserSession } from '@thallesp/nestjs-better-auth';
 import { Role } from '../../generated/prisma/enums.js';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { CloudinaryService } from '../cloudinary/cloudinary.service.js';
+import type { Multer } from 'multer';
 
 @Controller('hospital')
 export class HospitalController {

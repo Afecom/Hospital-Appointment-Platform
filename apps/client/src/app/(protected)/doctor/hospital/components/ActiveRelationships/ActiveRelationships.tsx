@@ -6,6 +6,7 @@ import RelationshipCard from "./RelationshipCard";
 type Relationship = {
   id: string;
   hospitalName: string;
+  createdAt: string;
   location?: string;
   slotDuration: string;
   workingTime: string;
@@ -15,15 +16,9 @@ type Relationship = {
 
 type Props = {
   relationships: Relationship[];
-  onRequestSlotChange: (rel: Relationship) => void;
-  onRequestRemoval: (rel: Relationship) => void;
 };
 
-export default function ActiveRelationships({
-  relationships,
-  onRequestSlotChange,
-  onRequestRemoval,
-}: Props) {
+export default function ActiveRelationships({ relationships }: Props) {
   return (
     <section className="mb-8">
       <div className="flex items-center justify-between mb-4">
@@ -42,8 +37,6 @@ export default function ActiveRelationships({
             <RelationshipCard
               key={r.id ?? `${r.hospitalName}-${i}`}
               relationship={r}
-              onRequestSlotChange={onRequestSlotChange}
-              onRequestRemoval={onRequestRemoval}
             />
           ))}
         </div>

@@ -19,7 +19,7 @@ export default function Header({
             My Appointments
           </h1>
           <p className="text-sm text-slate-600 mt-1">
-            {doctorName} • {specialization}
+            Dr. {doctorName} • {specialization}
           </p>
         </div>
         <div className="text-sm text-slate-600">{dateContext}</div>
