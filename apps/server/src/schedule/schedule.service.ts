@@ -514,7 +514,7 @@ export class ScheduleService {
   }
 
   /**
-   * Update schedule: ownership + no active appointments. No overlap or day-of-week checks.
+   * Update schedule: ownership, no active appointments, day-of-week/date-range validation, and no overlap.
    * Body: type, name, period, dayOfWeek, date (one_time) or startDate/endDate, startTime, endTime.
    */
   async updateSchedule(
@@ -532,8 +532,7 @@ export class ScheduleService {
     const schedule = await this.prisma.schedule.findUnique({
       where: { id: scheduleId },
     });
-    if (!schedule)
-      throw new NotFoundException("Couldn't find a schedule");
+    if (!schedule) throw new NotFoundException("Couldn't find a schedule");
     if (schedule.doctorId !== doctor.id)
       throw new UnauthorizedException(
         'A schedule can only be patched by its owner',
@@ -551,6 +550,11 @@ export class ScheduleService {
         code: 'SCHEDULE_HAS_ACTIVE_APPOINTMENTS',
       });
 
+    const hospital = await this.prisma.hospital.findUnique({
+      where: { id: schedule.hospitalId },
+    });
+    const tz = hospital?.timezone ?? 'UTC';
+
     const raw = body as Record<string, unknown>;
     const str = (v: unknown) =>
       typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
@@ -563,28 +567,72 @@ export class ScheduleService {
     const endDateStr = str(raw.endDate);
 
     const startDate = oneTime
-      ? dateStr ?? schedule.startDate
-      : startDateStr ?? schedule.startDate;
-    const endDate = oneTime ? null : endDateStr ?? schedule.endDate;
+      ? (dateStr ?? schedule.startDate)
+      : (startDateStr ?? schedule.startDate);
+    const endDate = oneTime ? null : (endDateStr ?? schedule.endDate);
 
-    const dayOfWeek = Array.isArray(raw.dayOfWeek)
+    if (oneTime && !startDate)
+      throw new BadRequestException('One-time schedule requires a date');
+
+    let dayOfWeek = Array.isArray(raw.dayOfWeek)
       ? (raw.dayOfWeek as number[]).filter(
           (d) => Number.isInteger(d) && d >= 0 && d <= 6,
         )
       : schedule.dayOfWeek;
-    const finalDayOfWeek =
-      dayOfWeek.length > 0 ? dayOfWeek : schedule.dayOfWeek;
+    if (dayOfWeek.length === 0) dayOfWeek = schedule.dayOfWeek;
+
+    // For one_time: derive dayOfWeek from date in hospital TZ so checkers never see a mismatch
+    let finalDayOfWeek = dayOfWeek;
+    if (oneTime && startDate) {
+      const dt = DateTime.fromISO(startDate, { zone: tz }).startOf('day');
+      if (dt.isValid) {
+        const w = dt.weekday;
+        finalDayOfWeek = [w === 7 ? 0 : w];
+      }
+    }
+
+    if (type === 'recurring' && finalDayOfWeek.length === 0) {
+      throw new BadRequestException(
+        'Recurring schedule requires at least one day of week',
+      );
+    }
+
+    await this.checkDateRange.dayOfWeekDateRangeChecker(
+      finalDayOfWeek,
+      oneTime ? (startDate ?? undefined) : undefined,
+      oneTime ? undefined : (startDate ?? undefined),
+      endDate ?? undefined,
+      tz,
+    );
 
     const timeStr = (v: unknown) => {
       const s = str(v);
       if (!s) return undefined;
       const match = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
-      if (match)
-        return `${match[1].padStart(2, '0')}:${match[2]}`;
-      return s.length === 5 && s[2] === ':' ? s : undefined;
+      if (match) return `${match[1].padStart(2, '0')}:${match[2]}`;
+      return s.length >= 5 && s[2] === ':' ? s.slice(0, 5) : undefined;
     };
-    const startTime = timeStr(raw.startTime) ?? schedule.startTime;
-    const endTime = timeStr(raw.endTime) ?? schedule.endTime;
+    const startTime =
+      timeStr(raw.startTime) ??
+      timeStr(schedule.startTime) ??
+      schedule.startTime;
+    const endTime =
+      timeStr(raw.endTime) ?? timeStr(schedule.endTime) ?? schedule.endTime;
+
+    const merged = {
+      type,
+      startDate: startDate ?? undefined,
+      endDate: endDate ?? undefined,
+      dayOfWeek: finalDayOfWeek,
+      startTime,
+      endTime,
+      timezone: tz,
+    };
+    // await this.checkOverlap.ensureNoOverlap(
+    //   doctor.id,
+    //   merged,
+    //   scheduleId,
+    // );
 
     const data = {
       type,

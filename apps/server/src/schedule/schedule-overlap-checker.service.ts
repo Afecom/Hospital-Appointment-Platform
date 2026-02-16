@@ -91,35 +91,62 @@ export class ScheduleOverlapService {
   // -------------------------
   // Normalization helpers
   // -------------------------
+  /** Normalize to HH:mm. Accepts HH:mm, HH:mm:ss, or 12h AM/PM. Returns null if invalid. */
+  private static normalizeTime(val: unknown): string | null {
+    if (val == null) return null;
+    const s = String(val).trim();
+    if (!s) return null;
+    const re24 = /^(?:[01]?\d|2[0-3]):[0-5]\d$/;
+    const re24WithSec = /^(?:[01]?\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
+    const re12 = /^(0?[1-9]|1[0-2]):([0-5]\d)\s*([APap][Mm])$/;
+    if (re24.test(s)) return s;
+    if (re24WithSec.test(s)) return s.slice(0, 5);
+    const m = s.match(re12);
+    if (m) {
+      let hh = Number(m[1]);
+      const mm = m[2];
+      const ampm = m[3].toUpperCase();
+      if (ampm === 'AM') {
+        if (hh === 12) hh = 0;
+      } else {
+        if (hh !== 12) hh += 12;
+      }
+      return `${String(hh).padStart(2, '0')}:${mm}`;
+    }
+    return null;
+  }
+
   private normalizeIncoming(incoming: IncomingSchedule): IncomingSchedule {
-    // light validation and normalization: ensure timezone and date formats
     const timezone = incoming.timezone || 'UTC';
-    // convert date strings to ISO-like format check via luxon
     const parseDate = (d?: string) =>
-      d ? DateTime.fromISO(d, { zone: timezone }) : null;
+      d && d.trim() ? DateTime.fromISO(d.trim(), { zone: timezone }) : null;
 
     if (incoming.type === 'one_time') {
-      // Accept either `date` (preferred) or `startDate` for one-time schedules.
-      const dateVal = incoming.date ?? incoming.startDate;
+      const dateVal = (incoming.date ?? incoming.startDate)?.trim();
       if (!dateVal)
-        throw new BadRequestException('ONE_TIME schedule requires date');
+        throw new BadRequestException('One-time schedule requires a date');
       const dt = parseDate(dateVal);
-      if (!dt || !dt.isValid) throw new BadRequestException('Invalid date');
-      // normalize to startDate for downstream logic which expects a calendar date field
+      if (!dt?.isValid) throw new BadRequestException('Invalid date');
       incoming.startDate = dateVal;
     } else if (incoming.type === 'temporary') {
-      if (!incoming.startDate || !incoming.endDate)
+      const start = (incoming.startDate ?? '').trim();
+      const end = (incoming.endDate ?? '').trim();
+      if (!start || !end)
         throw new BadRequestException(
-          'TEMPORARY requires startDate and endDate',
+          'Temporary schedule requires startDate and endDate',
         );
-      const s = parseDate(incoming.startDate);
-      const e = parseDate(incoming.endDate);
-      if (!s?.isValid || !e?.isValid || s.toMillis() > e.toMillis())
-        throw new BadRequestException('Invalid temporary date range');
+      const s = parseDate(start);
+      const e = parseDate(end);
+      if (!s?.isValid) throw new BadRequestException('Invalid startDate');
+      if (!e?.isValid) throw new BadRequestException('Invalid endDate');
+      if (s.toMillis() > e.toMillis())
+        throw new BadRequestException('startDate must be on or before endDate');
     } else if (incoming.type === 'recurring') {
-      if (!incoming.dayOfWeek || incoming.dayOfWeek.length === 0)
-        throw new BadRequestException('RECURRING needs dayOfWeek');
-      // startDate / endDate optional - validate if present
+      const dow = incoming.dayOfWeek;
+      if (!Array.isArray(dow) || dow.length === 0)
+        throw new BadRequestException(
+          'Recurring schedule requires at least one day of week',
+        );
       if (incoming.startDate && !parseDate(incoming.startDate)?.isValid)
         throw new BadRequestException('Invalid startDate');
       if (incoming.endDate && !parseDate(incoming.endDate)?.isValid)
@@ -128,44 +155,18 @@ export class ScheduleOverlapService {
         const s = parseDate(incoming.startDate)!;
         const e = parseDate(incoming.endDate)!;
         if (s.toMillis() > e.toMillis())
-          throw new BadRequestException('Recurring startDate > endDate');
+          throw new BadRequestException('startDate must be on or before endDate');
       }
     }
 
-    // Accept either 24-hour HH:mm or 12-hour with AM/PM — normalize to 24-hour for internal checks
-    const normalizeTime = (val: string) => {
-      if (!val) return val;
-      const s = String(val).trim();
-      const re24 = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
-      const re12 = /^(0?[1-9]|1[0-2]):([0-5]\d)\s*([APap][Mm])$/;
-      if (re24.test(s)) return s;
-      const m = s.match(re12);
-      if (m) {
-        let hh = Number(m[1]);
-        const mm = m[2];
-        const ampm = m[3].toUpperCase();
-        if (ampm === 'AM') {
-          if (hh === 12) hh = 0;
-        } else {
-          if (hh !== 12) hh += 12;
-        }
-        return `${hh.toString().padStart(2, '0')}:${mm}`;
-      }
-      return s;
-    };
-
-    incoming.startTime = normalizeTime(incoming.startTime);
-    incoming.endTime = normalizeTime(incoming.endTime);
-
-    const timeRegex = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
-    if (
-      !timeRegex.test(incoming.startTime) ||
-      !timeRegex.test(incoming.endTime)
-    ) {
+    const startNorm = ScheduleOverlapService.normalizeTime(incoming.startTime);
+    const endNorm = ScheduleOverlapService.normalizeTime(incoming.endTime);
+    if (!startNorm || !endNorm)
       throw new BadRequestException(
-        'startTime/endTime must be "HH:mm" (24-hour) or a valid 12-hour string with AM/PM',
+        'startTime and endTime must be valid times (HH:mm or HH:mm:ss)',
       );
-    }
+    incoming.startTime = startNorm;
+    incoming.endTime = endNorm;
 
     return { ...incoming, timezone };
   }
