@@ -29,13 +29,22 @@ export class ScheduleOverlapService {
   /**
    * Public method: ensures no approved/pending schedule overlaps the incoming schedule.
    * Throws BadRequestException if conflict is found.
+   * @param excludeScheduleId When updating a schedule, pass its id so it is not compared to itself.
    */
-  async ensureNoOverlap(doctorId: string, incoming: IncomingSchedule) {
+  async ensureNoOverlap(
+    doctorId: string,
+    incoming: IncomingSchedule,
+    excludeScheduleId?: string,
+  ) {
     // Normalize and validate incoming (ensures date strings are valid and timezone exists)
     const dto = this.normalizeIncoming(incoming);
 
     // Query the DB for only possible conflicting candidates (narrowed set)
-    const candidates = await this.findPossibleConflicts(doctorId, dto);
+    const candidates = await this.findPossibleConflicts(
+      doctorId,
+      dto,
+      excludeScheduleId,
+    );
 
     // Final in-memory precise checks
     for (const c of candidates) {
@@ -164,12 +173,17 @@ export class ScheduleOverlapService {
   // -------------------------
   // Candidate DB query narrowing
   // -------------------------
-  private async findPossibleConflicts(doctorId: string, dto: IncomingSchedule) {
+  private async findPossibleConflicts(
+    doctorId: string,
+    dto: IncomingSchedule,
+    excludeScheduleId?: string,
+  ) {
     const baseWhere: any = {
       doctorId,
       status: { in: ['approved', 'pending'] as StatusType[] },
       isDeleted: false,
       isExpired: false,
+      ...(excludeScheduleId ? { id: { not: excludeScheduleId } } : {}),
     };
 
     const or: any[] = [];

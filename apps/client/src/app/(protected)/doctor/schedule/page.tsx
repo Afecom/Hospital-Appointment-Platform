@@ -7,7 +7,9 @@ import ScheduleHeader from "./components/Header";
 import ScheduleModal from "./components/ScheduleModal";
 import StatusTabs from "./components/StatusTabs";
 import FiltersPanel from "./components/FiltersPanel";
-import ScheduleCard from "./components/ScheduleCard";
+import ScheduleCard, {
+  type ScheduleUpdatePayload,
+} from "./components/ScheduleCard";
 import type { Status } from "./components/StatusBadge";
 import api from "@/lib/axios";
 import { doctorHospital } from "@hap/contract";
@@ -265,17 +267,12 @@ export default function DoctorSchedulePage() {
     }
   }
 
-  async function handleUpdateSchedule(id: string, payload: any) {
-    try {
-      // ensure hospitalId is not sent
-      const { hospitalId, ...rest } = payload;
-      console.log("Updating schedule", id, rest);
-      await api.patch(`/schedule/update/${id}`, rest);
-      await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
-    } catch (err) {
-      console.error("Failed to update schedule", err);
-      throw err;
-    }
+  async function handleUpdateSchedule(
+    id: string,
+    payload: ScheduleUpdatePayload,
+  ) {
+    await api.patch(`/schedule/update/${id}`, payload);
+    await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
   }
 
   const [showEmptyModal, setShowEmptyModal] = useState(false);
@@ -379,19 +376,7 @@ export default function DoctorSchedulePage() {
               <ScheduleCard
                 key={s.id}
                 schedule={s}
-                onEdit={async (updated) => {
-                  // updated contains full schedule object; send normalized payload
-                  const payload: any = {
-                    type: updated.type,
-                    name: updated.name,
-                    period: updated.period,
-                    dayOfWeek: updated.dayOfWeek,
-                    startDate: updated.startDate,
-                    date: updated.date,
-                    endDate: updated.endDate,
-                    startTime: updated.startTime,
-                    endTime: updated.endTime,
-                  };
+                onEdit={async (payload) => {
                   await handleUpdateSchedule(s.id, payload);
                 }}
                 onDeactivate={async (sch) => {

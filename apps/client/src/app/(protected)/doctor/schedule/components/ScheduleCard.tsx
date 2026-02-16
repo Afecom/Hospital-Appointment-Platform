@@ -7,8 +7,28 @@ import {
   faTrash,
   faPlay,
 } from "@fortawesome/free-solid-svg-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/context/ToastContext";
+
+export type ScheduleUpdatePayload = {
+  type: "recurring" | "temporary" | "one_time";
+  name: string;
+  period: "morning" | "afternoon" | "evening";
+  dayOfWeek: number[];
+  date?: string;
+  startDate?: string;
+  endDate?: string;
+  startTime: string;
+  endTime: string;
+};
+
+function normalizeTime(value: string): string {
+  if (!value || typeof value !== "string") return "";
+  const trimmed = value.trim();
+  const match = trimmed.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+  if (match) return `${match[1].padStart(2, "0")}:${match[2]}`;
+  return trimmed.length >= 5 ? trimmed.slice(0, 5) : trimmed;
+}
 
 export default function ScheduleCard({
   schedule,
@@ -31,9 +51,9 @@ export default function ScheduleCard({
     dayOfWeek?: number[];
     status: Status;
   };
-  onEdit: (s: any) => void;
-  onDeactivate: (s: any) => void;
-  onDelete: (s: any) => void;
+  onEdit: (payload: ScheduleUpdatePayload) => void | Promise<void>;
+  onDeactivate: (s: typeof schedule) => void;
+  onDelete: (s: typeof schedule) => void;
 }) {
   const s = schedule;
   const [showEdit, setShowEdit] = useState(false);
@@ -341,42 +361,80 @@ function EditScheduleModal({
   onSave,
   isSaving,
 }: {
-  schedule: any;
+  schedule: {
+    type: string;
+    startDate?: string;
+    endDate?: string;
+    startTime?: string;
+    endTime?: string;
+    name?: string;
+    period?: string;
+    dayOfWeek?: number[];
+  };
   onClose: () => void;
-  onSave: (s: any) => void;
+  onSave: (payload: ScheduleUpdatePayload) => void;
   isSaving?: boolean;
 }) {
-  const [type, setType] = useState(schedule.type ?? "one_time");
+  const [type, setType] = useState<"recurring" | "temporary" | "one_time">(
+    (schedule.type as any) ?? "one_time",
+  );
   const [fromDate, setFromDate] = useState(schedule.startDate ?? "");
   const [toDate, setToDate] = useState(schedule.endDate ?? "");
-  const [fromTime, setFromTime] = useState(schedule.startTime ?? "");
-  const [toTime, setToTime] = useState(schedule.endTime ?? "");
+  const [fromTime, setFromTime] = useState(
+    normalizeTime(schedule.startTime ?? "") || "09:00",
+  );
+  const [toTime, setToTime] = useState(
+    normalizeTime(schedule.endTime ?? "") || "17:00",
+  );
   const [name, setName] = useState(schedule.name ?? "");
-  const [period, setPeriod] = useState(schedule.period ?? "morning");
+  const [period, setPeriod] = useState<"morning" | "afternoon" | "evening">(
+    (schedule.period as any) ?? "morning",
+  );
   const [dayOfWeek, setDayOfWeek] = useState<number[]>(
-    schedule.dayOfWeek ?? [],
+    Array.isArray(schedule.dayOfWeek) ? [...schedule.dayOfWeek] : [],
   );
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  useEffect(() => {
+    if (type === "one_time") {
+      if (fromDate) {
+        try {
+          setDayOfWeek([new Date(fromDate + "Z").getUTCDay()]);
+        } catch {
+          if (dayOfWeek.length > 1) setDayOfWeek([dayOfWeek[0]]);
+        }
+      } else if (dayOfWeek.length > 1) {
+        setDayOfWeek([dayOfWeek[0]]);
+      }
+    }
+  }, [type, fromDate]);
+
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const updated = {
-      ...schedule,
+    const payload: ScheduleUpdatePayload = {
       type,
-      name,
+      name: name.trim() || "Schedule",
       period,
-      dayOfWeek,
-      startDate: fromDate,
-      endDate: type === "one_time" ? undefined : toDate,
-      startTime: fromTime,
-      endTime: toTime,
+      dayOfWeek: type === "one_time" ? dayOfWeek : dayOfWeek.slice().sort((a, b) => a - b),
+      startTime: normalizeTime(fromTime) || "09:00",
+      endTime: normalizeTime(toTime) || "17:00",
     };
-    onSave(updated);
+    if (type === "one_time") {
+      payload.date = fromDate || undefined;
+    } else {
+      payload.startDate = fromDate || undefined;
+      payload.endDate = toDate || undefined;
+    }
+    onSave(payload);
   };
 
   const toggleDay = (d: number) => {
-    setDayOfWeek((prev) =>
-      prev.includes(d) ? prev.filter((x) => x !== d) : [...prev, d],
-    );
+    setDayOfWeek((prev) => {
+      if (type === "one_time") {
+        return prev.includes(d) ? [] : [d];
+      }
+      if (prev.includes(d)) return prev.filter((x) => x !== d);
+      return [...prev, d].sort((a, b) => a - b);
+    });
   };
 
   return (
@@ -406,7 +464,11 @@ function EditScheduleModal({
             </label>
             <select
               value={period}
-              onChange={(e) => setPeriod(e.target.value)}
+              onChange={(e) =>
+                setPeriod(
+                  e.target.value as "morning" | "afternoon" | "evening",
+                )
+              }
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             >
               <option value="morning">Morning</option>
@@ -436,7 +498,14 @@ function EditScheduleModal({
             </label>
             <select
               value={type}
-              onChange={(e) => setType(e.target.value)}
+              onChange={(e) =>
+                setType(
+                  e.target.value as
+                    | "recurring"
+                    | "temporary"
+                    | "one_time",
+                )
+              }
               className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
             >
               <option value="one_time">One-time</option>
@@ -448,12 +517,22 @@ function EditScheduleModal({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700">
-                From Date
+                {type === "one_time" ? "Date" : "From Date"}
               </label>
               <input
                 type="date"
                 value={fromDate}
-                onChange={(e) => setFromDate(e.target.value)}
+                onChange={(e) => {
+                  setFromDate(e.target.value);
+                  if (type === "one_time") {
+                    try {
+                      const d = new Date(e.target.value).getDay();
+                      setDayOfWeek([d]);
+                    } catch {
+                      // ignore
+                    }
+                  }
+                }}
                 className="mt-1 block w-full rounded-md border-gray-300 shadow-sm"
               />
             </div>

@@ -52,13 +52,15 @@ export class CreateScheduleDto {
   )
   date?: string;
 
-  // Accept either 24-hour HH:mm or 12-hour with AM/PM and normalize to 24-hour HH:mm
+  // Accept 24-hour HH:mm or HH:mm:ss, or 12-hour with AM/PM; normalize to 24-hour HH:mm
   private static normalizeTime(val: any) {
     if (!val) return val;
     const s = String(val).trim();
     const re24 = /^(?:[01]\d|2[0-3]):[0-5]\d$/;
+    const re24WithSeconds = /^(?:[01]\d|2[0-3]):[0-5]\d(?::[0-5]\d)?$/;
     const re12 = /^(0?[1-9]|1[0-2]):([0-5]\d)\s*([APap][Mm])$/;
     if (re24.test(s)) return s;
+    if (re24WithSeconds.test(s)) return s.slice(0, 5);
     const m = s.match(re12);
     if (m) {
       let hh = Number(m[1]);

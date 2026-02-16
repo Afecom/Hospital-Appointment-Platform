@@ -513,25 +513,15 @@ export class ScheduleService {
     });
   }
 
+  /**
+   * Update schedule: ownership + no active appointments. No overlap or day-of-week checks.
+   * Body: type, name, period, dayOfWeek, date (one_time) or startDate/endDate, startTime, endTime.
+   */
   async updateSchedule(
-    dto: UpdateScheduleDto,
+    body: UpdateScheduleDto,
     session: UserSession,
     scheduleId: string,
   ) {
-    const appointment = await this.prisma.appointment.findFirst({
-      where: {
-        scheduleId,
-        status: {
-          in: ['approved', 'pending'],
-        },
-      },
-    });
-    if (appointment)
-      throw new BadRequestException({
-        message: 'An active appointment exists for this schedule',
-        code: 'SCHEDULE_HAS_ACTIVE_APPOINTMENTS',
-        data: appointment,
-      });
     const doctor = await this.prisma.doctor.findUnique({
       where: { userId: session.user.id },
     });
@@ -539,42 +529,79 @@ export class ScheduleService {
       throw new UnauthorizedException(
         'A doctor should only access this resource',
       );
-    const doctorId = doctor.id;
     const schedule = await this.prisma.schedule.findUnique({
       where: { id: scheduleId },
     });
-    if (!schedule) throw new NotFoundException("Couldn't find a schedule");
-    if (schedule.doctorId !== doctorId)
+    if (!schedule)
+      throw new NotFoundException("Couldn't find a schedule");
+    if (schedule.doctorId !== doctor.id)
       throw new UnauthorizedException(
         'A schedule can only be patched by its owner',
       );
-    if (schedule.status === 'approved')
-      throw new BadRequestException(
-        'An approved schedule can not be updated. Please delete the existing schedule and submit an updated one',
-      );
 
-    const hospital = await this.prisma.hospital.findUnique({
-      where: { id: schedule.hospitalId },
+    const hasActiveAppointment = await this.prisma.appointment.findFirst({
+      where: {
+        scheduleId,
+        status: { in: ['approved', 'pending'] },
+      },
     });
-    const tz = hospital?.timezone || 'UTC';
+    if (hasActiveAppointment)
+      throw new BadRequestException({
+        message: 'An active appointment exists for this schedule',
+        code: 'SCHEDULE_HAS_ACTIVE_APPOINTMENTS',
+      });
 
-    const merged = {
-      type: (dto as any).type ?? schedule.type,
-      startDate: (dto as any).startDate ?? schedule.startDate,
-      endDate: (dto as any).endDate ?? schedule.endDate,
-      dayOfWeek: (dto as any).dayOfWeek ?? schedule.dayOfWeek,
-      startTime: (dto as any).startTime ?? schedule.startTime,
-      endTime: (dto as any).endTime ?? schedule.endTime,
-      timezone: tz,
+    const raw = body as Record<string, unknown>;
+    const str = (v: unknown) =>
+      typeof v === 'string' && v.trim() !== '' ? v.trim() : undefined;
+    const type =
+      (raw.type as 'recurring' | 'temporary' | 'one_time') ?? schedule.type;
+    const oneTime = type === 'one_time';
+
+    const dateStr = str(raw.date);
+    const startDateStr = str(raw.startDate);
+    const endDateStr = str(raw.endDate);
+
+    const startDate = oneTime
+      ? dateStr ?? schedule.startDate
+      : startDateStr ?? schedule.startDate;
+    const endDate = oneTime ? null : endDateStr ?? schedule.endDate;
+
+    const dayOfWeek = Array.isArray(raw.dayOfWeek)
+      ? (raw.dayOfWeek as number[]).filter(
+          (d) => Number.isInteger(d) && d >= 0 && d <= 6,
+        )
+      : schedule.dayOfWeek;
+    const finalDayOfWeek =
+      dayOfWeek.length > 0 ? dayOfWeek : schedule.dayOfWeek;
+
+    const timeStr = (v: unknown) => {
+      const s = str(v);
+      if (!s) return undefined;
+      const match = s.match(/^(\d{1,2}):(\d{2})(?::\d{2})?$/);
+      if (match)
+        return `${match[1].padStart(2, '0')}:${match[2]}`;
+      return s.length === 5 && s[2] === ':' ? s : undefined;
+    };
+    const startTime = timeStr(raw.startTime) ?? schedule.startTime;
+    const endTime = timeStr(raw.endTime) ?? schedule.endTime;
+
+    const data = {
+      type,
+      name: str(raw.name) ?? schedule.name,
+      period:
+        (raw.period as 'morning' | 'afternoon' | 'evening') ?? schedule.period,
+      dayOfWeek: finalDayOfWeek,
+      startTime,
+      endTime,
+      startDate,
+      endDate,
+      status: 'pending' as const,
     };
 
-    await this.checkOverlap.ensureNoOverlap(doctorId, merged);
-    return await this.prisma.schedule.update({
+    return this.prisma.schedule.update({
       where: { id: scheduleId },
-      data: {
-        ...dto,
-        status: 'pending',
-      },
+      data,
     });
   }
 }
