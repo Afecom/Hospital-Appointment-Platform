@@ -73,4 +73,38 @@ describe('ScheduleOverlapService', () => {
       svc.ensureNoOverlap('doc1', incoming),
     ).resolves.toBeUndefined();
   });
+
+  it('does not flag recurring overlap when one-time date is outside recurring bounds', async () => {
+    const mockPrisma: any = {
+      schedule: {
+        findMany: (jest.fn() as any).mockResolvedValue([
+          {
+            id: 'c3',
+            name: 'Bounded recurring',
+            type: 'recurring',
+            startDate: '2025-01-01',
+            endDate: '2025-01-31',
+            dayOfWeek: [1], // Monday
+            startTime: '09:00',
+            endTime: '10:00',
+            status: 'approved',
+            Hospital: { timezone: 'UTC' },
+          },
+        ] as any),
+      },
+    };
+
+    const svc = new ScheduleOverlapService(mockPrisma as any);
+    const incoming: any = {
+      type: 'one_time',
+      startDate: '2025-03-03', // Monday, but outside Jan bounds
+      startTime: '09:00',
+      endTime: '10:00',
+      timezone: 'UTC',
+    };
+
+    await expect(
+      svc.ensureNoOverlap('doc1', incoming),
+    ).resolves.toBeUndefined();
+  });
 });

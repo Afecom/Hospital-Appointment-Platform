@@ -628,11 +628,7 @@ export class ScheduleService {
       endTime,
       timezone: tz,
     };
-    // await this.checkOverlap.ensureNoOverlap(
-    //   doctor.id,
-    //   merged,
-    //   scheduleId,
-    // );
+    await this.checkOverlap.ensureNoOverlap(doctor.id, merged, scheduleId);
 
     const data = {
       type,

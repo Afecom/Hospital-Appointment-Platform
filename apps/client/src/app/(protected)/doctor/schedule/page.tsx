@@ -45,6 +45,33 @@ const STATUS_TABS: { key: string; label: string }[] = [
 ];
 
 export default function DoctorSchedulePage() {
+  function getApiErrorMessage(err: any, fallback: string) {
+    const data = err?.response?.data;
+
+    if (typeof data?.message === "string" && data.message.trim()) {
+      return data.message;
+    }
+
+    if (data?.message && typeof data.message === "object") {
+      if (
+        typeof data.message.message === "string" &&
+        data.message.message.trim()
+      ) {
+        return data.message.message;
+      }
+
+      if (typeof data.message.conflict?.name === "string") {
+        return `Schedule overlaps with existing schedule "${data.message.conflict.name}".`;
+      }
+    }
+
+    if (typeof err?.message === "string" && err.message.trim()) {
+      return err.message;
+    }
+
+    return fallback;
+  }
+
   const { data: doctorHospitalData } = useQuery({
     queryKey: ["doctorhospital"],
     queryFn: async () => {
@@ -271,8 +298,14 @@ export default function DoctorSchedulePage() {
     id: string,
     payload: ScheduleUpdatePayload,
   ) {
-    await api.patch(`/schedule/update/${id}`, payload);
-    await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
+    try {
+      await api.patch(`/schedule/update/${id}`, payload);
+      await queryClient.invalidateQueries({ queryKey: ["doctorSchedules"] });
+    } catch (err: any) {
+      throw new Error(
+        getApiErrorMessage(err, "Unable to update schedule due to overlap."),
+      );
+    }
   }
 
   const [showEmptyModal, setShowEmptyModal] = useState(false);

@@ -291,7 +291,7 @@ export class ScheduleOverlapService {
       dayOfWeek: db.dayOfWeek ?? [],
       startTime: db.startTime,
       endTime: db.endTime,
-      timezone: db.Hospital?.timezone || 'Africa_Addis_Ababa',
+      timezone: db.Hospital?.timezone || 'UTC',
     };
   }
 
@@ -360,14 +360,14 @@ export class ScheduleOverlapService {
     if (a.type === 'recurring' && b.type === 'one_time') {
       const bDt = DateTime.fromISO(b.startDate!, {
         zone: b.timezone || 'UTC',
-      }).setZone(a.timezone || 'UTC');
-      return (a.dayOfWeek || []).includes(bDt.weekday % 7);
+      }).startOf('day');
+      return this.scheduleActiveOnDate(a, bDt);
     }
     if (b.type === 'recurring' && a.type === 'one_time') {
       const aDt = DateTime.fromISO(a.startDate!, {
         zone: a.timezone || 'UTC',
-      }).setZone(b.timezone || 'UTC');
-      return (b.dayOfWeek || []).includes(aDt.weekday % 7);
+      }).startOf('day');
+      return this.scheduleActiveOnDate(b, aDt);
     }
 
     // RECURRING vs TEMPORARY
@@ -535,19 +535,18 @@ export class ScheduleOverlapService {
     // RECURRING
     const dow = day.setZone(s.timezone).weekday % 7;
     // check optional boundaries
-    if (s.startDate && s.endDate) {
+    const dayInZone = day.setZone(s.timezone);
+    if (s.startDate) {
       const sS = DateTime.fromISO(s.startDate!, { zone: s.timezone }).startOf(
         'day',
       );
+      if (dayInZone.toMillis() < sS.toMillis()) return false;
+    }
+    if (s.endDate) {
       const sE = DateTime.fromISO(s.endDate!, { zone: s.timezone }).startOf(
         'day',
       );
-      const dayInZone = day.setZone(s.timezone);
-      if (
-        dayInZone.toMillis() < sS.toMillis() ||
-        dayInZone.toMillis() > sE.toMillis()
-      )
-        return false;
+      if (dayInZone.toMillis() > sE.toMillis()) return false;
     }
     return (s.dayOfWeek || []).includes(dow);
   }
