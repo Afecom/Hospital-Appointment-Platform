@@ -67,15 +67,27 @@ export const NavSchema = {
   hospital_operator: [
     {
       id: 1,
-      text: "Appointments",
-      path: "/hospital-operator/appointment",
-      icon: <ClipboardClock />,
+      text: "Dashboard",
+      path: "/hospital-operator/dashboard",
+      icon: <LayoutDashboard />,
     },
     {
       id: 2,
+      text: "Doctors",
+      path: "/hospital-operator/doctor",
+      icon: <BriefcaseMedical />,
+    },
+    {
+      id: 3,
       text: "Schedules",
       path: "/hospital-operator/schedule",
       icon: <Calendar />,
+    },
+    {
+      id: 4,
+      text: "Appointments",
+      path: "/hospital-operator/appointment",
+      icon: <ClipboardClock />,
     },
   ],
   hospital_user: [
