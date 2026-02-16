@@ -17,6 +17,7 @@ export interface doctorHospital {
     hospitalName: any;
     location: any;
     slotDuration: string;
+    createdAt: string;
     workingTime: string;
     activeSchedulesCount: number;
     startDate: string;
