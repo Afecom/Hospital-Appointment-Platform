@@ -27,7 +27,7 @@ export default function AppShell({
           >
             <SidebarItem role={user.role}></SidebarItem>
           </Sidebar>
-          <main className="flex-1 -ml-6 md:ml-13 md:border-l-2 p-4 md:border-l-blue-950">
+          <main className="flex-1 -ml-6 md:ml-13 md:border-l-2 md:border-l-blue-950">
             {children}
           </main>
         </div>

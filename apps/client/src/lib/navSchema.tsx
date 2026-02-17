@@ -79,12 +79,6 @@ export const NavSchema = {
     },
     {
       id: 3,
-      text: "Schedules",
-      path: "/hospital-operator/schedule",
-      icon: <Calendar />,
-    },
-    {
-      id: 4,
       text: "Appointments",
       path: "/hospital-operator/appointment",
       icon: <ClipboardClock />,
