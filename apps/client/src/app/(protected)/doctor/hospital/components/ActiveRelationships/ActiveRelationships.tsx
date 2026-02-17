@@ -6,7 +6,7 @@ import RelationshipCard from "./RelationshipCard";
 type Relationship = {
   id: string;
   hospitalName: string;
-  createdAt: string;
+  createdAt?: string;
   location?: string;
   slotDuration: string;
   workingTime: string;

@@ -6,7 +6,7 @@ import { useToast } from "@/context/ToastContext";
 type Relationship = {
   id: string;
   hospitalName: string;
-  createdAt: string;
+  createdAt?: string;
   location?: string;
   slotDuration: string;
   workingTime: string;
@@ -26,6 +26,7 @@ export default function RelationshipCard({ relationship }: Props) {
     workingTime,
     activeSchedulesCount,
     createdAt,
+    startDate,
   } = relationship;
   const toast = useToast();
 
@@ -46,7 +47,7 @@ export default function RelationshipCard({ relationship }: Props) {
           )}
         </div>
         <div className="text-right text-sm text-slate-500">
-          Since {createdAt}
+          Since {createdAt ?? startDate}
         </div>
       </div>
 

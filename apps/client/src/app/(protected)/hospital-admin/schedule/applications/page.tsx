@@ -78,7 +78,7 @@ export default function ScheduleApplicationsPage() {
               !schedule.isDeleted && (
                 <ScheduleCard
                   key={schedule.id}
-                  schedule={schedule}
+                  schedule={schedule as any}
                   actions={[
                     {
                       key: `approve-${schedule.id}`,
