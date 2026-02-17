@@ -17,7 +17,9 @@ type StatusFilter = "ALL" | "ACTIVE" | "ON_LEAVE";
 type AvailabilityFilter = "ALL" | "AVAILABLE" | "FULLY_BOOKED";
 
 export default function HospitalOperatorDoctorPage() {
-  const [selectedDate, setSelectedDate] = useState<string>(() => toISODateString(new Date()));
+  const [selectedDate, setSelectedDate] = useState<string>(() =>
+    toISODateString(new Date()),
+  );
   const [search, setSearch] = useState("");
   const [specialty, setSpecialty] = useState<string>("ALL");
   const [status, setStatus] = useState<StatusFilter>("ALL");
@@ -35,8 +37,8 @@ export default function HospitalOperatorDoctorPage() {
   }, [drawerOpen, selectedDoctorId]);
 
   const specialties = useMemo(() => {
-    const uniq = Array.from(new Set(doctors.map((d) => d.specialty))).sort((a, b) =>
-      a.localeCompare(b),
+    const uniq = Array.from(new Set(doctors.map((d) => d.specialty))).sort(
+      (a, b) => a.localeCompare(b),
     );
     return ["ALL", ...uniq];
   }, []);
@@ -54,8 +56,13 @@ export default function HospitalOperatorDoctorPage() {
       const stats = getDailyStats(doctor, selectedDate);
       const availableSlots = Math.max(0, stats.totalSlots - stats.bookedSlots);
       const utilizationPct =
-        stats.totalSlots === 0 ? 0 : Math.round((stats.bookedSlots / stats.totalSlots) * 100);
-      const nextAvailableSlot = getNextAvailableSlotForDoctorOnDate(doctor, selectedDate);
+        stats.totalSlots === 0
+          ? 0
+          : Math.round((stats.bookedSlots / stats.totalSlots) * 100);
+      const nextAvailableSlot = getNextAvailableSlotForDoctorOnDate(
+        doctor,
+        selectedDate,
+      );
 
       const isDisabled = doctor.status === "ON_LEAVE";
 
@@ -75,7 +82,8 @@ export default function HospitalOperatorDoctorPage() {
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     return baseRows.filter((row) => {
-      if (specialty !== "ALL" && row.doctor.specialty !== specialty) return false;
+      if (specialty !== "ALL" && row.doctor.specialty !== specialty)
+        return false;
       if (status !== "ALL" && row.doctor.status !== status) return false;
 
       if (availability === "AVAILABLE" && row.availableSlots <= 0) return false;
@@ -106,7 +114,8 @@ export default function HospitalOperatorDoctorPage() {
       if (primary !== 0) return primary;
 
       // Tie-breakers (consistent, operationally useful)
-      if (a.doctor.status !== b.doctor.status) return a.doctor.status === "ACTIVE" ? -1 : 1;
+      if (a.doctor.status !== b.doctor.status)
+        return a.doctor.status === "ACTIVE" ? -1 : 1;
       const byAvail = compare(b.availableSlots, a.availableSlots);
       if (byAvail !== 0) return byAvail;
       return compare(a.doctor.name, b.doctor.name);
@@ -147,15 +156,19 @@ export default function HospitalOperatorDoctorPage() {
         <h1 className="text-2xl font-semibold text-gray-800">Doctors</h1>
         <p className="text-sm text-gray-500 mt-1">
           Operational visibility for staffing, capacity, and appointment load —{" "}
-          <span className="font-medium text-gray-700">{formatLongDate(selectedDate)}</span>
+          <span className="font-medium text-gray-700">
+            {formatLongDate(selectedDate)}
+          </span>
         </p>
       </header>
 
       {/* Controls Section */}
       <section className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
         <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between min-w-0">
-          <div className="w-full lg:w-[240px] min-w-0">
-            <label className="block text-sm font-medium text-gray-700">Date</label>
+          <div className="w-full lg:w-60 min-w-0">
+            <label className="block text-sm font-medium text-gray-700">
+              Date
+            </label>
             <input
               type="date"
               value={selectedDate}
@@ -166,7 +179,9 @@ export default function HospitalOperatorDoctorPage() {
 
           <div className="w-full flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-end min-w-0">
             <div className="w-full lg:w-[320px] min-w-0">
-              <label className="block text-sm font-medium text-gray-700">Search</label>
+              <label className="block text-sm font-medium text-gray-700">
+                Search
+              </label>
               <input
                 type="text"
                 value={search}
@@ -176,8 +191,10 @@ export default function HospitalOperatorDoctorPage() {
               />
             </div>
 
-            <div className="w-full lg:w-[220px] min-w-0">
-              <label className="block text-sm font-medium text-gray-700">Specialty</label>
+            <div className="w-full lg:w-55 min-w-0">
+              <label className="block text-sm font-medium text-gray-700">
+                Specialty
+              </label>
               <select
                 value={specialty}
                 onChange={(e) => setSpecialty(e.target.value)}
@@ -191,8 +208,10 @@ export default function HospitalOperatorDoctorPage() {
               </select>
             </div>
 
-            <div className="w-full lg:w-[200px] min-w-0">
-              <label className="block text-sm font-medium text-gray-700">Status</label>
+            <div className="w-full lg:w-50 min-w-0">
+              <label className="block text-sm font-medium text-gray-700">
+                Status
+              </label>
               <select
                 value={status}
                 onChange={(e) => setStatus(e.target.value as StatusFilter)}
@@ -204,11 +223,15 @@ export default function HospitalOperatorDoctorPage() {
               </select>
             </div>
 
-            <div className="w-full lg:w-[220px] min-w-0">
-              <label className="block text-sm font-medium text-gray-700">Availability</label>
+            <div className="w-full lg:w-55 min-w-0">
+              <label className="block text-sm font-medium text-gray-700">
+                Availability
+              </label>
               <select
                 value={availability}
-                onChange={(e) => setAvailability(e.target.value as AvailabilityFilter)}
+                onChange={(e) =>
+                  setAvailability(e.target.value as AvailabilityFilter)
+                }
                 className="mt-1 block w-full rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-200 focus:border-blue-300"
               >
                 <option value="ALL">All</option>
@@ -224,7 +247,8 @@ export default function HospitalOperatorDoctorPage() {
             {sortedRows.length} doctor{sortedRows.length === 1 ? "" : "s"} shown
           </span>
           <span className="inline-flex items-center rounded-full bg-gray-50 ring-1 ring-gray-100 px-3 py-1">
-            Sorting: <span className="ml-1 font-medium text-gray-700">{sortKey}</span> (
+            Sorting:{" "}
+            <span className="ml-1 font-medium text-gray-700">{sortKey}</span> (
             {sortDir})
           </span>
         </div>
@@ -233,14 +257,21 @@ export default function HospitalOperatorDoctorPage() {
       {/* Doctor Summary Grid (Cards) */}
       <section className="space-y-4">
         <div>
-          <h2 className="text-lg font-semibold text-gray-800">Operational Snapshot</h2>
+          <h2 className="text-lg font-semibold text-gray-800">
+            Operational Snapshot
+          </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Cards summarize workload and next available times for the selected date
+            Cards summarize workload and next available times for the selected
+            date
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {sortedRows.map((row) => (
-            <DoctorCard key={row.doctor.id} row={row} onClick={() => openDoctor(row.doctor.id)} />
+            <DoctorCard
+              key={row.doctor.id}
+              row={row}
+              onClick={() => openDoctor(row.doctor.id)}
+            />
           ))}
         </div>
       </section>
