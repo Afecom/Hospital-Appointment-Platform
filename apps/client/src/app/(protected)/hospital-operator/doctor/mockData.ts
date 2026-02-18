@@ -247,7 +247,7 @@ export function getAppointmentsForDoctorOnDate(
     cursor = (cursor + step) % slotTimes.length;
   }
 
-  const idxArr = [...bookedIdx].sort((a, b) => a - b);
+  const idxArr = Array.from(bookedIdx).sort((a, b) => a - b);
   const appointments: Appointment[] = idxArr.map((idx, i) => {
     const pSeed = stableHash(`${doctor.id}:${isoDate}:pt:${idx}`);
     return {

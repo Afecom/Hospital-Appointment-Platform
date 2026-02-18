@@ -60,6 +60,7 @@ export function fromMinutes(totalMinutes: number): string {
 }
 
 export function formatTimeLabel(hhmm: string): string {
+  if (!hhmm || typeof hhmm !== "string") return "—";
   const [h, m] = hhmm.split(":").map((x) => Number(x));
   const dt = new Date();
   dt.setHours(h ?? 0, m ?? 0, 0, 0);
