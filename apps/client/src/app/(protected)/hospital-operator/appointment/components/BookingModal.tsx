@@ -9,10 +9,7 @@ import {
   generateSlotTimes,
   slotDurationMinutesByDoctorId,
 } from "../../doctor/mockData";
-import {
-  getBookedSlotsForDoctorDate,
-  createAppointmentId,
-} from "../mockData";
+import { getBookedSlotsForDoctorDate, createAppointmentId } from "../mockData";
 import { toISODateString } from "../utils";
 import SlotSelector from "./SlotSelector";
 import type { Appointment, BookingSource } from "../types";
@@ -70,8 +67,11 @@ export default function BookingModal({
     for (const d of doctors) {
       const wh = getWorkingHoursForDate(d, date);
       const stats = getDailyStats(d, date);
-      const booked = getBookedSlotsForDoctorDate(d.id, date, existingAppointments)
-        .length;
+      const booked = getBookedSlotsForDoctorDate(
+        d.id,
+        date,
+        existingAppointments,
+      ).length;
       const total = stats.totalSlots;
       let label: string;
       let isWorking: boolean;
@@ -105,7 +105,8 @@ export default function BookingModal({
 
   const selectedDoctor = doctors.find((d) => d.id === doctorId);
   const { slotTimes, bookedTimes } = useMemo(() => {
-    if (!selectedDoctor || !doctorId) return { slotTimes: [] as string[], bookedTimes: [] as string[] };
+    if (!selectedDoctor || !doctorId)
+      return { slotTimes: [] as string[], bookedTimes: [] as string[] };
     const wh = getWorkingHoursForDate(selectedDoctor, date);
     const duration = slotDurationMinutesByDoctorId[doctorId] ?? 30;
     if (
@@ -117,7 +118,11 @@ export default function BookingModal({
       return { slotTimes: [], bookedTimes: [] };
     }
     const slots = generateSlotTimes(wh.start, wh.end, duration);
-    const booked = getBookedSlotsForDoctorDate(doctorId, date, existingAppointments);
+    const booked = getBookedSlotsForDoctorDate(
+      doctorId,
+      date,
+      existingAppointments,
+    );
     return { slotTimes: slots, bookedTimes: booked };
   }, [selectedDoctor, doctorId, date, existingAppointments]);
 
@@ -144,7 +149,8 @@ export default function BookingModal({
       const avail = doctorAvailability[doctorId];
       if (!avail?.isWorking || avail.label === "Fully Booked")
         err.doctor = "Select an available doctor";
-      else if (isDateDisabled(date)) err.date = "Selected date is not a working day";
+      else if (isDateDisabled(date))
+        err.date = "Selected date is not a working day";
     }
     if (!selectedSlot) err.slot = "Select a time slot";
     setErrors(err);
@@ -180,7 +186,10 @@ export default function BookingModal({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-hidden={!open}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      aria-hidden={!open}
+    >
       <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
@@ -194,7 +203,10 @@ export default function BookingModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 shrink-0">
-          <h2 id="booking-modal-title" className="text-xl font-semibold text-gray-900">
+          <h2
+            id="booking-modal-title"
+            className="text-xl font-semibold text-gray-900"
+          >
             Book Appointment
           </h2>
           <button
@@ -211,7 +223,9 @@ export default function BookingModal({
           <div className="overflow-y-auto px-6 py-6 space-y-6">
             {/* Section A — Patient Info */}
             <section className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900">Patient Info</h3>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Patient Info
+              </h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -225,7 +239,9 @@ export default function BookingModal({
                     placeholder="Full name"
                   />
                   {errors.patientName && (
-                    <p className="text-xs text-red-600 mt-1">{errors.patientName}</p>
+                    <p className="text-xs text-red-600 mt-1">
+                      {errors.patientName}
+                    </p>
                   )}
                 </div>
                 <div>
@@ -256,26 +272,13 @@ export default function BookingModal({
                   placeholder="Brief reason for visit"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Booking Source
-                </label>
-                <select
-                  value={source}
-                  onChange={(e) => setSource(e.target.value as BookingSource)}
-                  className={inputBase}
-                >
-                  <option value="WEB">Web</option>
-                  <option value="APP">App</option>
-                  <option value="CALL_CENTER">Call Center</option>
-                  <option value="OPERATOR">Operator</option>
-                </select>
-              </div>
             </section>
 
             {/* Section B — Doctor Selection */}
             <section className="space-y-4">
-              <h3 className="text-sm font-semibold text-gray-900">Doctor Selection</h3>
+              <h3 className="text-sm font-semibold text-gray-900">
+                Doctor Selection
+              </h3>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Search doctor

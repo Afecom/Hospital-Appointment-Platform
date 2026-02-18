@@ -158,12 +158,12 @@ export function fetchAppointments(
 
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      filtered = filtered.filter(
-        (a) =>
-          a.patientName.toLowerCase().includes(q) ||
-          a.phone.includes(q) ||
-          a.id.toLowerCase().includes(q),
-      );
+      filtered = filtered.filter((a) => {
+        const name = (a.patientName ?? "").toLowerCase();
+        const phone = a.phone ?? "";
+        const id = (a.id ?? "").toLowerCase();
+        return name.includes(q) || phone.includes(q) || id.includes(q);
+      });
     }
 
     if (filters.status && filters.status !== "ALL") {
@@ -194,19 +194,25 @@ export function fetchAppointments(
 export function getOverviewCounts(
   params: Omit<FetchAppointmentsParams, "page" | "limit">,
   appointmentsSource?: Appointment[],
-): { pending: number; approved: number; rescheduled: number; refunded: number; total: number } {
+): {
+  pending: number;
+  approved: number;
+  rescheduled: number;
+  refunded: number;
+  total: number;
+} {
   const { filters = {}, search = "" } = params;
   const source = appointmentsSource ?? mockAppointments;
   let filtered = [...source];
 
   if (search.trim()) {
     const q = search.trim().toLowerCase();
-    filtered = filtered.filter(
-      (a) =>
-        a.patientName.toLowerCase().includes(q) ||
-        a.phone.includes(q) ||
-        a.id.toLowerCase().includes(q),
-    );
+    filtered = filtered.filter((a) => {
+      const name = (a.patientName ?? "").toLowerCase();
+      const phone = a.phone ?? "";
+      const id = (a.id ?? "").toLowerCase();
+      return name.includes(q) || phone.includes(q) || id.includes(q);
+    });
   }
   // Do NOT filter by status - KPI shows breakdown of all statuses for current filters
   if (filters.source && filters.source !== "ALL") {
