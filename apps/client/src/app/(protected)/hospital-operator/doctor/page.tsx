@@ -164,7 +164,7 @@ export default function HospitalOperatorDoctorPage() {
 
       {/* Controls Section */}
       <section className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
-        <div className="flex flex-col gap-2 lg:flex-row lg:items-end lg:justify-between min-w-0">
+        <div className="flex flex-col gap-2 lg:gap-10 lg:flex-row lg:items-end lg:justify-between min-w-0">
           <div className="w-full lg:w-40 min-w-0">
             <label className="block text-sm font-medium text-gray-700">
               Date
@@ -177,7 +177,7 @@ export default function HospitalOperatorDoctorPage() {
             />
           </div>
 
-          <div className="w-full flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-end min-w-0">
+          <div className="w-full flex flex-col gap-4 lg:flex-row lg:items-end min-w-0">
             <div className="w-full lg:w-60 min-w-0">
               <label className="block text-sm font-medium text-gray-700">
                 Search
