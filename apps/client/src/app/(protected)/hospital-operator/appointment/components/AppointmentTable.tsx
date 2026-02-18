@@ -14,7 +14,8 @@ interface AppointmentTableProps {
 }
 
 function paymentBadgeClass(status: "PAID" | "UNPAID" | "REFUNDED"): string {
-  const base = "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1";
+  const base =
+    "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ring-1";
   switch (status) {
     case "PAID":
       return `${base} bg-green-50 text-green-700 ring-green-100`;
@@ -27,9 +28,24 @@ function paymentBadgeClass(status: "PAID" | "UNPAID" | "REFUNDED"): string {
   }
 }
 
-function isWithinThreeHours(dateStr: string, timeStr: string): boolean {
-  const [y, m, d] = dateStr.split("-").map(Number);
-  const [h, min] = timeStr.split(":").map(Number);
+function isWithinThreeHours(
+  dateStr: string | undefined,
+  timeStr: string | undefined,
+): boolean {
+  if (!dateStr || !timeStr) return false;
+
+  // date expected as YYYY-MM-DD; time may be "HH:MM" or "HH:MM - HH:MM"
+  const dateParts = dateStr.split("-").map((v) => Number(v));
+  if (dateParts.length < 3 || dateParts.some((n) => Number.isNaN(n)))
+    return false;
+
+  const timeMain = timeStr.split(" - ")[0].trim();
+  const timeParts = timeMain.split(":").map((v) => Number(v));
+  if (timeParts.length < 2 || timeParts.some((n) => Number.isNaN(n)))
+    return false;
+
+  const [y, m, d] = dateParts;
+  const [h, min] = timeParts;
   const aptDate = new Date(y, (m ?? 1) - 1, d ?? 1, h ?? 0, min ?? 0);
   const now = new Date();
   const threeHoursFromNow = new Date(now.getTime() + 3 * 60 * 60 * 1000);
@@ -65,7 +81,7 @@ export default function AppointmentTable({
 }: AppointmentTableProps) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-gray-100 bg-white shadow-sm">
-      <table className="w-full min-w-[900px]">
+      <table className="w-full min-w-225">
         <thead>
           <tr className="border-b border-gray-200 bg-gray-50/50">
             <th className="text-left py-3 px-4 text-xs font-semibold text-gray-700 uppercase tracking-wide">
@@ -104,7 +120,8 @@ export default function AppointmentTable({
           {appointments.map((apt) => {
             const isToday = apt.date === todayDate;
             const showStartingSoon =
-              apt.status === "PENDING" && isWithinThreeHours(apt.date, apt.time);
+              apt.status === "PENDING" &&
+              isWithinThreeHours(apt.date, apt.time);
             const actions = getActions(apt.status);
 
             return (
