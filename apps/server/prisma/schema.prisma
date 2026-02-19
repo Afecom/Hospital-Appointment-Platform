@@ -25,6 +25,7 @@ model Appointment {
   isPaid                            Boolean           @default(false)
   newScheduleId                     String?
   newSlotId                         String?
+  isFree                            Boolean           @default(false)
   User_Appointment_approvedByToUser User?             @relation("Appointment_approvedByToUser", fields: [approvedBy], references: [id])
   User_Appointment_customerIdToUser User              @relation("Appointment_customerIdToUser", fields: [customerId], references: [id])
   Doctor                            Doctor            @relation(fields: [doctorId], references: [id])
@@ -32,7 +33,8 @@ model Appointment {
   originalSchedule                  Schedule          @relation("Appointment_originalSchedule", fields: [scheduleId], references: [id])
   newScheule                        Schedule?         @relation("Appointment_newSchedule", fields: [newScheduleId], references: [id])
   Payment                           Payment?
-  Slot                              Slot?
+  originalSlot                      Slot?             @relation("Appointment_originalSlot")
+  newSlot                           Slot?             @relation("Appointment_newSlot")
 }
 
 model AuditLog {
@@ -265,17 +267,19 @@ model SearchLog {
 }
 
 model Slot {
-  id            String       @id @default(uuid())
-  scheduleId    String
-  slotStart     DateTime
-  slotEnd       DateTime
-  status        SlotStatus
-  appointmentId String?      @unique
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  date          DateTime
-  Appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  Schedule      Schedule     @relation(fields: [scheduleId], references: [id])
+  id               String       @id @default(uuid())
+  scheduleId       String
+  slotStart        DateTime
+  slotEnd          DateTime
+  status           SlotStatus
+  appointmentId    String?      @unique
+  newAppointmentId String?      @unique
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  date             DateTime
+  Appointment      Appointment? @relation("Appointment_originalSlot", fields: [appointmentId], references: [id])
+  newAppointment   Appointment? @relation("Appointment_newSlot", fields: [newAppointmentId], references: [id])
+  Schedule         Schedule     @relation(fields: [scheduleId], references: [id])
 
   @@unique([slotStart, scheduleId, date])
   @@index([scheduleId, slotStart, status])
