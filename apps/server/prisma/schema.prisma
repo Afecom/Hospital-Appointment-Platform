@@ -23,11 +23,14 @@ model Appointment {
   tx_ref                            String            @unique
   hospitalId                        String
   isPaid                            Boolean           @default(false)
+  newScheduleId                     String?
+  newSlotId                         String?
   User_Appointment_approvedByToUser User?             @relation("Appointment_approvedByToUser", fields: [approvedBy], references: [id])
   User_Appointment_customerIdToUser User              @relation("Appointment_customerIdToUser", fields: [customerId], references: [id])
   Doctor                            Doctor            @relation(fields: [doctorId], references: [id])
   Hospital                          Hospital          @relation(fields: [hospitalId], references: [id])
-  Schedule                          Schedule          @relation(fields: [scheduleId], references: [id])
+  originalSchedule                  Schedule          @relation("Appointment_originalSchedule", fields: [scheduleId], references: [id])
+  newScheule                        Schedule?         @relation("Appointment_newSchedule", fields: [newScheduleId], references: [id])
   Payment                           Payment?
   Slot                              Slot?
 }
@@ -243,7 +246,8 @@ model Schedule {
   isExpired             Boolean        @default(false)
   isDeleted             Boolean        @default(false)
   slotLastGeneratedDate String?
-  Appointment           Appointment[]
+  originalAppointments  Appointment[]  @relation("Appointment_originalSchedule")
+  newAppointments       Appointment[]  @relation("Appointment_newSchedule")
   Doctor                Doctor         @relation(fields: [doctorId], references: [id])
   Hospital              Hospital       @relation(fields: [hospitalId], references: [id])
   Slot                  Slot[]
