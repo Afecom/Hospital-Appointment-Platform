@@ -147,6 +147,7 @@ model Hospital {
   timezone               String                      @default("Africa/Addis_Ababa")
   subAccountId           String
   logoId                 String
+  freeDays               Int                         @default(0)
   Appointment            Appointment[]
   DoctorHospitalProfile  DoctorHospitalProfile[]
   Admin                  User                        @relation(name: "Hospitaladmin", fields: [adminId], references: [id])
@@ -375,7 +376,8 @@ model verification {
 enum AppointmentStatus {
   pending
   approved
-  rejected
+  rescheduled
+  refunded
   cancelled
   completed
   expired

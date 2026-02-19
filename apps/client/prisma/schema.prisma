@@ -147,6 +147,7 @@ model Hospital {
   timezone               String                      @default("Africa/Addis_Ababa")
   subAccountId           String
   logoId                 String
+  freeDays               Int                         @default(0)
   Appointment            Appointment[]
   DoctorHospitalProfile  DoctorHospitalProfile[]
   Admin                  User                        @relation(name: "Hospitaladmin", fields: [adminId], references: [id])
@@ -229,21 +230,20 @@ model Schedule {
   startTime             String
   endTime               String
   status                ScheduleStatus @default(pending)
-  createdBy             String
   createdAt             DateTime       @default(now())
   updatedAt             DateTime       @updatedAt
   doctorId              String
   endDate               String?
   hospitalId            String
-  startDate             String
+  startDate             String?
   dayOfWeek             Int[]
   name                  String
   period                SchedulePeriod
   isDeactivated         Boolean        @default(false)
   isExpired             Boolean        @default(false)
+  isDeleted             Boolean        @default(false)
   slotLastGeneratedDate String?
   Appointment           Appointment[]
-  User                  User           @relation(fields: [createdBy], references: [id])
   Doctor                Doctor         @relation(fields: [doctorId], references: [id])
   Hospital              Hospital       @relation(fields: [hospitalId], references: [id])
   Slot                  Slot[]
@@ -320,7 +320,6 @@ model User {
   Payment                                  Payment[]
   Review                                   Review[]
   SavedDoctorHospital                      SavedDoctorHospital[]
-  Schedule                                 Schedule[]
   SearchLog                                SearchLog[]
   account                                  account[]
   session                                  session[]
@@ -377,7 +376,8 @@ model verification {
 enum AppointmentStatus {
   pending
   approved
-  rejected
+  rescheduled
+  refunded
   cancelled
   completed
   expired
