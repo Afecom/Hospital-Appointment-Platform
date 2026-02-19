@@ -31,7 +31,7 @@ model Appointment {
   Doctor                            Doctor            @relation(fields: [doctorId], references: [id])
   Hospital                          Hospital          @relation(fields: [hospitalId], references: [id])
   originalSchedule                  Schedule          @relation("Appointment_originalSchedule", fields: [scheduleId], references: [id])
-  newScheule                        Schedule?         @relation("Appointment_newSchedule", fields: [newScheduleId], references: [id])
+  newSchedule                       Schedule?         @relation("Appointment_newSchedule", fields: [newScheduleId], references: [id])
   Payment                           Payment?
   originalSlot                      Slot?             @relation("Appointment_originalSlot")
   newSlot                           Slot?             @relation("Appointment_newSlot")

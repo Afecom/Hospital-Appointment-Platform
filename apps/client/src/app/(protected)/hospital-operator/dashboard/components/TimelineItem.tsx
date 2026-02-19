@@ -9,15 +9,18 @@ interface TimelineItemProps {
 
 const statusDotColors = {
   PENDING: "bg-yellow-500",
-  RESCHEDULE_REQUESTED: "bg-blue-500",
-  REFUND_REQUESTED: "bg-red-500",
   APPROVED: "bg-green-500",
   RESCHEDULED: "bg-blue-500",
   REFUNDED: "bg-red-500",
+  EXPIRED: "bg-gray-500",
+  COMPLETED: "bg-emerald-500",
+  CANCELLED: "bg-gray-400",
 };
 
 export default function TimelineItem({ appointment }: TimelineItemProps) {
-  const dotColor = statusDotColors[appointment.status];
+  const dotColor =
+    statusDotColors[appointment.status as keyof typeof statusDotColors] ??
+    "bg-gray-400";
 
   return (
     <div className="flex items-center gap-3 py-2 border-b border-gray-100 last:border-b-0">

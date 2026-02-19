@@ -1,10 +1,11 @@
 export type AppointmentStatus =
   | "PENDING"
-  | "RESCHEDULE_REQUESTED"
-  | "REFUND_REQUESTED"
   | "APPROVED"
   | "RESCHEDULED"
-  | "REFUNDED";
+  | "REFUNDED"
+  | "EXPIRED"
+  | "COMPLETED"
+  | "CANCELLED";
 
 export type BookingSource = "Web" | "Walk-in";
 
@@ -17,6 +18,8 @@ export interface PendingAppointment {
   source: BookingSource;
   status: AppointmentStatus;
   createdAt: string;
+  isFree: boolean;
+  newAppointmentId?: string;
 }
 
 export interface KPIData {
@@ -81,6 +84,7 @@ export const pendingAppointments: PendingAppointment[] = [
     source: "Web",
     status: "PENDING",
     createdAt: "2 hours ago",
+    isFree: false,
   },
   {
     id: "APT-1002",
@@ -91,6 +95,7 @@ export const pendingAppointments: PendingAppointment[] = [
     source: "Web",
     status: "PENDING",
     createdAt: "1 hour ago",
+    isFree: true,
   },
   {
     id: "APT-1003",
@@ -99,8 +104,9 @@ export const pendingAppointments: PendingAppointment[] = [
     date: "2026-02-18",
     time: "09:00 AM",
     source: "Walk-in",
-    status: "RESCHEDULE_REQUESTED",
+    status: "APPROVED",
     createdAt: "3 hours ago",
+    isFree: false,
   },
   {
     id: "APT-1004",
@@ -111,6 +117,7 @@ export const pendingAppointments: PendingAppointment[] = [
     source: "Web",
     status: "PENDING",
     createdAt: "45 minutes ago",
+    isFree: false,
   },
   {
     id: "APT-1005",
@@ -119,8 +126,9 @@ export const pendingAppointments: PendingAppointment[] = [
     date: "2026-02-19",
     time: "10:00 AM",
     source: "Web",
-    status: "REFUND_REQUESTED",
+    status: "REFUNDED",
     createdAt: "4 hours ago",
+    isFree: false,
   },
   {
     id: "APT-1006",
@@ -131,6 +139,7 @@ export const pendingAppointments: PendingAppointment[] = [
     source: "Web",
     status: "PENDING",
     createdAt: "30 minutes ago",
+    isFree: true,
   },
   {
     id: "APT-1007",
@@ -139,8 +148,10 @@ export const pendingAppointments: PendingAppointment[] = [
     date: "2026-02-20",
     time: "11:30 AM",
     source: "Walk-in",
-    status: "RESCHEDULE_REQUESTED",
+    status: "RESCHEDULED",
     createdAt: "5 hours ago",
+    isFree: false,
+    newAppointmentId: "APT-1009",
   },
   {
     id: "APT-1008",
@@ -151,6 +162,29 @@ export const pendingAppointments: PendingAppointment[] = [
     source: "Web",
     status: "PENDING",
     createdAt: "1 hour ago",
+    isFree: false,
+  },
+  {
+    id: "APT-1010",
+    patient: "Sara Bekele",
+    doctor: "Dr. Ruth",
+    date: "2026-02-15",
+    time: "09:00 AM",
+    source: "Web",
+    status: "EXPIRED",
+    createdAt: "2 days ago",
+    isFree: false,
+  },
+  {
+    id: "APT-1011",
+    patient: "Yohannes Mekonnen",
+    doctor: "Dr. Hana",
+    date: "2026-02-14",
+    time: "02:00 PM",
+    source: "Walk-in",
+    status: "COMPLETED",
+    createdAt: "3 days ago",
+    isFree: true,
   },
 ];
 
