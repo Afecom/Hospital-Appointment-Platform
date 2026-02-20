@@ -10,6 +10,7 @@ import {
 } from "../../doctor/mockData";
 import { getBookedSlotsForDoctorDate } from "../mockData";
 import SlotSelector from "./SlotSelector";
+import { rescheduleAppointment } from "@/actions/appointment";
 import type { Appointment } from "../types";
 
 interface RescheduleModalProps {
@@ -35,7 +36,10 @@ export default function RescheduleModal({
   const [doctorId, setDoctorId] = useState("");
   const [date, setDate] = useState("");
   const [selectedSlot, setSelectedSlot] = useState<string | null>(null);
+  const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const [slotConflictError, setSlotConflictError] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (appointment && open) {
@@ -98,25 +102,37 @@ export default function RescheduleModal({
     return !isSlotAvailable(selectedSlot);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!appointment) return;
+    if (!appointment || !selectedSlotId) return;
+    
     setSlotConflictError(false);
+    setError(null);
+    
     if (checkSlotConflict()) {
       setSlotConflictError(true);
       return;
     }
-    const doctor = doctors.find((d) => d.id === doctorId);
-    const updated: Appointment = {
-      ...appointment,
-      doctorId,
-      doctorName: doctor?.name ?? appointment.doctorName,
-      date,
-      time: selectedSlot ?? appointment.time,
-      status: "RESCHEDULED",
-    };
-    onSuccess(updated);
-    onClose();
+
+    setLoading(true);
+
+    try {
+      const updated = await rescheduleAppointment(appointment.id, selectedSlotId);
+      const transformed: Appointment = {
+        ...appointment,
+        doctorId,
+        doctorName: updated.doctorName,
+        date: updated.date,
+        time: updated.time,
+        status: "RESCHEDULED",
+      };
+      onSuccess(transformed);
+      onClose();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to reschedule appointment");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!open || !appointment) return null;
@@ -248,6 +264,8 @@ export default function RescheduleModal({
                     value={selectedSlot}
                     onChange={(t) => {
                       setSelectedSlot(t);
+                      // For now, generate a mock slot ID - in production this would come from API
+                      setSelectedSlotId(`slot-${doctorId}-${date}-${t.replace(':', '')}`);
                       setSlotConflictError(false);
                     }}
                   />
@@ -255,6 +273,11 @@ export default function RescheduleModal({
                     <p className="text-sm text-red-600 mt-2">
                       Selected slot is no longer available.
                     </p>
+                  )}
+                  {error && (
+                    <div className="rounded-lg bg-red-50 border border-red-200 p-3 mt-2">
+                      <p className="text-sm text-red-700">{error}</p>
+                    </div>
                   )}
                 </div>
               )}
@@ -265,15 +288,17 @@ export default function RescheduleModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200"
+              className="px-4 py-2 rounded-xl text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              disabled={loading || !selectedSlotId}
+              className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Reschedule
+              {loading ? "Rescheduling..." : "Reschedule"}
             </button>
           </div>
         </form>

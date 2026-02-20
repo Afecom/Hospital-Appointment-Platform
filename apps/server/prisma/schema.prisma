@@ -27,6 +27,7 @@ model Appointment {
   newSlotId                         String?
   isFree                            Boolean           @default(false)
   source                            AppointmentSource @default(web)
+  refundedAt                        DateTime?
   User_Appointment_approvedByToUser User?             @relation("Appointment_approvedByToUser", fields: [approvedBy], references: [id])
   User_Appointment_customerIdToUser User              @relation("Appointment_customerIdToUser", fields: [customerId], references: [id])
   Doctor                            Doctor            @relation(fields: [doctorId], references: [id])
@@ -36,6 +37,11 @@ model Appointment {
   Payment                           Payment?
   originalSlot                      Slot?             @relation("Appointment_originalSlot")
   newSlot                           Slot?             @relation("Appointment_newSlot")
+
+  @@index([hospitalId, status])
+  @@index([hospitalId, createdAt])
+  @@index([status, createdAt])
+  @@index([hospitalId, status, createdAt])
 }
 
 model AuditLog {

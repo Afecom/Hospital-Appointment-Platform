@@ -650,7 +650,7 @@ export class DoctorService {
         where: {
           doctorId,
           approvedSlotStart: { gte: startOfToday, lt: endOfToday },
-          status: { notIn: ['cancelled', 'expired', 'rejected'] },
+          status: { notIn: ['cancelled', 'expired'] },
         },
         orderBy: { approvedSlotStart: 'asc' },
         include: {
@@ -697,7 +697,7 @@ export class DoctorService {
         where: {
           doctorId,
           approvedSlotStart: { gte: startOfWeek, lt: endOfWeek },
-          status: { notIn: ['cancelled', 'expired', 'rejected'] },
+          status: { notIn: ['cancelled', 'expired'] },
         },
         select: { id: true, status: true, approvedSlotStart: true },
       });
@@ -709,12 +709,11 @@ export class DoctorService {
       for (const ap of weekAppointments) {
         const d = new Date(ap.approvedSlotStart);
         const idx = (d.getDay() + 6) % 7; // Monday = 0
-        if (ap.status === AppointmentStatus.completed) completedSeries[idx]++;
-        else if (
-          ap.status === AppointmentStatus.cancelled ||
-          ap.status === AppointmentStatus.rejected
-        )
+        if (ap.status === AppointmentStatus.completed) {
+          completedSeries[idx]++;
+        } else if (ap.status === AppointmentStatus.cancelled) {
           canceledSeries[idx]++;
+        }
       }
 
       const completedTotal = completedSeries.reduce((s, v) => s + v, 0);

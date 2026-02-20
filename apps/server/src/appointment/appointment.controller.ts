@@ -26,7 +26,7 @@ export class appointmentController {
   }
 
   @Get()
-  @Roles([Role.hospital_admin, Role.admin])
+  @Roles([Role.hospital_admin, Role.admin, Role.hospital_operator])
   findall(
     @Session() session: UserSession,
     @Query('page') page: number,
@@ -41,8 +41,42 @@ export class appointmentController {
     return this.appointment.countPendingHospitalAppointments(session);
   }
 
+  @Get('operator')
+  @Roles([Role.hospital_operator])
+  findAllForOperator(
+    @Session() session: UserSession,
+    @Query('page') page?: number,
+    @Query('limit') limit?: number,
+    @Query('status') status?: string,
+    @Query('source') source?: string,
+    @Query('doctorId') doctorId?: string,
+    @Query('dateFrom') dateFrom?: string,
+    @Query('dateTo') dateTo?: string,
+    @Query('search') search?: string,
+  ) {
+    return this.appointment.findAllForOperator(
+      session,
+      page ?? 1,
+      limit ?? 10,
+      {
+        status: status as any,
+        source,
+        doctorId,
+        dateFrom,
+        dateTo,
+        search,
+      },
+    );
+  }
+
+  @Get('operator/kpis')
+  @Roles([Role.hospital_operator])
+  getOperatorKPIs(@Session() session: UserSession) {
+    return this.appointment.getOperatorKPIs(session);
+  }
+
   @Get(':id')
-  @Roles([Role.user, Role.admin])
+  @Roles([Role.user, Role.admin, Role.hospital_operator])
   findOne(@Param('id') id: string, @Session() session: UserSession) {
     return this.appointment.findOne(id, session);
   }
@@ -51,6 +85,35 @@ export class appointmentController {
   @Roles([Role.doctor])
   doctorOverview(@Session() session: UserSession) {
     return this.appointment.doctorOverview(session);
+  }
+
+  @Patch(':id/approve')
+  @Roles([Role.hospital_operator, Role.admin])
+  approve(
+    @Param('id') id: string,
+    @Session() session: UserSession,
+  ) {
+    return this.appointment.approveAppointment(id, session);
+  }
+
+  @Patch(':id/reschedule')
+  @Roles([Role.hospital_operator, Role.admin])
+  reschedule(
+    @Param('id') id: string,
+    @Body() body: { newSlotId: string },
+    @Session() session: UserSession,
+  ) {
+    return this.appointment.rescheduleAppointment(
+      id,
+      body.newSlotId,
+      session,
+    );
+  }
+
+  @Patch(':id/refund')
+  @Roles([Role.hospital_operator, Role.admin])
+  refund(@Param('id') id: string, @Session() session: UserSession) {
+    return this.appointment.refundAppointment(id, session);
   }
 
   @Patch(':id')

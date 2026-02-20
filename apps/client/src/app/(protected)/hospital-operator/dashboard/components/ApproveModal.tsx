@@ -2,22 +2,22 @@
 
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
-import { refundAppointment } from "@/actions/appointment";
-import type { Appointment } from "../types";
+import { approveAppointment } from "@/actions/appointment";
+import type { PendingAppointment } from "../mockData";
 
-interface RefundDialogProps {
+interface ApproveModalProps {
   open: boolean;
   onClose: () => void;
-  appointment: Appointment | null;
-  onConfirm: (appointment: Appointment) => void;
+  appointment: PendingAppointment | null;
+  onSuccess: (updated: PendingAppointment) => void;
 }
 
-export default function RefundDialog({
+export default function ApproveModal({
   open,
   onClose,
   appointment,
-  onConfirm,
-}: RefundDialogProps) {
+  onSuccess,
+}: ApproveModalProps) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -46,16 +46,15 @@ export default function RefundDialog({
     setError(null);
 
     try {
-      const updated = await refundAppointment(appointment.id);
-      const transformed: Appointment = {
+      const updated = await approveAppointment(appointment.id);
+      const transformed: PendingAppointment = {
         ...appointment,
-        status: "REFUNDED",
-        paymentStatus: "REFUNDED",
+        status: "APPROVED",
       };
-      onConfirm(transformed);
+      onSuccess(transformed);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to refund appointment");
+      setError(err instanceof Error ? err.message : "Failed to approve appointment");
     } finally {
       setLoading(false);
     }
@@ -64,7 +63,10 @@ export default function RefundDialog({
   if (!open || !appointment) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4" aria-hidden={!open}>
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      aria-hidden={!open}
+    >
       <div
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
@@ -74,12 +76,15 @@ export default function RefundDialog({
         className="relative bg-white rounded-2xl shadow-xl w-full max-w-md overflow-hidden"
         role="dialog"
         aria-modal="true"
-        aria-labelledby="refund-dialog-title"
+        aria-labelledby="approve-modal-title"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
-          <h2 id="refund-dialog-title" className="text-lg font-semibold text-gray-900">
-            Confirm Refund
+          <h2
+            id="approve-modal-title"
+            className="text-lg font-semibold text-gray-900"
+          >
+            Approve Appointment
           </h2>
           <button
             type="button"
@@ -100,11 +105,11 @@ export default function RefundDialog({
             </p>
             <p>
               <span className="font-medium text-gray-700">Patient:</span>{" "}
-              {appointment.patientName}
+              {appointment.patient}
             </p>
             <p>
               <span className="font-medium text-gray-700">Doctor:</span>{" "}
-              {appointment.doctorName}
+              {appointment.doctor}
             </p>
             <p>
               <span className="font-medium text-gray-700">Date:</span>{" "}
@@ -116,6 +121,10 @@ export default function RefundDialog({
               })}{" "}
               at {appointment.time}
             </p>
+            <p>
+              <span className="font-medium text-gray-700">Source:</span>{" "}
+              {appointment.source}
+            </p>
           </div>
 
           {error && (
@@ -125,7 +134,7 @@ export default function RefundDialog({
           )}
 
           <p className="text-sm text-gray-600">
-            Are you sure you want to refund this appointment?
+            Are you sure you want to approve this appointment?
           </p>
         </div>
 
@@ -142,9 +151,9 @@ export default function RefundDialog({
             type="button"
             onClick={handleConfirm}
             disabled={loading}
-            className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-red-600 hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 rounded-xl text-sm font-medium text-white bg-green-600 hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? "Processing..." : "Confirm Refund"}
+            {loading ? "Approving..." : "Approve"}
           </button>
         </div>
       </div>

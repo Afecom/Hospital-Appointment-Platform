@@ -397,14 +397,6 @@ export class ScheduleService {
         },
         select: {
           id: true,
-          Slot: {
-            select: {
-              id: true,
-              slotStart: true,
-              slotEnd: true,
-              date: true,
-            },
-          },
         },
       });
       if (appointments.length > 0) {

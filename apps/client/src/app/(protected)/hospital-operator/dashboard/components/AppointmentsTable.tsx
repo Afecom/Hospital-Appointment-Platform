@@ -6,6 +6,10 @@ import ActionButton from "./ActionButton";
 
 interface AppointmentsTableProps {
   appointments: PendingAppointment[];
+  onApprove?: (appointment: PendingAppointment) => void;
+  onReschedule?: (appointment: PendingAppointment) => void;
+  onRefund?: (appointment: PendingAppointment) => void;
+  onView?: (appointment: PendingAppointment) => void;
 }
 
 function getActions(status: AppointmentStatus): {
@@ -32,6 +36,10 @@ function getActions(status: AppointmentStatus): {
 
 export default function AppointmentsTable({
   appointments,
+  onApprove,
+  onReschedule,
+  onRefund,
+  onView,
 }: AppointmentsTableProps) {
   return (
     <div className="overflow-x-auto">
@@ -140,16 +148,32 @@ export default function AppointmentsTable({
                 <td className="py-4 px-4">
                   <div className="flex items-center gap-2 flex-wrap">
                     {actions.approve && (
-                      <ActionButton label="Approve" variant="approve" />
+                      <ActionButton
+                        label="Approve"
+                        variant="approve"
+                        onClick={() => onApprove?.(appointment)}
+                      />
                     )}
                     {actions.reschedule && (
-                      <ActionButton label="Reschedule" variant="reschedule" />
+                      <ActionButton
+                        label="Reschedule"
+                        variant="reschedule"
+                        onClick={() => onReschedule?.(appointment)}
+                      />
                     )}
                     {actions.refund && (
-                      <ActionButton label="Refund" variant="refund" />
+                      <ActionButton
+                        label="Refund"
+                        variant="refund"
+                        onClick={() => onRefund?.(appointment)}
+                      />
                     )}
                     {actions.view && (
-                      <ActionButton label="View" variant="view" />
+                      <ActionButton
+                        label="View"
+                        variant="view"
+                        onClick={() => onView?.(appointment)}
+                      />
                     )}
                   </div>
                 </td>
