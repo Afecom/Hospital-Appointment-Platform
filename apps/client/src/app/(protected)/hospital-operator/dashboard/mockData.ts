@@ -19,6 +19,8 @@ export interface PendingAppointment {
   status: AppointmentStatus;
   createdAt: string;
   isFree: boolean;
+  /** true = paid, false = unpaid (for free appointments this should be false) */
+  isPaid: boolean;
   newAppointmentId?: string;
 }
 
@@ -85,6 +87,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "PENDING",
     createdAt: "2 hours ago",
     isFree: false,
+    isPaid: true,
   },
   {
     id: "APT-1002",
@@ -96,6 +99,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "PENDING",
     createdAt: "1 hour ago",
     isFree: true,
+    isPaid: false,
   },
   {
     id: "APT-1003",
@@ -107,6 +111,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "APPROVED",
     createdAt: "3 hours ago",
     isFree: false,
+    isPaid: true,
   },
   {
     id: "APT-1004",
@@ -118,6 +123,8 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "PENDING",
     createdAt: "45 minutes ago",
     isFree: false,
+    // demo unpaid example
+    isPaid: false,
   },
   {
     id: "APT-1005",
@@ -129,6 +136,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "REFUNDED",
     createdAt: "4 hours ago",
     isFree: false,
+    isPaid: true,
   },
   {
     id: "APT-1006",
@@ -140,6 +148,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "PENDING",
     createdAt: "30 minutes ago",
     isFree: true,
+    isPaid: false,
   },
   {
     id: "APT-1007",
@@ -151,6 +160,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "RESCHEDULED",
     createdAt: "5 hours ago",
     isFree: false,
+    isPaid: true,
     newAppointmentId: "APT-1009",
   },
   {
@@ -163,6 +173,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "PENDING",
     createdAt: "1 hour ago",
     isFree: false,
+    isPaid: true,
   },
   {
     id: "APT-1010",
@@ -174,6 +185,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "EXPIRED",
     createdAt: "2 days ago",
     isFree: false,
+    isPaid: true,
   },
   {
     id: "APT-1011",
@@ -185,6 +197,7 @@ export const pendingAppointments: PendingAppointment[] = [
     status: "COMPLETED",
     createdAt: "3 days ago",
     isFree: true,
+    isPaid: false,
   },
 ];
 

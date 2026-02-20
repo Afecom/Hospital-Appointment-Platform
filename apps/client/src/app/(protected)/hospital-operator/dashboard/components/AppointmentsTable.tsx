@@ -95,14 +95,14 @@ export default function AppointmentsTable({
                   <span
                     className={`text-xs px-2 py-1 rounded-md ${
                       appointment.source === "Web"
-                        ? "bg-blue-50 text-blue-700"
+                        ? "bg-sky-50 text-sky-700 ring-1 ring-sky-100"
                         : appointment.source === "Operator"
-                          ? "bg-gray-50 text-gray-700"
+                          ? "bg-slate-50 text-slate-700 ring-1 ring-slate-100"
                           : appointment.source === "APP"
-                            ? "bg-green-50 text-green-700"
+                            ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
                             : appointment.source === "Call Center"
-                              ? "bg-yellow-50 text-yellow-700"
-                              : "bg-gray-50 text-gray-700"
+                              ? "bg-amber-50 text-amber-700 ring-1 ring-amber-100"
+                              : "bg-gray-50 text-gray-700 ring-1 ring-gray-100"
                     }`}
                   >
                     {appointment.source}
@@ -112,15 +112,27 @@ export default function AppointmentsTable({
                   <StatusBadge status={appointment.status} />
                 </td>
                 <td className="py-4 px-4">
-                  <span
-                    className={`text-xs px-2 py-1 rounded-md ${
-                      appointment.isFree
-                        ? "bg-green-50 text-green-700 ring-1 ring-green-100"
-                        : "bg-gray-50 text-gray-700 ring-1 ring-gray-100"
-                    }`}
-                  >
-                    {appointment.isFree ? "Free" : "Paid"}
-                  </span>
+                  {(() => {
+                    const paymentLabel = appointment.isFree
+                      ? "Free"
+                      : appointment.isPaid
+                        ? "Paid"
+                        : "Unpaid";
+
+                    const paymentClass = appointment.isFree
+                      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-100"
+                      : appointment.isPaid
+                        ? "bg-indigo-50 text-indigo-700 ring-1 ring-indigo-100"
+                        : "bg-rose-50 text-rose-700 ring-1 ring-rose-100";
+
+                    return (
+                      <span
+                        className={`text-xs px-2 py-1 rounded-md ${paymentClass}`}
+                      >
+                        {paymentLabel}
+                      </span>
+                    );
+                  })()}
                 </td>
                 <td className="py-4 px-4 text-sm text-gray-500">
                   {appointment.createdAt}
