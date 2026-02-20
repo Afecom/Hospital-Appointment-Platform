@@ -96,7 +96,13 @@ export default function AppointmentsTable({
                     className={`text-xs px-2 py-1 rounded-md ${
                       appointment.source === "Web"
                         ? "bg-blue-50 text-blue-700"
-                        : "bg-gray-50 text-gray-700"
+                        : appointment.source === "Operator"
+                          ? "bg-gray-50 text-gray-700"
+                          : appointment.source === "APP"
+                            ? "bg-green-50 text-green-700"
+                            : appointment.source === "Call Center"
+                              ? "bg-yellow-50 text-yellow-700"
+                              : "bg-gray-50 text-gray-700"
                     }`}
                   >
                     {appointment.source}

@@ -7,7 +7,7 @@ export type AppointmentStatus =
   | "COMPLETED"
   | "CANCELLED";
 
-export type BookingSource = "Web" | "Walk-in";
+export type BookingSource = "Web" | "Operator" | "APP" | "Call Center";
 
 export interface PendingAppointment {
   id: string;
@@ -92,7 +92,7 @@ export const pendingAppointments: PendingAppointment[] = [
     doctor: "Dr. Samuel",
     date: "2026-02-17",
     time: "11:00 AM",
-    source: "Web",
+    source: "APP",
     status: "PENDING",
     createdAt: "1 hour ago",
     isFree: true,
@@ -103,7 +103,7 @@ export const pendingAppointments: PendingAppointment[] = [
     doctor: "Dr. Ruth",
     date: "2026-02-18",
     time: "09:00 AM",
-    source: "Walk-in",
+    source: "Operator",
     status: "APPROVED",
     createdAt: "3 hours ago",
     isFree: false,
@@ -125,7 +125,7 @@ export const pendingAppointments: PendingAppointment[] = [
     doctor: "Dr. Samuel",
     date: "2026-02-19",
     time: "10:00 AM",
-    source: "Web",
+    source: "Call Center",
     status: "REFUNDED",
     createdAt: "4 hours ago",
     isFree: false,
@@ -136,7 +136,7 @@ export const pendingAppointments: PendingAppointment[] = [
     doctor: "Dr. Ruth",
     date: "2026-02-17",
     time: "03:00 PM",
-    source: "Web",
+    source: "APP",
     status: "PENDING",
     createdAt: "30 minutes ago",
     isFree: true,
@@ -147,7 +147,7 @@ export const pendingAppointments: PendingAppointment[] = [
     doctor: "Dr. Hana",
     date: "2026-02-20",
     time: "11:30 AM",
-    source: "Walk-in",
+    source: "APP",
     status: "RESCHEDULED",
     createdAt: "5 hours ago",
     isFree: false,
@@ -181,7 +181,7 @@ export const pendingAppointments: PendingAppointment[] = [
     doctor: "Dr. Hana",
     date: "2026-02-14",
     time: "02:00 PM",
-    source: "Walk-in",
+    source: "Operator",
     status: "COMPLETED",
     createdAt: "3 days ago",
     isFree: true,
@@ -229,7 +229,7 @@ export const timelineData: DoctorTimeline[] = [
         time: "10:00",
         patient: "Saron Bekele",
         status: "APPROVED",
-        source: "Walk-in",
+        source: "APP",
       },
       {
         id: "APT-1004",
@@ -262,7 +262,7 @@ export const timelineData: DoctorTimeline[] = [
         time: "10:00",
         patient: "Meron Tesfaye",
         status: "APPROVED",
-        source: "Walk-in",
+        source: "Operator",
       },
       {
         id: "APT-2003",
@@ -288,14 +288,14 @@ export const timelineData: DoctorTimeline[] = [
         time: "08:30",
         patient: "Sara Bekele",
         status: "APPROVED",
-        source: "Web",
+        source: "APP",
       },
       {
         id: "APT-3002",
         time: "09:30",
         patient: "Yohannes Mekonnen",
         status: "APPROVED",
-        source: "Walk-in",
+        source: "Operator",
       },
       {
         id: "APT-3003",
