@@ -23,13 +23,19 @@ model Appointment {
   tx_ref                            String            @unique
   hospitalId                        String
   isPaid                            Boolean           @default(false)
+  newScheduleId                     String?
+  newSlotId                         String?
+  isFree                            Boolean           @default(false)
+  source                            AppointmentSource @default(web)
   User_Appointment_approvedByToUser User?             @relation("Appointment_approvedByToUser", fields: [approvedBy], references: [id])
   User_Appointment_customerIdToUser User              @relation("Appointment_customerIdToUser", fields: [customerId], references: [id])
   Doctor                            Doctor            @relation(fields: [doctorId], references: [id])
   Hospital                          Hospital          @relation(fields: [hospitalId], references: [id])
-  Schedule                          Schedule          @relation(fields: [scheduleId], references: [id])
+  originalSchedule                  Schedule          @relation("Appointment_originalSchedule", fields: [scheduleId], references: [id])
+  newSchedule                       Schedule?         @relation("Appointment_newSchedule", fields: [newScheduleId], references: [id])
   Payment                           Payment?
-  Slot                              Slot?
+  originalSlot                      Slot?             @relation("Appointment_originalSlot")
+  newSlot                           Slot?             @relation("Appointment_newSlot")
 }
 
 model AuditLog {
@@ -243,7 +249,8 @@ model Schedule {
   isExpired             Boolean        @default(false)
   isDeleted             Boolean        @default(false)
   slotLastGeneratedDate String?
-  Appointment           Appointment[]
+  originalAppointments  Appointment[]  @relation("Appointment_originalSchedule")
+  newAppointments       Appointment[]  @relation("Appointment_newSchedule")
   Doctor                Doctor         @relation(fields: [doctorId], references: [id])
   Hospital              Hospital       @relation(fields: [hospitalId], references: [id])
   Slot                  Slot[]
@@ -261,17 +268,19 @@ model SearchLog {
 }
 
 model Slot {
-  id            String       @id @default(uuid())
-  scheduleId    String
-  slotStart     DateTime
-  slotEnd       DateTime
-  status        SlotStatus
-  appointmentId String?      @unique
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
-  date          DateTime
-  Appointment   Appointment? @relation(fields: [appointmentId], references: [id])
-  Schedule      Schedule     @relation(fields: [scheduleId], references: [id])
+  id               String       @id @default(uuid())
+  scheduleId       String
+  slotStart        DateTime
+  slotEnd          DateTime
+  status           SlotStatus
+  appointmentId    String?      @unique
+  newAppointmentId String?      @unique
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  date             DateTime
+  Appointment      Appointment? @relation("Appointment_originalSlot", fields: [appointmentId], references: [id])
+  newAppointment   Appointment? @relation("Appointment_newSlot", fields: [newAppointmentId], references: [id])
+  Schedule         Schedule     @relation(fields: [scheduleId], references: [id])
 
   @@unique([slotStart, scheduleId, date])
   @@index([scheduleId, slotStart, status])
@@ -381,6 +390,13 @@ enum AppointmentStatus {
   cancelled
   completed
   expired
+}
+
+enum AppointmentSource {
+  call_center
+  web
+  app
+  operator
 }
 
 enum DoctorApplicationStatus {

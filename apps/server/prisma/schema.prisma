@@ -26,6 +26,7 @@ model Appointment {
   newScheduleId                     String?
   newSlotId                         String?
   isFree                            Boolean           @default(false)
+  source                            AppointmentSource @default(web)
   User_Appointment_approvedByToUser User?             @relation("Appointment_approvedByToUser", fields: [approvedBy], references: [id])
   User_Appointment_customerIdToUser User              @relation("Appointment_customerIdToUser", fields: [customerId], references: [id])
   Doctor                            Doctor            @relation(fields: [doctorId], references: [id])
@@ -389,6 +390,13 @@ enum AppointmentStatus {
   cancelled
   completed
   expired
+}
+
+enum AppointmentSource {
+  call_center
+  web
+  app
+  operator
 }
 
 enum DoctorApplicationStatus {
