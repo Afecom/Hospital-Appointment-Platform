@@ -75,6 +75,12 @@ export class appointmentController {
     return this.appointment.getOperatorKPIs(session);
   }
 
+  @Get('operator/dashboard')
+  @Roles([Role.hospital_operator])
+  getOperatorDashboard(@Session() session: UserSession) {
+    return this.appointment.getOperatorDashboard(session);
+  }
+
   @Get(':id')
   @Roles([Role.user, Role.admin, Role.hospital_operator])
   findOne(@Param('id') id: string, @Session() session: UserSession) {

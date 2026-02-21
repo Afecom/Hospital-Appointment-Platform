@@ -14,7 +14,11 @@ import {
   buildPaginationMeta,
 } from '../common/pagination/pagination.js';
 import { DateTime } from 'luxon';
-import { countPendingAppointmentsRes, doctorOverviewRes } from '@hap/contract';
+import {
+  countPendingAppointmentsRes,
+  doctorOverviewRes,
+  OperatorDashboardResponse,
+} from '@hap/contract';
 
 //TODO: Connect payment gatway via axios call
 
@@ -671,6 +675,356 @@ export class appointmentService {
       totalToday,
       slotUtilization,
     };
+  }
+
+  async getOperatorDashboard(session: UserSession): Promise<OperatorDashboardResponse> {
+    const hospitalId = await this.getOperatorHospitalId(session);
+
+    const todayStart = DateTime.local().startOf('day');
+    const todayEnd = DateTime.local().endOf('day');
+    const yesterdayStart = todayStart.minus({ days: 1 });
+    const yesterdayEnd = yesterdayStart.endOf('day');
+
+    const [
+      pending,
+      pendingYesterday,
+      approvedToday,
+      approvedYesterday,
+      rescheduledToday,
+      rescheduledYesterday,
+      refunds,
+      refundsYesterday,
+      totalToday,
+      totalYesterday,
+      totalSlotsToday,
+      bookedSlotsToday,
+      totalSlotsYesterday,
+      bookedSlotsYesterday,
+      todayAppointments,
+      recentActivityAppointments,
+    ] = await Promise.all([
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.pending,
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.pending,
+          createdAt: {
+            gte: yesterdayStart.toJSDate(),
+            lte: yesterdayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.approved,
+          updatedAt: {
+            gte: todayStart.toJSDate(),
+            lte: todayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.approved,
+          updatedAt: {
+            gte: yesterdayStart.toJSDate(),
+            lte: yesterdayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.rescheduled,
+          updatedAt: {
+            gte: todayStart.toJSDate(),
+            lte: todayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.rescheduled,
+          updatedAt: {
+            gte: yesterdayStart.toJSDate(),
+            lte: yesterdayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.refunded,
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          status: AppointmentStatus.refunded,
+          createdAt: {
+            lt: todayStart.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          approvedSlotStart: {
+            gte: todayStart.toJSDate(),
+            lte: todayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.appointment.count({
+        where: {
+          hospitalId,
+          approvedSlotStart: {
+            gte: yesterdayStart.toJSDate(),
+            lte: yesterdayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.slot.count({
+        where: {
+          Schedule: { hospitalId },
+          date: {
+            gte: todayStart.toJSDate(),
+            lte: todayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.slot.count({
+        where: {
+          Schedule: { hospitalId },
+          date: {
+            gte: todayStart.toJSDate(),
+            lte: todayEnd.toJSDate(),
+          },
+          status: 'booked',
+        },
+      }),
+      this.prisma.slot.count({
+        where: {
+          Schedule: { hospitalId },
+          date: {
+            gte: yesterdayStart.toJSDate(),
+            lte: yesterdayEnd.toJSDate(),
+          },
+        },
+      }),
+      this.prisma.slot.count({
+        where: {
+          Schedule: { hospitalId },
+          date: {
+            gte: yesterdayStart.toJSDate(),
+            lte: yesterdayEnd.toJSDate(),
+          },
+          status: 'booked',
+        },
+      }),
+      this.prisma.appointment.findMany({
+        where: {
+          hospitalId,
+          approvedSlotStart: {
+            gte: todayStart.toJSDate(),
+            lte: todayEnd.toJSDate(),
+          },
+        },
+        include: {
+          Doctor: {
+            include: {
+              User: { select: { fullName: true } },
+            },
+          },
+          User_Appointment_customerIdToUser: {
+            select: { fullName: true },
+          },
+          originalSlot: {
+            select: { slotStart: true },
+          },
+        },
+        orderBy: { approvedSlotStart: 'asc' },
+      }),
+      this.prisma.appointment.findMany({
+        where: {
+          hospitalId,
+          approvedBy: { not: null },
+        },
+        include: {
+          User_Appointment_approvedByToUser: {
+            select: { fullName: true },
+          },
+        },
+        orderBy: { updatedAt: 'desc' },
+        take: 10,
+      }),
+    ]);
+
+    const slotUtilization =
+      totalSlotsToday > 0 ? Math.round((bookedSlotsToday / totalSlotsToday) * 100) : 0;
+    const yesterdayUtilization =
+      totalSlotsYesterday > 0
+        ? Math.round((bookedSlotsYesterday / totalSlotsYesterday) * 100)
+        : 0;
+
+    const statusColorMap: Record<AppointmentStatus, string> = {
+      pending: '#f59e0b',
+      approved: '#10b981',
+      rescheduled: '#3b82f6',
+      refunded: '#ef4444',
+      expired: '#6b7280',
+      completed: '#14b8a6',
+      cancelled: '#9ca3af',
+    };
+
+    const sourceLabelMap: Record<string, 'Web' | 'Operator' | 'APP' | 'Call Center'> = {
+      web: 'Web',
+      operator: 'Operator',
+      app: 'APP',
+      call_center: 'Call Center',
+    };
+
+    const statusCountMap = new Map<string, number>();
+    const doctorCountMap = new Map<string, number>();
+    const doctorTimelineMap = new Map<
+      string,
+      {
+        doctor: string;
+        appointments: {
+          id: string;
+          time: string;
+          patient: string;
+          status:
+            | 'PENDING'
+            | 'APPROVED'
+            | 'RESCHEDULED'
+            | 'REFUNDED'
+            | 'EXPIRED'
+            | 'COMPLETED'
+            | 'CANCELLED';
+          source: 'Web' | 'Operator' | 'APP' | 'Call Center';
+        }[];
+      }
+    >();
+
+    for (const appointment of todayAppointments) {
+      const statusKey = appointment.status.toLowerCase();
+      statusCountMap.set(statusKey, (statusCountMap.get(statusKey) ?? 0) + 1);
+
+      const doctorName = appointment.Doctor?.User?.fullName ?? 'Unknown Doctor';
+      doctorCountMap.set(doctorName, (doctorCountMap.get(doctorName) ?? 0) + 1);
+
+      const source = sourceLabelMap[appointment.source] ?? 'Web';
+      const status = appointment.status.toUpperCase() as
+        | 'PENDING'
+        | 'APPROVED'
+        | 'RESCHEDULED'
+        | 'REFUNDED'
+        | 'EXPIRED'
+        | 'COMPLETED'
+        | 'CANCELLED';
+      const slotTime = DateTime.fromJSDate(
+        appointment.originalSlot?.slotStart ?? appointment.approvedSlotStart,
+      ).toFormat('hh:mm a');
+
+      if (!doctorTimelineMap.has(doctorName)) {
+        doctorTimelineMap.set(doctorName, { doctor: doctorName, appointments: [] });
+      }
+      doctorTimelineMap.get(doctorName)!.appointments.push({
+        id: appointment.id,
+        time: slotTime,
+        patient: appointment.User_Appointment_customerIdToUser?.fullName ?? 'Unknown',
+        status,
+        source,
+      });
+    }
+
+    const statusChartData = Array.from(statusCountMap.entries()).map(([status, value]) => ({
+      name: this.toTitleCase(status),
+      value,
+      color: statusColorMap[status as AppointmentStatus] ?? '#9ca3af',
+    }));
+
+    const doctorChartData = Array.from(doctorCountMap.entries())
+      .map(([doctor, appointments]) => ({ doctor, appointments }))
+      .sort((a, b) => b.appointments - a.appointments);
+
+    const timelineData = Array.from(doctorTimelineMap.values());
+
+    const activityLog = recentActivityAppointments.map((activity) => ({
+      id: activity.id,
+      operator: activity.User_Appointment_approvedByToUser?.fullName ?? 'Operator',
+      action: this.toTitleCase(activity.status),
+      appointmentId: activity.id,
+      timestamp: this.formatRelativeTime(activity.updatedAt),
+    }));
+
+    return {
+      kpis: {
+        pending,
+        approvedToday,
+        rescheduledToday,
+        refunds,
+        totalToday,
+        slotUtilization,
+      },
+      kpiTrends: {
+        pending: this.buildTrendText(pending, pendingYesterday),
+        approvedToday: this.buildTrendText(approvedToday, approvedYesterday),
+        rescheduledToday: this.buildTrendText(rescheduledToday, rescheduledYesterday),
+        refunds: this.buildTrendText(refunds, refundsYesterday),
+        totalToday: this.buildTrendText(totalToday, totalYesterday),
+        slotUtilization: this.buildTrendText(slotUtilization, yesterdayUtilization, true),
+      },
+      statusChartData,
+      doctorChartData,
+      timelineData,
+      activityLog,
+    };
+  }
+
+  private buildTrendText(current: number, previous: number, isPercent = false): string {
+    if (current === 0 && previous === 0) return 'No appointments';
+    if (previous === 0) {
+      return current > 0
+        ? `+${current}${isPercent ? '%' : ''} from yesterday`
+        : 'No appointments';
+    }
+    const diff = current - previous;
+    if (diff === 0) return 'No change from yesterday';
+    const sign = diff > 0 ? '+' : '-';
+    return `${sign}${Math.abs(diff)}${isPercent ? '%' : ''} from yesterday`;
+  }
+
+  private toTitleCase(value: string): string {
+    return value
+      .toLowerCase()
+      .split('_')
+      .map((chunk) => chunk.charAt(0).toUpperCase() + chunk.slice(1))
+      .join(' ');
+  }
+
+  private formatRelativeTime(date: Date): string {
+    const now = DateTime.local();
+    const then = DateTime.fromJSDate(date);
+    const diffMinutes = Math.floor(now.diff(then, 'minutes').minutes);
+
+    if (diffMinutes < 1) return 'Just now';
+    if (diffMinutes < 60) return `${diffMinutes} min ago`;
+
+    const diffHours = Math.floor(diffMinutes / 60);
+    if (diffHours < 24) return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+
+    const diffDays = Math.floor(diffHours / 24);
+    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
   }
 
   // async verifyPayment(data: chapaWebhookPayload, signature: string) {
