@@ -2,6 +2,7 @@
 
 import api from "@/lib/axios";
 import type {
+  OperatorDashboardResponse,
   OperatorAppointmentsResponse,
   OperatorKPIsResponse,
 } from "@hap/contract";
@@ -46,6 +47,44 @@ export interface KPIData {
   refunds: number;
   totalToday: number;
   slotUtilization: number;
+}
+
+export interface OperatorDashboardData {
+  kpis: KPIData;
+  kpiTrends: {
+    pending: string;
+    approvedToday: string;
+    rescheduledToday: string;
+    refunds: string;
+    totalToday: string;
+    slotUtilization: string;
+  };
+  statusChartData: {
+    name: string;
+    value: number;
+    color: string;
+  }[];
+  doctorChartData: {
+    doctor: string;
+    appointments: number;
+  }[];
+  timelineData: {
+    doctor: string;
+    appointments: {
+      id: string;
+      time: string;
+      patient: string;
+      status: AppointmentStatus;
+      source: BookingSource;
+    }[];
+  }[];
+  activityLog: {
+    id: string;
+    operator: string;
+    action: string;
+    appointmentId: string;
+    timestamp: string;
+  }[];
 }
 
 // Helper to transform backend status to frontend status
@@ -283,6 +322,37 @@ export const fetchOperatorKPIs = async (): Promise<KPIData> => {
     throw new Error(message);
   }
 };
+
+export const fetchOperatorDashboard =
+  async (): Promise<OperatorDashboardData> => {
+    try {
+      const response = await api.get<OperatorDashboardResponse>(
+        "/appointment/operator/dashboard",
+      );
+      return {
+        kpis: response.data.kpis,
+        kpiTrends: response.data.kpiTrends,
+        statusChartData: response.data.statusChartData,
+        doctorChartData: response.data.doctorChartData,
+        timelineData: response.data.timelineData,
+        activityLog: response.data.activityLog,
+      };
+    } catch (error) {
+      const anyErr = error as any;
+      const resp = anyErr?.response?.data;
+      let message = "Failed to fetch operator dashboard data";
+      if (resp) {
+        if (typeof resp === "string") message = resp;
+        else if (Array.isArray(resp?.message)) message = resp.message.join(", ");
+        else if (resp?.message) message = resp.message;
+        else if (resp?.error) message = resp.error;
+        else message = JSON.stringify(resp);
+      } else if (anyErr?.message) {
+        message = anyErr.message;
+      }
+      throw new Error(message);
+    }
+  };
 
 export const fetchAppointmentDetails = async (id: string): Promise<any> => {
   try {
