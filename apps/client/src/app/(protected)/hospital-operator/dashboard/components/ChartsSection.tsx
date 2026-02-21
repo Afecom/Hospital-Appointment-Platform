@@ -14,7 +14,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import ChartCard from "./ChartCard";
-import { ChartStatusData, DoctorAppointmentData } from "../mockData";
+import { ChartStatusData, DoctorAppointmentData } from "../types";
 
 interface ChartsSectionProps {
   statusData: ChartStatusData[];
