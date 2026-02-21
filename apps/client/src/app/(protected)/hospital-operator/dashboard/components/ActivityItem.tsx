@@ -1,6 +1,6 @@
 "use client";
 
-import { ActivityLogEntry } from "../mockData";
+import { ActivityLogEntry } from "../types";
 
 interface ActivityItemProps {
   activity: ActivityLogEntry;

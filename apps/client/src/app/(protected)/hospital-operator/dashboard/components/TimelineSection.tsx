@@ -1,6 +1,6 @@
 "use client";
 
-import { DoctorTimeline } from "../mockData";
+import { DoctorTimeline } from "../types";
 import TimelineItem from "./TimelineItem";
 
 interface TimelineSectionProps {

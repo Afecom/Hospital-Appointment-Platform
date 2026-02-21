@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { X } from "lucide-react";
-import type { PendingAppointment } from "../mockData";
+import type { PendingAppointment } from "../types";
 
 interface ViewModalProps {
   open: boolean;

@@ -1,6 +1,6 @@
 "use client";
 
-import { TimelineAppointment } from "../mockData";
+import { TimelineAppointment } from "../types";
 import StatusBadge from "./StatusBadge";
 
 interface TimelineItemProps {

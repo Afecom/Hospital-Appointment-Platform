@@ -1,6 +1,6 @@
 "use client";
 
-import { AppointmentStatus } from "../mockData";
+import { AppointmentStatus } from "../types";
 
 interface StatusBadgeProps {
   status: AppointmentStatus;

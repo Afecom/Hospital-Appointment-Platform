@@ -1,6 +1,6 @@
 "use client";
 
-import { PendingAppointment, AppointmentStatus } from "../mockData";
+import { PendingAppointment, AppointmentStatus } from "../types";
 import StatusBadge from "./StatusBadge";
 import ActionButton from "./ActionButton";
 
@@ -41,6 +41,19 @@ export default function AppointmentsTable({
   onRefund,
   onView,
 }: AppointmentsTableProps) {
+  if (appointments.length === 0) {
+    return (
+      <div className="rounded-xl border border-dashed border-gray-200 p-8 text-center">
+        <p className="text-sm font-medium text-gray-700">
+          No appointments require review right now.
+        </p>
+        <p className="mt-1 text-xs text-gray-500">
+          New pending requests will appear here.
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full">

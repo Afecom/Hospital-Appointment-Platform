@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { approveAppointment } from "@/actions/appointment";
-import type { PendingAppointment } from "../mockData";
+import type { PendingAppointment } from "../types";
 
 interface ApproveModalProps {
   open: boolean;
