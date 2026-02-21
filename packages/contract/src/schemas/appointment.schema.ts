@@ -78,3 +78,60 @@ export interface OperatorKPIsResponse {
   totalToday: number;
   slotUtilization: number;
 }
+
+export interface OperatorKPITrendsResponse {
+  pending: string;
+  approvedToday: string;
+  rescheduledToday: string;
+  refunds: string;
+  totalToday: string;
+  slotUtilization: string;
+}
+
+export interface OperatorStatusChartData {
+  name: string;
+  value: number;
+  color: string;
+}
+
+export interface OperatorDoctorChartData {
+  doctor: string;
+  appointments: number;
+}
+
+export interface OperatorTimelineAppointment {
+  id: string;
+  time: string;
+  patient: string;
+  status:
+    | "PENDING"
+    | "APPROVED"
+    | "RESCHEDULED"
+    | "REFUNDED"
+    | "EXPIRED"
+    | "COMPLETED"
+    | "CANCELLED";
+  source: "Web" | "Operator" | "APP" | "Call Center";
+}
+
+export interface OperatorDoctorTimeline {
+  doctor: string;
+  appointments: OperatorTimelineAppointment[];
+}
+
+export interface OperatorActivityLogEntry {
+  id: string;
+  operator: string;
+  action: string;
+  appointmentId: string;
+  timestamp: string;
+}
+
+export interface OperatorDashboardResponse {
+  kpis: OperatorKPIsResponse;
+  kpiTrends: OperatorKPITrendsResponse;
+  statusChartData: OperatorStatusChartData[];
+  doctorChartData: OperatorDoctorChartData[];
+  timelineData: OperatorDoctorTimeline[];
+  activityLog: OperatorActivityLogEntry[];
+}
