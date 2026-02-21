@@ -9,54 +9,55 @@ import {
   TrendingUp,
 } from "lucide-react";
 import KPICard from "./KPICard";
-import { KPIData } from "../mockData";
+import { KPIData, KPITrendData } from "../types";
 
 interface KPISectionProps {
   data: KPIData;
+  trends: KPITrendData;
 }
 
-export default function KPISection({ data }: KPISectionProps) {
+export default function KPISection({ data, trends }: KPISectionProps) {
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
       <KPICard
         title="Pending Approvals"
         value={data.pending}
-        subtext="+12% from yesterday"
+        subtext={trends.pending}
         icon={Clock}
         color="yellow"
       />
       <KPICard
         title="Approved Today"
         value={data.approvedToday}
-        subtext="+8% from yesterday"
+        subtext={trends.approvedToday}
         icon={CheckCircle}
         color="green"
       />
       <KPICard
         title="Rescheduled Today"
         value={data.rescheduledToday}
-        subtext="+2 from yesterday"
+        subtext={trends.rescheduledToday}
         icon={Calendar}
         color="blue"
       />
       <KPICard
         title="Refund Requests"
         value={data.refunds}
-        subtext="-1 from yesterday"
+        subtext={trends.refunds}
         icon={DollarSign}
         color="red"
       />
       <KPICard
         title="Total Appointments Today"
         value={data.totalToday}
-        subtext="+15% from yesterday"
+        subtext={trends.totalToday}
         icon={CalendarDays}
         color="gray"
       />
       <KPICard
         title="Slot Utilization"
         value={`${data.slotUtilization}%`}
-        subtext="+5% from yesterday"
+        subtext={trends.slotUtilization}
         icon={TrendingUp}
         color="purple"
       />
