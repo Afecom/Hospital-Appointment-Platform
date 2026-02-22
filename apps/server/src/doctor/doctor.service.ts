@@ -986,7 +986,9 @@ export class DoctorService {
         totalSlots === 0 ? 0 : Math.round((bookedSlots / totalSlots) * 100);
 
       const nextAvailableSlot =
-        selectedDateISO === todayISO
+        selectedDateISO < todayISO
+          ? null
+          : selectedDateISO === todayISO
           ? availableSlotTimes.find((time) => {
               const slotAt = DateTime.fromISO(`${selectedDateISO}T${time}`, {
                 zone: timezone,
