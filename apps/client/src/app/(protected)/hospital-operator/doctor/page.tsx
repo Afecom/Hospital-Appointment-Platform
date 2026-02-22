@@ -1,17 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import DoctorCard, { DoctorOperationalRow } from "./components/DoctorCard";
 import DoctorDrawer from "./components/DoctorDrawer";
 import DoctorTable, { DoctorSortKey } from "./components/DoctorTable";
 import UtilizationChart from "./components/UtilizationChart";
-import {
-  doctors,
-  getDailyStats,
-  getNextAvailableSlotForDoctorOnDate,
-  getWorkingHoursForDate,
-} from "./mockData";
 import { compare, formatLongDate, SortDir, toISODateString } from "./utils";
+import { fetchOperatorDoctorsOverview } from "@/actions/operatorDoctor";
+import { OperatorDoctor } from "./types";
 
 type StatusFilter = "ALL" | "ACTIVE" | "ON_LEAVE";
 type AvailabilityFilter = "ALL" | "AVAILABLE" | "FULLY_BOOKED";
@@ -31,6 +27,30 @@ export default function HospitalOperatorDoctorPage() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [selectedDoctorId, setSelectedDoctorId] = useState<string | null>(null);
 
+  const [doctors, setDoctors] = useState<OperatorDoctor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const loadDoctors = useCallback(async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await fetchOperatorDoctorsOverview(selectedDate);
+      setDoctors(data);
+    } catch (err) {
+      setError(
+        err instanceof Error ? err.message : "Failed to load doctors data",
+      );
+      setDoctors([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [selectedDate]);
+
+  useEffect(() => {
+    void loadDoctors();
+  }, [loadDoctors]);
+
   useEffect(() => {
     if (!drawerOpen) return;
     if (!selectedDoctorId) setDrawerOpen(false);
@@ -41,43 +61,20 @@ export default function HospitalOperatorDoctorPage() {
       (a, b) => a.localeCompare(b),
     );
     return ["ALL", ...uniq];
-  }, []);
+  }, [doctors]);
 
   const baseRows = useMemo(() => {
-    return doctors.map((doctor): DoctorOperationalRow => {
-      const wh = getWorkingHoursForDate(doctor, selectedDate);
-      const workingHoursLabel =
-        doctor.status === "ON_LEAVE"
-          ? "On leave"
-          : wh.isWorking && wh.start && wh.end
-            ? `${wh.start}–${wh.end}`
-            : "Off";
-
-      const stats = getDailyStats(doctor, selectedDate);
-      const availableSlots = Math.max(0, stats.totalSlots - stats.bookedSlots);
-      const utilizationPct =
-        stats.totalSlots === 0
-          ? 0
-          : Math.round((stats.bookedSlots / stats.totalSlots) * 100);
-      const nextAvailableSlot = getNextAvailableSlotForDoctorOnDate(
-        doctor,
-        selectedDate,
-      );
-
-      const isDisabled = doctor.status === "ON_LEAVE";
-
-      return {
-        doctor,
-        workingHoursLabel,
-        totalSlots: stats.totalSlots,
-        bookedSlots: stats.bookedSlots,
-        availableSlots,
-        utilizationPct,
-        nextAvailableSlot,
-        isDisabled,
-      };
-    });
-  }, [selectedDate]);
+    return doctors.map((doctor): DoctorOperationalRow => ({
+      doctor,
+      workingHoursLabel: doctor.selectedDate.workingHoursLabel,
+      totalSlots: doctor.selectedDate.totalSlots,
+      bookedSlots: doctor.selectedDate.bookedSlots,
+      availableSlots: doctor.selectedDate.availableSlots,
+      utilizationPct: doctor.selectedDate.utilizationPct,
+      nextAvailableSlot: doctor.selectedDate.nextAvailableSlot,
+      isDisabled: doctor.status === "ON_LEAVE",
+    }));
+  }, [doctors]);
 
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -113,7 +110,6 @@ export default function HospitalOperatorDoctorPage() {
       const primary = mul * compare(getPrimary(a), getPrimary(b));
       if (primary !== 0) return primary;
 
-      // Tie-breakers (consistent, operationally useful)
       if (a.doctor.status !== b.doctor.status)
         return a.doctor.status === "ACTIVE" ? -1 : 1;
       const byAvail = compare(b.availableSlots, a.availableSlots);
@@ -125,7 +121,7 @@ export default function HospitalOperatorDoctorPage() {
   const selectedDoctor = useMemo(() => {
     if (!selectedDoctorId) return null;
     return doctors.find((d) => d.id === selectedDoctorId) ?? null;
-  }, [selectedDoctorId]);
+  }, [doctors, selectedDoctorId]);
 
   const chartData = useMemo(() => {
     return sortedRows.map((r) => ({
@@ -151,18 +147,16 @@ export default function HospitalOperatorDoctorPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 p-6 space-y-8 w-full max-w-full overflow-x-hidden">
-      {/* Header */}
       <header className="mb-2">
         <h1 className="text-2xl font-semibold text-gray-800">Doctors</h1>
         <p className="text-sm text-gray-500 mt-1">
-          Operational visibility for staffing, capacity, and appointment load —{" "}
-          <span className="font-medium text-gray-700">
+          Operational visibility for staffing, capacity, and appointment load -
+          <span className="font-medium text-gray-700 ml-1">
             {formatLongDate(selectedDate)}
           </span>
         </p>
       </header>
 
-      {/* Controls Section */}
       <section className="bg-white rounded-2xl shadow-sm p-6 border border-gray-100">
         <div className="flex flex-col gap-2 lg:gap-10 lg:flex-row lg:items-end lg:justify-between min-w-0">
           <div className="w-full lg:w-40 min-w-0">
@@ -247,14 +241,26 @@ export default function HospitalOperatorDoctorPage() {
             {sortedRows.length} doctor{sortedRows.length === 1 ? "" : "s"} shown
           </span>
           <span className="inline-flex items-center rounded-full bg-gray-50 ring-1 ring-gray-100 px-3 py-1">
-            Sorting:{" "}
+            Sorting:
             <span className="ml-1 font-medium text-gray-700">{sortKey}</span> (
             {sortDir})
           </span>
         </div>
       </section>
 
-      {/* Doctor Summary Grid (Cards) */}
+      {error && (
+        <section className="rounded-2xl border border-red-200 bg-red-50 p-4">
+          <p className="text-sm font-medium text-red-700">{error}</p>
+          <button
+            type="button"
+            onClick={() => void loadDoctors()}
+            className="mt-3 px-3 py-1.5 rounded-lg text-xs font-medium text-white bg-red-600 hover:bg-red-700"
+          >
+            Retry
+          </button>
+        </section>
+      )}
+
       <section className="space-y-4">
         <div>
           <h2 className="text-lg font-semibold text-gray-800">
@@ -265,23 +271,27 @@ export default function HospitalOperatorDoctorPage() {
             date
           </p>
         </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {sortedRows.map((row) => (
-            <DoctorCard
-              key={row.doctor.id}
-              row={row}
-              onClick={() => openDoctor(row.doctor.id)}
-            />
-          ))}
-        </div>
+        {loading ? (
+          <div className="rounded-xl border border-dashed border-gray-200 p-6 text-center bg-white">
+            <p className="text-sm text-gray-600">Loading doctors...</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {sortedRows.map((row) => (
+              <DoctorCard
+                key={row.doctor.id}
+                row={row}
+                onClick={() => openDoctor(row.doctor.id)}
+              />
+            ))}
+          </div>
+        )}
       </section>
 
-      {/* Utilization Chart (Compact) */}
       <section>
         <UtilizationChart data={chartData} />
       </section>
 
-      {/* Doctors Operational Table */}
       <section>
         <DoctorTable
           rows={sortedRows}
@@ -292,7 +302,6 @@ export default function HospitalOperatorDoctorPage() {
         />
       </section>
 
-      {/* Doctor Detail Drawer */}
       <DoctorDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}

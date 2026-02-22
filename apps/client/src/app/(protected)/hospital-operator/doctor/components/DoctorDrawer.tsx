@@ -1,18 +1,18 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { X } from "lucide-react";
-import {
-  Appointment,
-  Doctor,
-  getAppointmentsForDoctorOnDate,
-  getDailyStats,
-  getNext7DaysSnapshot,
-  getWorkingHoursForDate,
-  slotDurationMinutesByDoctorId,
-} from "../mockData";
 import StatusBadge from "./StatusBadge";
-import { formatLongDate, formatShortDate, formatTimeLabel, dayNameFromISODate } from "../utils";
+import {
+  OperatorDoctor,
+  OperatorDoctorTimelineAppointment,
+} from "../types";
+import {
+  dayNameFromISODate,
+  formatLongDate,
+  formatShortDate,
+  formatTimeLabel,
+} from "../utils";
 
 function KV({ label, value }: { label: string; value: string }) {
   return (
@@ -77,7 +77,7 @@ export default function DoctorDrawer({
 }: {
   open: boolean;
   onClose: () => void;
-  doctor: Doctor | null;
+  doctor: OperatorDoctor | null;
   selectedDate: string; // YYYY-MM-DD
 }) {
   useEffect(() => {
@@ -98,29 +98,6 @@ export default function DoctorDrawer({
     };
   }, [open]);
 
-  const content = useMemo(() => {
-    if (!doctor) return null;
-    const stats = getDailyStats(doctor, selectedDate);
-    const available = Math.max(0, stats.totalSlots - stats.bookedSlots);
-    const utilizationPct =
-      stats.totalSlots === 0 ? 0 : Math.round((stats.bookedSlots / stats.totalSlots) * 100);
-    const wh = getWorkingHoursForDate(doctor, selectedDate);
-    const workingHoursLabel = wh.isWorking && wh.start && wh.end ? `${wh.start}–${wh.end}` : "Off";
-    const { appointments } = getAppointmentsForDoctorOnDate(doctor, selectedDate);
-    const next7 = getNext7DaysSnapshot(doctor, selectedDate);
-    const slotDuration = slotDurationMinutesByDoctorId[doctor.id] ?? 30;
-
-    return {
-      stats,
-      available,
-      utilizationPct,
-      workingHoursLabel,
-      appointments: appointments.sort((a, b) => a.time.localeCompare(b.time)),
-      next7,
-      slotDuration,
-    };
-  }, [doctor, selectedDate]);
-
   if (!open) return null;
 
   return (
@@ -128,7 +105,7 @@ export default function DoctorDrawer({
       <div className="absolute inset-0 bg-black/30" onClick={onClose} />
 
       <aside
-        className={`absolute right-0 top-0 h-dvh w-full md:w-[35%] lg:w-[32%] bg-gray-50 shadow-xl border-l border-gray-200 flex flex-col`}
+        className="absolute right-0 top-0 h-dvh w-full md:w-[35%] lg:w-[32%] bg-gray-50 shadow-xl border-l border-gray-200 flex flex-col"
         role="dialog"
         aria-modal="true"
         aria-label="Doctor details drawer"
@@ -140,7 +117,7 @@ export default function DoctorDrawer({
               Doctor Details
             </p>
             <h2 className="text-lg font-semibold text-gray-900 truncate">
-              {doctor ? doctor.name : "—"}
+              {doctor ? doctor.name : "-"}
             </h2>
             <p className="text-sm text-gray-500 mt-1">{formatLongDate(selectedDate)}</p>
           </div>
@@ -155,9 +132,8 @@ export default function DoctorDrawer({
         </div>
 
         <div className="flex-1 overflow-y-auto p-5 space-y-6">
-          {doctor && content && (
+          {doctor && (
             <>
-              {/* A. Doctor Info */}
               <section className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
@@ -167,12 +143,14 @@ export default function DoctorDrawer({
                   <StatusBadge kind="doctor" status={doctor.status} />
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <KV label="Working Hours" value={content.workingHoursLabel} />
-                  <KV label="Slot Duration" value={`${content.slotDuration} min`} />
+                  <KV
+                    label="Working Hours"
+                    value={doctor.selectedDate.workingHoursLabel}
+                  />
+                  <KV label="Slot Duration" value={`${doctor.slotDuration} min`} />
                 </div>
               </section>
 
-              {/* B. Weekly Schedule Table */}
               <section>
                 <div className="mb-3">
                   <h3 className="text-sm font-semibold text-gray-900">Weekly Schedule</h3>
@@ -184,14 +162,13 @@ export default function DoctorDrawer({
                     rows={doctor.weeklySchedule.map((d) => [
                       d.day,
                       d.isWorking ? "Yes" : "No",
-                      d.isWorking ? d.start : "—",
-                      d.isWorking ? d.end : "—",
+                      d.isWorking ? d.start : "-",
+                      d.isWorking ? d.end : "-",
                     ])}
                   />
                 </TableContainer>
               </section>
 
-              {/* C. Selected Date Breakdown */}
               <section className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -203,14 +180,19 @@ export default function DoctorDrawer({
                   <StatusBadge kind="doctor" status={doctor.status} />
                 </div>
                 <div className="mt-4 grid grid-cols-2 gap-3">
-                  <KV label="Total Slots" value={String(content.stats.totalSlots)} />
-                  <KV label="Booked Slots" value={String(content.stats.bookedSlots)} />
-                  <KV label="Available Slots" value={String(content.available)} />
-                  <KV label="Utilization" value={`${content.utilizationPct}%`} />
+                  <KV label="Total Slots" value={String(doctor.selectedDate.totalSlots)} />
+                  <KV label="Booked Slots" value={String(doctor.selectedDate.bookedSlots)} />
+                  <KV
+                    label="Available Slots"
+                    value={String(doctor.selectedDate.availableSlots)}
+                  />
+                  <KV
+                    label="Utilization"
+                    value={`${doctor.selectedDate.utilizationPct}%`}
+                  />
                 </div>
               </section>
 
-              {/* D. Next 7 Days Snapshot Table */}
               <section>
                 <div className="mb-3">
                   <h3 className="text-sm font-semibold text-gray-900">Next 7 Days Snapshot</h3>
@@ -219,8 +201,8 @@ export default function DoctorDrawer({
                 <TableContainer>
                   <SmallTable
                     headers={["Date", "Working", "Total", "Booked", "Available"]}
-                    rows={content.next7.map((d) => [
-                      `${formatShortDate(d.date)}`,
+                    rows={doctor.next7Days.map((d) => [
+                      formatShortDate(d.date),
                       d.working ? "Yes" : "No",
                       String(d.totalSlots),
                       String(d.bookedSlots),
@@ -230,44 +212,49 @@ export default function DoctorDrawer({
                 </TableContainer>
               </section>
 
-              {/* E. Selected Date Appointments Timeline */}
               <section className="bg-white rounded-2xl shadow-sm p-5 border border-gray-100">
                 <div className="mb-3">
                   <h3 className="text-sm font-semibold text-gray-900">
                     Selected Date Appointments Timeline
                   </h3>
                   <p className="text-xs text-gray-500 mt-1">
-                    {content.appointments.length} booked appointment
-                    {content.appointments.length === 1 ? "" : "s"}
+                    {doctor.selectedDate.appointments.length} booked appointment
+                    {doctor.selectedDate.appointments.length === 1 ? "" : "s"}
                   </p>
                 </div>
 
-                {content.appointments.length === 0 ? (
+                {doctor.selectedDate.appointments.length === 0 ? (
                   <div className="rounded-xl bg-gray-50 p-4">
                     <p className="text-sm font-medium text-gray-700">No booked appointments</p>
                     <p className="text-xs text-gray-500 mt-1">
-                      This day is off, on leave, or currently has no bookings in mock data.
+                      This day is off, on leave, or currently has no bookings.
                     </p>
                   </div>
                 ) : (
                   <ul className="space-y-3">
-                    {content.appointments.map((a: Appointment) => (
-                      <li
-                        key={a.id}
-                        className="rounded-xl border border-gray-100 p-4 flex items-start justify-between gap-3"
-                      >
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold text-gray-900">
-                            {formatTimeLabel(a.time)}
-                          </p>
-                          <p className="text-sm text-gray-700 mt-0.5 truncate">{a.patient}</p>
-                          <p className="text-xs text-gray-500 mt-1">Appointment ID: {a.id}</p>
-                        </div>
-                        <div className="shrink-0">
-                          <StatusBadge kind="appointment" status={a.status} />
-                        </div>
-                      </li>
-                    ))}
+                    {doctor.selectedDate.appointments.map(
+                      (appointment: OperatorDoctorTimelineAppointment) => (
+                        <li
+                          key={appointment.id}
+                          className="rounded-xl border border-gray-100 p-4 flex items-start justify-between gap-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold text-gray-900">
+                              {formatTimeLabel(appointment.time)}
+                            </p>
+                            <p className="text-sm text-gray-700 mt-0.5 truncate">
+                              {appointment.patient}
+                            </p>
+                            <p className="text-xs text-gray-500 mt-1">
+                              Appointment ID: {appointment.id}
+                            </p>
+                          </div>
+                          <div className="shrink-0">
+                            <StatusBadge kind="appointment" status={appointment.status} />
+                          </div>
+                        </li>
+                      ),
+                    )}
                   </ul>
                 )}
               </section>
@@ -278,4 +265,3 @@ export default function DoctorDrawer({
     </div>
   );
 }
-
