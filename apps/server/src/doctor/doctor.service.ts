@@ -1,7 +1,9 @@
 import {
+  BadRequestException,
   BadGatewayException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import {
   approveDoctor,
@@ -15,6 +17,7 @@ import {
   DoctorHospitalApplicationStatus,
   ScheduleStatus,
 } from '../../generated/prisma/enums.js';
+import { DateTime } from 'luxon';
 import {
   buildPaginationMeta,
   normalizePagination,
@@ -36,6 +39,13 @@ import {
 @Injectable()
 export class DoctorService {
   constructor(private readonly databaseService: DatabaseService) {}
+
+  private readonly operatorBookedStatuses: AppointmentStatus[] = [
+    AppointmentStatus.pending,
+    AppointmentStatus.approved,
+    AppointmentStatus.rescheduled,
+    AppointmentStatus.completed,
+  ];
 
   async findAll(page: number, limit: number) {
     const { normalizedLimit, normalizedPage, skip, take } = normalizePagination(
@@ -615,6 +625,445 @@ export class DoctorService {
       status: 'Success',
       message: 'Doctors counted successfuly',
       total,
+    };
+  }
+
+  private async getOperatorHospitalContext(session: UserSession) {
+    const operator = await this.databaseService.user.findUnique({
+      where: { id: session.user.id },
+      select: {
+        OperatorHospitalId: true,
+        HospitalOperator: {
+          select: {
+            timezone: true,
+          },
+        },
+      },
+    });
+    if (!operator?.OperatorHospitalId) {
+      throw new UnauthorizedException(
+        'Operator is not associated with a hospital',
+      );
+    }
+    return {
+      hospitalId: operator.OperatorHospitalId,
+      timezone: operator.HospitalOperator?.timezone ?? 'UTC',
+    };
+  }
+
+  private normalizeOperatorDate(
+    requestedDate: string | undefined,
+    timezone: string,
+  ): string {
+    if (!requestedDate) {
+      return DateTime.now().setZone(timezone).toISODate() as string;
+    }
+    const parsed = DateTime.fromISO(requestedDate, { zone: timezone });
+    if (!parsed.isValid) {
+      throw new BadRequestException('Invalid date format. Use YYYY-MM-DD');
+    }
+    return parsed.toISODate() as string;
+  }
+
+  private toWeekdayIndex(dateISO: string, timezone: string): number {
+    const weekday = DateTime.fromISO(dateISO, { zone: timezone }).weekday;
+    return weekday === 7 ? 0 : weekday;
+  }
+
+  private normalizeTime(value: string): string {
+    if (!value) return '00:00';
+    return value.length >= 5 ? value.slice(0, 5) : value;
+  }
+
+  private isScheduleActiveOnDate(
+    schedule: {
+      dayOfWeek: number[];
+      startDate: string | null;
+      endDate: string | null;
+    },
+    dateISO: string,
+    weekdayIndex: number,
+  ) {
+    if (schedule.startDate && dateISO < schedule.startDate) return false;
+    if (schedule.endDate && dateISO > schedule.endDate) return false;
+    if (schedule.dayOfWeek?.length > 0) {
+      return schedule.dayOfWeek.includes(weekdayIndex);
+    }
+    return true;
+  }
+
+  private mergeWorkingHours(
+    schedules: {
+      dayOfWeek: number[];
+      startDate: string | null;
+      endDate: string | null;
+      startTime: string;
+      endTime: string;
+    }[],
+    dateISO: string,
+    weekdayIndex: number,
+  ) {
+    const applicable = schedules.filter((schedule) =>
+      this.isScheduleActiveOnDate(schedule, dateISO, weekdayIndex),
+    );
+    if (!applicable.length) {
+      return {
+        isWorking: false,
+        start: '00:00',
+        end: '00:00',
+        label: 'Off',
+      };
+    }
+    const start = applicable
+      .map((item) => this.normalizeTime(item.startTime))
+      .sort((a, b) => a.localeCompare(b))[0];
+    const end = applicable
+      .map((item) => this.normalizeTime(item.endTime))
+      .sort((a, b) => b.localeCompare(a))[0];
+    return {
+      isWorking: true,
+      start: start ?? '00:00',
+      end: end ?? '00:00',
+      label: `${start ?? '00:00'}-${end ?? '00:00'}`,
+    };
+  }
+
+  async getOperatorDoctorsOverview(session: UserSession, requestedDate?: string) {
+    const { hospitalId, timezone } =
+      await this.getOperatorHospitalContext(session);
+    const selectedDateISO = this.normalizeOperatorDate(requestedDate, timezone);
+
+    const selectedDate = DateTime.fromISO(selectedDateISO, {
+      zone: timezone,
+    }).startOf('day');
+    const selectedStartUtc = selectedDate.toUTC().toJSDate();
+    const selectedEndUtc = selectedDate.plus({ days: 1 }).toUTC().toJSDate();
+    const sevenDayEndUtc = selectedDate.plus({ days: 7 }).toUTC().toJSDate();
+
+    const doctorProfiles =
+      await this.databaseService.doctorHospitalProfile.findMany({
+        where: { hospitalId },
+        select: {
+          doctorId: true,
+          slotDuration: true,
+          Doctor: {
+            select: {
+              id: true,
+              isDeactivated: true,
+              User: {
+                select: {
+                  fullName: true,
+                },
+              },
+              DoctorSpecialization: {
+                select: {
+                  Specialization: {
+                    select: {
+                      name: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+    const doctorIds = doctorProfiles.map((profile) => profile.doctorId);
+    if (!doctorIds.length) {
+      return {
+        status: 'Success',
+        message: 'Operator doctors fetched successfully',
+        data: {
+          date: selectedDateISO,
+          doctors: [],
+        },
+      };
+    }
+
+    const [schedules, slots, appointments] = await this.databaseService.$transaction([
+      this.databaseService.schedule.findMany({
+        where: {
+          hospitalId,
+          doctorId: { in: doctorIds },
+          status: ScheduleStatus.approved,
+          isDeactivated: false,
+          isExpired: false,
+          isDeleted: false,
+        },
+        select: {
+          doctorId: true,
+          dayOfWeek: true,
+          startDate: true,
+          endDate: true,
+          startTime: true,
+          endTime: true,
+        },
+      }),
+      this.databaseService.slot.findMany({
+        where: {
+          date: {
+            gte: selectedStartUtc,
+            lt: sevenDayEndUtc,
+          },
+          Schedule: {
+            hospitalId,
+            doctorId: { in: doctorIds },
+            status: ScheduleStatus.approved,
+            isDeactivated: false,
+            isExpired: false,
+            isDeleted: false,
+          },
+        },
+        select: {
+          status: true,
+          date: true,
+          slotStart: true,
+          Schedule: {
+            select: {
+              doctorId: true,
+            },
+          },
+        },
+        orderBy: {
+          slotStart: 'asc',
+        },
+      }),
+      this.databaseService.appointment.findMany({
+        where: {
+          hospitalId,
+          doctorId: { in: doctorIds },
+          approvedSlotStart: {
+            gte: selectedStartUtc,
+            lt: sevenDayEndUtc,
+          },
+          status: {
+            in: this.operatorBookedStatuses,
+          },
+        },
+        select: {
+          id: true,
+          doctorId: true,
+          status: true,
+          approvedSlotStart: true,
+          User_Appointment_customerIdToUser: {
+            select: {
+              fullName: true,
+            },
+          },
+        },
+        orderBy: {
+          approvedSlotStart: 'asc',
+        },
+      }),
+    ]);
+
+    const schedulesByDoctor = new Map<string, typeof schedules>();
+    for (const schedule of schedules) {
+      const existing = schedulesByDoctor.get(schedule.doctorId) ?? [];
+      existing.push(schedule);
+      schedulesByDoctor.set(schedule.doctorId, existing);
+    }
+
+    const slotTotalByDoctorDate = new Map<string, number>();
+    const availableSlotTimesByDoctorDate = new Map<string, string[]>();
+    for (const slot of slots) {
+      const doctorId = slot.Schedule.doctorId;
+      const dayISO = DateTime.fromJSDate(slot.date, { zone: 'utc' })
+        .setZone(timezone)
+        .toISODate() as string;
+      const key = `${doctorId}:${dayISO}`;
+      const total = slotTotalByDoctorDate.get(key) ?? 0;
+      slotTotalByDoctorDate.set(key, total + 1);
+
+      if (slot.status === 'available') {
+        const time = DateTime.fromJSDate(slot.slotStart, { zone: 'utc' })
+          .setZone(timezone)
+          .toFormat('HH:mm');
+        const current = availableSlotTimesByDoctorDate.get(key) ?? [];
+        current.push(time);
+        availableSlotTimesByDoctorDate.set(key, current);
+      }
+    }
+
+    const bookedByDoctorDate = new Map<string, number>();
+    const selectedDateAppointmentsByDoctor = new Map<
+      string,
+      {
+        id: string;
+        time: string;
+        patient: string;
+        status:
+          | 'PENDING'
+          | 'APPROVED'
+          | 'RESCHEDULED'
+          | 'REFUNDED'
+          | 'EXPIRED'
+          | 'COMPLETED'
+          | 'CANCELLED';
+      }[]
+    >();
+
+    for (const appointment of appointments) {
+      const dayISO = DateTime.fromJSDate(appointment.approvedSlotStart, {
+        zone: 'utc',
+      })
+        .setZone(timezone)
+        .toISODate() as string;
+      const key = `${appointment.doctorId}:${dayISO}`;
+      bookedByDoctorDate.set(key, (bookedByDoctorDate.get(key) ?? 0) + 1);
+
+      if (dayISO === selectedDateISO) {
+        const timeline = selectedDateAppointmentsByDoctor.get(appointment.doctorId) ?? [];
+        timeline.push({
+          id: appointment.id,
+          time: DateTime.fromJSDate(appointment.approvedSlotStart, {
+            zone: 'utc',
+          })
+            .setZone(timezone)
+            .toFormat('HH:mm'),
+          patient:
+            appointment.User_Appointment_customerIdToUser?.fullName ??
+            'Unknown Patient',
+          status: appointment.status.toUpperCase() as
+            | 'PENDING'
+            | 'APPROVED'
+            | 'RESCHEDULED'
+            | 'REFUNDED'
+            | 'EXPIRED'
+            | 'COMPLETED'
+            | 'CANCELLED',
+        });
+        selectedDateAppointmentsByDoctor.set(appointment.doctorId, timeline);
+      }
+    }
+
+    const todayISO = DateTime.now().setZone(timezone).toISODate();
+    const nowInHospitalTz = DateTime.now().setZone(timezone);
+    const mondayOfSelectedWeek = selectedDate.minus({
+      days: selectedDate.weekday - 1,
+    });
+    const weekRows = [
+      { day: 'Monday', offset: 0, weekday: 1 },
+      { day: 'Tuesday', offset: 1, weekday: 2 },
+      { day: 'Wednesday', offset: 2, weekday: 3 },
+      { day: 'Thursday', offset: 3, weekday: 4 },
+      { day: 'Friday', offset: 4, weekday: 5 },
+      { day: 'Saturday', offset: 5, weekday: 6 },
+      { day: 'Sunday', offset: 6, weekday: 0 },
+    ];
+
+    const doctors = doctorProfiles.map((profile) => {
+      const doctorId = profile.doctorId;
+      const doctorSchedules = schedulesByDoctor.get(doctorId) ?? [];
+      const selectedWeekday = this.toWeekdayIndex(selectedDateISO, timezone);
+      const selectedHours = this.mergeWorkingHours(
+        doctorSchedules,
+        selectedDateISO,
+        selectedWeekday,
+      );
+
+      const selectedKey = `${doctorId}:${selectedDateISO}`;
+      const totalSlots = slotTotalByDoctorDate.get(selectedKey) ?? 0;
+      const bookedSlots = bookedByDoctorDate.get(selectedKey) ?? 0;
+      const availableSlots = Math.max(totalSlots - bookedSlots, 0);
+      const utilizationPct =
+        totalSlots === 0 ? 0 : Math.round((bookedSlots / totalSlots) * 100);
+
+      const availableTimes =
+        availableSlotTimesByDoctorDate.get(selectedKey)?.sort((a, b) =>
+          a.localeCompare(b),
+        ) ?? [];
+      const nextAvailableSlot =
+        selectedDateISO === todayISO
+          ? availableTimes.find((time) => {
+              const slotAt = DateTime.fromISO(`${selectedDateISO}T${time}`, {
+                zone: timezone,
+              });
+              return slotAt >= nowInHospitalTz;
+            }) ?? null
+          : (availableTimes[0] ?? null);
+
+      const next7Days = Array.from({ length: 7 }).map((_, index) => {
+        const day = selectedDate.plus({ days: index });
+        const dayISO = day.toISODate() as string;
+        const dayWeekIndex = this.toWeekdayIndex(dayISO, timezone);
+        const dayHours = this.mergeWorkingHours(
+          doctorSchedules,
+          dayISO,
+          dayWeekIndex,
+        );
+        const key = `${doctorId}:${dayISO}`;
+        const total = slotTotalByDoctorDate.get(key) ?? 0;
+        const booked = bookedByDoctorDate.get(key) ?? 0;
+        const available = Math.max(total - booked, 0);
+        const utilization =
+          total === 0 ? 0 : Math.round((booked / total) * 100);
+        return {
+          date: dayISO,
+          working: dayHours.isWorking,
+          totalSlots: total,
+          bookedSlots: booked,
+          availableSlots: available,
+          utilizationPct: utilization,
+        };
+      });
+
+      const weeklySchedule = weekRows.map((row) => {
+        const dateISO = mondayOfSelectedWeek
+          .plus({ days: row.offset })
+          .toISODate() as string;
+        const hours = this.mergeWorkingHours(
+          doctorSchedules,
+          dateISO,
+          row.weekday,
+        );
+        return {
+          day: row.day,
+          isWorking: hours.isWorking,
+          start: hours.start,
+          end: hours.end,
+        };
+      });
+
+      const specializations = profile.Doctor.DoctorSpecialization.map(
+        (item) => item.Specialization.name,
+      );
+
+      return {
+        id: doctorId,
+        name: profile.Doctor.User.fullName,
+        specialty: specializations[0] ?? 'General Medicine',
+        specializations,
+        status: profile.Doctor.isDeactivated ? 'ON_LEAVE' : 'ACTIVE',
+        slotDuration: profile.slotDuration,
+        weeklySchedule,
+        selectedDate: {
+          date: selectedDateISO,
+          workingHoursLabel: profile.Doctor.isDeactivated
+            ? 'On leave'
+            : selectedHours.label,
+          totalSlots,
+          bookedSlots,
+          availableSlots,
+          utilizationPct,
+          nextAvailableSlot,
+          appointments:
+            selectedDateAppointmentsByDoctor.get(doctorId)?.sort((a, b) =>
+              a.time.localeCompare(b.time),
+            ) ?? [],
+        },
+        next7Days,
+      };
+    });
+
+    return {
+      status: 'Success',
+      message: 'Operator doctors fetched successfully',
+      data: {
+        date: selectedDateISO,
+        doctors,
+      },
     };
   }
 

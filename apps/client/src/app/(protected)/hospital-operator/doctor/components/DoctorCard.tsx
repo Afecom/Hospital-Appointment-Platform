@@ -1,12 +1,12 @@
 "use client";
 
-import { Doctor } from "../mockData";
+import { OperatorDoctor } from "../types";
 import StatusBadge from "./StatusBadge";
 import ProgressBar from "./ProgressBar";
 import { formatTimeLabel } from "../utils";
 
 export type DoctorOperationalRow = {
-  doctor: Doctor;
+  doctor: OperatorDoctor;
   workingHoursLabel: string;
   totalSlots: number;
   bookedSlots: number;

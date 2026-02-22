@@ -123,6 +123,15 @@ export class DoctorController {
     );
   }
 
+  @Get('operator')
+  @Roles([Role.hospital_operator])
+  getOperatorDoctorsOverview(
+    @Session() session: UserSession,
+    @Query('date') date?: string,
+  ) {
+    return this.doctorService.getOperatorDoctorsOverview(session, date);
+  }
+
   @Patch('hospital/reject')
   @Roles([Role.hospital_admin])
   rejectHospitalDoctor(@Body() body: doctorHospitalApplication) {
