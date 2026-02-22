@@ -1060,6 +1060,14 @@ export class DoctorService {
         weeklySchedule,
         selectedDate: {
           date: selectedDateISO,
+          startTime:
+            profile.Doctor.isDeactivated || !selectedHours.isWorking
+              ? null
+              : selectedHours.start,
+          endTime:
+            profile.Doctor.isDeactivated || !selectedHours.isWorking
+              ? null
+              : selectedHours.end,
           workingHoursLabel: profile.Doctor.isDeactivated
             ? 'On leave'
             : selectedHours.label,

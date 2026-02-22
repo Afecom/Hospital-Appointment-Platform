@@ -25,6 +25,8 @@ export interface OperatorDoctorTimelineAppointment {
 
 export interface OperatorDoctorSelectedDateMetrics {
   date: string;
+  startTime: string | null;
+  endTime: string | null;
   workingHoursLabel: string;
   totalSlots: number;
   bookedSlots: number;
