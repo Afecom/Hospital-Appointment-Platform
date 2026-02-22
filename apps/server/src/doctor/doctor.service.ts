@@ -941,7 +941,7 @@ export class DoctorService {
       }
     }
 
-    const todayISO = DateTime.now().setZone(timezone).toISODate();
+    const todayISO = DateTime.now().setZone(timezone).toISODate() ?? selectedDateISO;
     const nowInHospitalTz = DateTime.now().setZone(timezone);
     const mondayOfSelectedWeek = selectedDate.minus({
       days: selectedDate.weekday - 1,
