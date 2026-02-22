@@ -675,6 +675,19 @@ export class DoctorService {
     return value.length >= 5 ? value.slice(0, 5) : value;
   }
 
+  private hhmmToMinutes(hhmm: string): number {
+    const [h, m] = this.normalizeTime(hhmm)
+      .split(':')
+      .map((v) => Number(v));
+    return (h ?? 0) * 60 + (m ?? 0);
+  }
+
+  private minutesToHHmm(totalMinutes: number): string {
+    const h = Math.floor(totalMinutes / 60);
+    const m = totalMinutes % 60;
+    return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+  }
+
   private isScheduleActiveOnDate(
     schedule: {
       dayOfWeek: number[];
@@ -726,6 +739,44 @@ export class DoctorService {
       end: end ?? '00:00',
       label: `${start ?? '00:00'}-${end ?? '00:00'}`,
     };
+  }
+
+  private buildScheduleSlotTimes(
+    schedules: {
+      dayOfWeek: number[];
+      startDate: string | null;
+      endDate: string | null;
+      startTime: string;
+      endTime: string;
+    }[],
+    dateISO: string,
+    weekdayIndex: number,
+    slotDuration: number,
+  ): string[] {
+    const safeDuration = Number.isFinite(slotDuration) && slotDuration > 0
+      ? slotDuration
+      : 30;
+    const slotStarts = new Set<number>();
+
+    for (const schedule of schedules) {
+      if (!this.isScheduleActiveOnDate(schedule, dateISO, weekdayIndex)) continue;
+
+      const startMin = this.hhmmToMinutes(schedule.startTime);
+      const endMin = this.hhmmToMinutes(schedule.endTime);
+      if (endMin <= startMin) continue;
+
+      for (
+        let cursor = startMin;
+        cursor + safeDuration <= endMin;
+        cursor += safeDuration
+      ) {
+        slotStarts.add(cursor);
+      }
+    }
+
+    return Array.from(slotStarts)
+      .sort((a, b) => a - b)
+      .map((minutes) => this.minutesToHHmm(minutes));
   }
 
   async getOperatorDoctorsOverview(session: UserSession, requestedDate?: string) {
@@ -780,7 +831,7 @@ export class DoctorService {
       };
     }
 
-    const [schedules, slots, appointments] = await this.databaseService.$transaction([
+    const [schedules, appointments] = await this.databaseService.$transaction([
       this.databaseService.schedule.findMany({
         where: {
           hospitalId,
@@ -797,35 +848,6 @@ export class DoctorService {
           endDate: true,
           startTime: true,
           endTime: true,
-        },
-      }),
-      this.databaseService.slot.findMany({
-        where: {
-          date: {
-            gte: selectedStartUtc,
-            lt: sevenDayEndUtc,
-          },
-          Schedule: {
-            hospitalId,
-            doctorId: { in: doctorIds },
-            status: ScheduleStatus.approved,
-            isDeactivated: false,
-            isExpired: false,
-            isDeleted: false,
-          },
-        },
-        select: {
-          status: true,
-          date: true,
-          slotStart: true,
-          Schedule: {
-            select: {
-              doctorId: true,
-            },
-          },
-        },
-        orderBy: {
-          slotStart: 'asc',
         },
       }),
       this.databaseService.appointment.findMany({
@@ -864,28 +886,7 @@ export class DoctorService {
       schedulesByDoctor.set(schedule.doctorId, existing);
     }
 
-    const slotTotalByDoctorDate = new Map<string, number>();
-    const availableSlotTimesByDoctorDate = new Map<string, string[]>();
-    for (const slot of slots) {
-      const doctorId = slot.Schedule.doctorId;
-      const dayISO = DateTime.fromJSDate(slot.date, { zone: 'utc' })
-        .setZone(timezone)
-        .toISODate() as string;
-      const key = `${doctorId}:${dayISO}`;
-      const total = slotTotalByDoctorDate.get(key) ?? 0;
-      slotTotalByDoctorDate.set(key, total + 1);
-
-      if (slot.status === 'available') {
-        const time = DateTime.fromJSDate(slot.slotStart, { zone: 'utc' })
-          .setZone(timezone)
-          .toFormat('HH:mm');
-        const current = availableSlotTimesByDoctorDate.get(key) ?? [];
-        current.push(time);
-        availableSlotTimesByDoctorDate.set(key, current);
-      }
-    }
-
-    const bookedByDoctorDate = new Map<string, number>();
+    const bookedTimesByDoctorDate = new Map<string, Set<string>>();
     const selectedDateAppointmentsByDoctor = new Map<
       string,
       {
@@ -910,17 +911,20 @@ export class DoctorService {
         .setZone(timezone)
         .toISODate() as string;
       const key = `${appointment.doctorId}:${dayISO}`;
-      bookedByDoctorDate.set(key, (bookedByDoctorDate.get(key) ?? 0) + 1);
+      const time = DateTime.fromJSDate(appointment.approvedSlotStart, {
+        zone: 'utc',
+      })
+        .setZone(timezone)
+        .toFormat('HH:mm');
+      const times = bookedTimesByDoctorDate.get(key) ?? new Set<string>();
+      times.add(time);
+      bookedTimesByDoctorDate.set(key, times);
 
       if (dayISO === selectedDateISO) {
         const timeline = selectedDateAppointmentsByDoctor.get(appointment.doctorId) ?? [];
         timeline.push({
           id: appointment.id,
-          time: DateTime.fromJSDate(appointment.approvedSlotStart, {
-            zone: 'utc',
-          })
-            .setZone(timezone)
-            .toFormat('HH:mm'),
+          time,
           patient:
             appointment.User_Appointment_customerIdToUser?.fullName ??
             'Unknown Patient',
@@ -961,27 +965,35 @@ export class DoctorService {
         selectedDateISO,
         selectedWeekday,
       );
+      const selectedSlotTimes = this.buildScheduleSlotTimes(
+        doctorSchedules,
+        selectedDateISO,
+        selectedWeekday,
+        profile.slotDuration,
+      );
 
       const selectedKey = `${doctorId}:${selectedDateISO}`;
-      const totalSlots = slotTotalByDoctorDate.get(selectedKey) ?? 0;
-      const bookedSlots = bookedByDoctorDate.get(selectedKey) ?? 0;
-      const availableSlots = Math.max(totalSlots - bookedSlots, 0);
+      const selectedBookedTimes = bookedTimesByDoctorDate.get(selectedKey) ?? new Set<string>();
+      const totalSlots = selectedSlotTimes.length;
+      const bookedSlots = selectedSlotTimes.filter((time) =>
+        selectedBookedTimes.has(time),
+      ).length;
+      const availableSlotTimes = selectedSlotTimes.filter(
+        (time) => !selectedBookedTimes.has(time),
+      );
+      const availableSlots = availableSlotTimes.length;
       const utilizationPct =
         totalSlots === 0 ? 0 : Math.round((bookedSlots / totalSlots) * 100);
 
-      const availableTimes =
-        availableSlotTimesByDoctorDate.get(selectedKey)?.sort((a, b) =>
-          a.localeCompare(b),
-        ) ?? [];
       const nextAvailableSlot =
         selectedDateISO === todayISO
-          ? availableTimes.find((time) => {
+          ? availableSlotTimes.find((time) => {
               const slotAt = DateTime.fromISO(`${selectedDateISO}T${time}`, {
                 zone: timezone,
               });
               return slotAt >= nowInHospitalTz;
             }) ?? null
-          : (availableTimes[0] ?? null);
+          : (availableSlotTimes[0] ?? null);
 
       const next7Days = Array.from({ length: 7 }).map((_, index) => {
         const day = selectedDate.plus({ days: index });
@@ -993,9 +1005,16 @@ export class DoctorService {
           dayWeekIndex,
         );
         const key = `${doctorId}:${dayISO}`;
-        const total = slotTotalByDoctorDate.get(key) ?? 0;
-        const booked = bookedByDoctorDate.get(key) ?? 0;
-        const available = Math.max(total - booked, 0);
+        const slotTimes = this.buildScheduleSlotTimes(
+          doctorSchedules,
+          dayISO,
+          dayWeekIndex,
+          profile.slotDuration,
+        );
+        const bookedTimes = bookedTimesByDoctorDate.get(key) ?? new Set<string>();
+        const total = slotTimes.length;
+        const booked = slotTimes.filter((time) => bookedTimes.has(time)).length;
+        const available = total - booked;
         const utilization =
           total === 0 ? 0 : Math.round((booked / total) * 100);
         return {
@@ -1042,17 +1061,26 @@ export class DoctorService {
           workingHoursLabel: profile.Doctor.isDeactivated
             ? 'On leave'
             : selectedHours.label,
-          totalSlots,
-          bookedSlots,
-          availableSlots,
-          utilizationPct,
-          nextAvailableSlot,
+          totalSlots: profile.Doctor.isDeactivated ? 0 : totalSlots,
+          bookedSlots: profile.Doctor.isDeactivated ? 0 : bookedSlots,
+          availableSlots: profile.Doctor.isDeactivated ? 0 : availableSlots,
+          utilizationPct: profile.Doctor.isDeactivated ? 0 : utilizationPct,
+          nextAvailableSlot: profile.Doctor.isDeactivated ? null : nextAvailableSlot,
           appointments:
             selectedDateAppointmentsByDoctor.get(doctorId)?.sort((a, b) =>
               a.time.localeCompare(b.time),
             ) ?? [],
         },
-        next7Days,
+        next7Days: profile.Doctor.isDeactivated
+          ? next7Days.map((day) => ({
+              ...day,
+              working: false,
+              totalSlots: 0,
+              bookedSlots: 0,
+              availableSlots: 0,
+              utilizationPct: 0,
+            }))
+          : next7Days,
       };
     });
 
