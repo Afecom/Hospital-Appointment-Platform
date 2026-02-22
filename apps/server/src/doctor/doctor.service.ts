@@ -737,7 +737,6 @@ export class DoctorService {
       zone: timezone,
     }).startOf('day');
     const selectedStartUtc = selectedDate.toUTC().toJSDate();
-    const selectedEndUtc = selectedDate.plus({ days: 1 }).toUTC().toJSDate();
     const sevenDayEndUtc = selectedDate.plus({ days: 7 }).toUTC().toJSDate();
 
     const doctorProfiles =
